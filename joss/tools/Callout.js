@@ -1,0 +1,319 @@
+/*
+ * Define a "callout", "tip", or "spike" of a typical tooltip.  This can be
+ * used for other things, like creating an arrow.  For that reason, I'm being
+ * exact here and defining a callout as a partial triangle whose two
+ * visible sides, including stroke, precisely fill the specified width and
+ * height.  
+ */
+(function(window, factory) {
+	if (typeof define === 'function' && define.amd) {
+		// AMD. Register as an anonymous module.
+		define(['jquery', 'joss/dojo', 'joss/geometry/Position', 'joss/geometry/Point', 'joss/geometry/Line'], factory);
+	} else {
+		// Browser globals
+		dojo.setObject('joss.tools.Callout', factory(jQuery, dojo, joss.geometry.Position, joss.geometry.Point, joss.geometry.Line));
+	}
+})(this, function($, dojo, Position, Point, Line) {
+
+	return dojo.declare(null, {
+
+		constructor: function(opts) {
+			
+			opts = dojo.mixin({
+				element: null,
+				canvas: null,
+				width: 20,
+				height: 20,
+				borderWidth: 1,
+				borderColor: 'rgba(255, 255, 255, 0.5)',
+				fillColor: 'rgba(0, 0, 0, 0.5)',
+				direction: new Position('right center')
+			}, opts);
+
+			this._element = opts.element;
+			this._canvas = opts.canvas;
+			this._width = opts.width;
+			this._height = opts.height;
+			this._borderWidth = opts.borderWidth;
+			this._borderColor = opts.borderColor;
+			this._fillColor = opts.fillColor;
+			this._direction = opts.direction;
+
+		},
+
+
+		element: function(val) {
+			if (val) { this._element = val; return this; }
+			return this._element;
+		},
+
+
+		width: function(val) {
+			if (val) { this._width = val; return this; }
+			return this._width;
+		},
+
+
+		height: function(val) {
+			if (val) { this._height = val; return this; }
+			return this._height;
+		},
+
+
+		borderWidth: function(val) {
+			if (val) { this._borderWidth = val; return this; }
+			return this._borderWidth;
+		},
+
+
+		borderColor: function(val) {
+			if (val) { this._borderColor = val; return this; }
+			return this._borderColor;
+		},
+
+
+		fillColor: function(val) {
+			if (val) { this._fillColor = val; return this; }
+			return this._fillColor;
+		},
+
+
+		direction: function(val) {
+			if (val) { this._direction = val; return this; }
+			return this._direction;
+		},
+
+
+		pointAt: function(pos) {
+
+			var point = new Point();
+
+			switch (pos.x()) {
+				case 'left':
+					point.x = 0;
+					break;
+				case 'right':
+					point.x = this._width;
+					break;
+				default:
+					point.x = this._width / 2;
+					break;
+			}
+
+			switch (pos.y()) {
+				case 'top':
+					point.y = 0;
+					break;
+				case 'bottom':
+					point.y = this._height;
+					break;
+				default:
+					point.y = this._height / 2;
+					break;
+			}
+
+			return point;
+		
+		},
+
+
+		coords: function() {
+
+			var pos = this._direction;
+			var tip = this.pointAt(pos);
+
+			var tipEdge;
+			if (pos.precedence() === 'x') {
+				tipEdge = pos.x();
+			}
+			else {
+				tipEdge = pos.y();
+			}
+
+			//move the tip away from its edge to account for miter
+			switch (tipEdge) {
+				case 'top':
+					tip.y += this._borderWidth / 2;
+					break;
+				case 'bottom':
+					tip.y -= this._borderWidth / 2;
+					break;
+				case 'left':
+					tip.x += this._borderWidth / 2;
+					break;
+				case 'right':
+					tip.x -= this._borderWidth / 2;
+					break;
+			}
+
+
+			//the opposite points, of course, lie at the corner points opposite
+			//the tip
+			var oppPos = [];
+			oppPos[0] = pos.reverse();
+			oppPos[1] = dojo.clone(oppPos[0]);
+
+			switch (oppPos[0].precedence()) {
+				case 'x':
+					oppPos[0].y('top');
+					break;
+				case 'y':
+					oppPos[0].x('left');
+					break;
+			};
+
+			switch (oppPos[1].precedence()) {
+				case 'x':
+					oppPos[1].y('bottom');
+					break;
+				case 'y':
+					oppPos[1].x('right');
+					break;
+			};
+
+			var lines = [];
+			lines[0] = new Line(tip, this.pointAt(oppPos[0]));
+			lines[1] = new Line(tip, this.pointAt(oppPos[1]));
+
+			//console.log(this._direction);
+
+			//We have to translate these lines inward to account for stroke width.
+			//This is because canvas draws strokes as a "center" stroke, as
+			//opposed to "inside" or "outside", and we need to use some linear algebra
+			//to ensure a line at any angle will lie precisely within the canvas.
+			var self = this;
+			$.each(lines, function(i, line) {
+				//vertical line, which is a simple translation
+				if (line.m() === null) {
+
+					if (oppPos[i].x() === 'left' || oppPos[i].y === 'top') {
+						lines[i] = line.translate(self._borderWidth / 2, 0);
+					}
+					else {
+						lines[i] = line.translate(-1 * self._borderWidth / 2, 0);
+					}
+				
+				}
+				//slanted lines can't be a simple translation, because the
+				//closer a line gets to being parallel with its edge, the more
+				//of its center-aligned border will bleed through the adjacent
+				//edge. you can picture a ruler on top of a piece of paper.
+				//the paper's left and bottom edges are the y and x axes.  the
+				//ruler's center running lengthwise is our line, and its body
+				//is our stroke.  align the ruler's vertical center with the
+				//left edge (y axis), with the bottom of the ruler lying a few
+				//inches below the x axis.  now rotate the ruler about the
+				//origin to just 1 degree.  almost all of it overlaps the x
+				//axis.  a simple x translation by half the ruler's width would
+				//still have the ruler being "cut off" at the y axis.  what we
+				//want is to translate the ruler by half its width in a
+				//direction exactly 90 degrees from its current angle.
+				else {
+
+					var d = self._borderWidth / 2;
+
+					//console.log(oppPos[i]);
+
+					var b2;
+					// solve the distance between parallel lines formula
+					// (http://en.wikipedia.org/wiki/Parallel_(geometry)#Distance_between_two_parallel_lines)
+					// for b2, then we have a parallel line exactly borderWidth / 2px
+					// from the the original line.
+					if (
+						(oppPos[i].precedence() === 'x' && oppPos[i].y() === 'top') 
+						||
+						(oppPos[i].precedence() === 'y' && oppPos[i].y() === 'bottom') 
+					) {
+						//-1 for canvas' inverted y coordinate system (remember?)
+						b2 = -1 * line.b() + Math.sqrt( Math.pow(d, 2) * Math.pow(line.m(), 2) + Math.pow(d, 2) );
+					}
+					else {
+						b2 = -1 * line.b() - Math.sqrt( Math.pow(d, 2) * Math.pow(line.m(), 2) + Math.pow(d, 2) );
+					}
+
+					//console.log(b2);
+					lines[i] = Line.fromSlopeIntercept(line.m(), b2);
+					
+				}
+
+			});
+
+			var oppEdge;
+			if (pos.precedence() === 'x') {
+				oppEdge = pos.reverse().x();
+			}
+			else {
+				oppEdge = pos.reverse().y();
+			}
+
+			//move the edge line a fair distance away from the real canvas
+			//edge, to avoid rendering the line butting up against that edge
+			var edges = {
+				'top': new Line(new Point(0, -100), new Point(1, -100)),
+				'left': new Line(new Point(-100, 0), new Point(-100, 1)),
+				'right': new Line(new Point(this._width + 100, 0), new Point(this._width + 100, 1)),
+				'bottom': new Line(new Point(0, this._height + 100), new Point(1, this._height + 100))
+			};
+
+			var coords = [];
+			coords[0] = lines[0].intersection(edges[oppEdge]);
+			coords[1] = lines[0].intersection(lines[1]);
+			coords[2] = lines[1].intersection(edges[oppEdge]);
+
+			//console.log(coords);
+
+			return coords;
+		
+		},
+
+
+		render: function() {
+
+			if (!this._canvas) {
+				//define dimensions before initializing excanvas
+				this._canvas = $('<canvas width="' + this.width() + '" height="' + this.height() + '" />').appendTo(this._element)[0];
+				//excanvas for ie < 9
+				if (window.G_vmlCanvasManager) {
+					G_vmlCanvasManager.initElement(this._canvas);
+				}
+				//our first restore will cause errors with excanvas and also
+				//FF2 unless we save() the context immediately
+				this._canvas.getContext('2d').save();
+			}
+
+			$(this._canvas).attr({
+				width: this.width(),
+				height: this.height()
+			});
+
+			// Grab canvas context and clear/save it
+			var context = this._canvas.getContext('2d');
+			context.restore(); 
+			context.save();
+			context.clearRect(0,0,3000,3000);
+
+			// Draw the tip
+			var coords = this.coords();
+			//console.log(coords);
+			context.beginPath();
+			context.moveTo(coords[0].x, coords[0].y);
+			context.lineTo(coords[1].x, coords[1].y);
+			context.lineTo(coords[2].x, coords[2].y);
+			context.closePath();
+			context.fillStyle = this._fillColor;
+			context.strokeStyle = this._borderColor;
+			//console.log('borderWidth: ', this._borderWidth);
+			context.lineWidth = this._borderWidth;
+			context.lineJoin = 'miter';
+			context.miterLimit = 100;
+			if(this._borderWidth) {
+				context.stroke();
+			}
+			context.fill();
+		
+		}
+
+
+	});
+
+});

@@ -1,0 +1,21 @@
+{
+	"globals": {
+		"define": false
+	},
+
+	"es5":       true,
+	"node":      true,
+	"devel":     true,
+	"strict":    false,
+
+	"undef":     true,
+	"unused":    true,
+	"smarttabs": true,
+	"laxbreak":  true,
+	"curly":     true,
+	"eqeqeq":    true,
+	"nonew":     true,
+	"latedef":   true,
+	"sub":       true
+
+}

@@ -1,0 +1,34 @@
+h2=module
+div.description!=cl.constructor.description
+
+each member in cl.members
+    div.member
+        h4
+            - if (member.type.link)
+                a.type(href=member.type.link)=member.type.shortName
+            - else
+                span.type=member.type.shortName
+            &nbsp;
+            span.name=member.name
+        div.description!=member.description
+
+each method in cl.methods
+    //-- console.log(JSON.stringify(method, null, 4))
+    div.method
+        a(class='permalink', href='#'+method.name, alt='Permalink to '+module+'#'+method.name, title='Permalink to '+module+'#'+method.name) #
+        h4(id=method.name)
+            - if (method.returns.link)
+                a.returns(href=method.returns.link)=method.returns.shortName
+            - else
+                span.returns=method.returns.shortName
+            &nbsp;
+            span.name=method.name
+            &#40;
+            each param, i in method.params
+                a.paramType(href=param.type.link)=param.type.shortName
+                &nbsp;
+                span.param=param.name
+                - if (i < method.params.length - 1)
+                    ,&nbsp;
+            &#41;
+        div.description!=method.description

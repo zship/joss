@@ -228,11 +228,13 @@ define(function(require) {
 			height: Math.round(curr.height) !== Math.round(next.height)
 		};
 
-		changed.width && el.css('width', Math.round(next.width));
-		changed.height && el.css('height', Math.round(next.height));
+		var styles = {};
 
-		if (!changed.top && !changed.left) {
-			return;
+		if (changed.width) {
+			styles['width'] = Math.round(next.width);
+		}
+		if (changed.height) {
+			styles['height'] = Math.round(next.height);
 		}
 
 		//adjust offsets for position: relative elements (still valid for position: absolute)
@@ -244,32 +246,42 @@ define(function(require) {
 			bottom: -1 * (curr.position.bottom + (next.offset.top - curr.offset.top))
 		};
 
-		if (curr.positioning === 'static') {
-			el.css('position', 'absolute');
-		}
-
 		if (changed.top) {
 			if (curr.precedence.y === 'bottom') {
-				el.css('bottom', Math.round(adjusted.bottom));
+				styles['bottom'] = Math.round(adjusted.bottom);
 				//if we're not depending on 'top' to set height, disable it
-				changed.height && el.css('top', 'auto');
+				if (changed.height) {
+					styles['top'] = 'auto';
+				}
 			}
 			else {
-				el.css('top', Math.round(adjusted.top));
-				changed.height && el.css('bottom', 'auto');
+				styles['top'] = Math.round(adjusted.top);
+				if (changed.height) {
+					styles['bottom'] = 'auto';
+				}
 			}
 		}
 
 		if (changed.left) {
 			if (curr.precedence.x === 'right') {
-				el.css('right', Math.round(adjusted.right));
-				changed.width && el.css('left', 'auto');
+				styles['right'] = Math.round(adjusted.right);
+				if (changed.width) {
+					styles['left'] = 'auto';
+				}
 			}
 			else {
-				el.css('left', Math.round(adjusted.left));
-				changed.width && el.css('right', 'auto');
+				styles['left'] = Math.round(adjusted.left);
+				if (changed.width) {
+					styles['right'] = 'auto';
+				}
 			}
 		}
+
+		if (curr.positioning === 'static' && (changed.top || changed.left)) {
+			styles['position'] = 'absolute';
+		}
+
+		Elements.setStyles(el[0], styles);
 
 	};
 

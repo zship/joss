@@ -19,7 +19,6 @@ module.exports = function(grunt) {
 			paths: {
 				'dojo/i18n': libdir + '/i18n',
 				'jquery': 'lib/jquery',
-				'jquery.curstyles': 'lib/jquery.curstyles',
 				'jquery.hashchange': 'lib/jquery.ba-hashchange',
 				'jquery.mousewheel': 'lib/jquery.mousewheel',
 				'jquery.event.drag': 'lib/jquery.event.drag-2.0',

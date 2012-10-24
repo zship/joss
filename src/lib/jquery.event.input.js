@@ -1,7 +1,7 @@
 /*
  * jQuery.event.input
  *
- * MIT license
+ * Zach Shipley | MIT license
  * www.opensource.org/licenses/mit-license.php
  */
 (function($) {

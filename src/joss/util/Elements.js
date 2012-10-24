@@ -13,7 +13,7 @@ define(function(require) {
 	// Used for matching numbers
 	var rNumber = /[\-+]?(?:\d*\.|)\d+(?:[eE][\-+]?\d+|)/.source;
 	// Number not ending in 'px'
-	var rNonPixelNumber = new RegExp( "^(" + rNumber + ")(?!px)[a-z%]+$", "i" );
+	var rNonPixelLengthValue = new RegExp( "^(" + rNumber + ")(?!px)[a-z%]+$", "i" );
 
 	var cssPxLength = {
 		"fillOpacity": true,
@@ -137,7 +137,7 @@ define(function(require) {
 				// Webkit bug: https://bugs.webkit.org/show_bug.cgi?id=29084
 				// getComputedStyle returns percent when specified for top/left/bottom/right
 				// rather than make the css module depend on the offset module, we just check for it here
-				if ( /^(top|left)$/.test(name) && rNonPixelNumber.test( val ) ) {
+				if ( /^(top|left)$/.test(name) && rNonPixelLengthValue.test( val ) ) {
 					val = $(el).position()[name];
 				}
 
@@ -145,7 +145,7 @@ define(function(require) {
 				// Chrome < 17 and Safari 5.0 uses 'computed value' instead of 'used value' for margin-right
 				// Safari 5.1.7 (at least) returns percentage for a larger set of values, but width seems to be reliably pixels
 				// this is against the CSSOM draft spec: http://dev.w3.org/csswg/cssom/#resolved-values
-				if ( /^margin/.test(name) && rNonPixelNumber.test( val ) ) {
+				if ( /^margin/.test(name) && rNonPixelLengthValue.test( val ) ) {
 					var width = el.style.width;
 					var minWidth = el.style.minWidth;
 					var maxWidth = el.style.maxWidth;
@@ -187,7 +187,7 @@ define(function(require) {
 				// but a number that has a weird ending, we need to convert it to pixels
 				// but not position css attributes, as those are proportional to the parent element instead
 				// and we can't measure the parent instead because it might trigger a 'stacking dolls' problem
-				if ( rNonPixelNumber.test(val) && !/^(top|right|bottom|left)$/.test(name) ) {
+				if ( rNonPixelLengthValue.test(val) && !/^(top|right|bottom|left)$/.test(name) ) {
 
 					// Remember the original values
 					var left = el.style.left;

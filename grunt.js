@@ -30,12 +30,19 @@ module.exports = function( grunt ) {
 			optimize: 'none',
 			baseUrl: 'src',
 			out: 'dist/joss.js',
-			//include all files under 'joss'
-			include: (function() {
-				return grunt.file.expandFiles('src/joss/**').map(function(path, i) {
-					return path.replace(/^src\//, '');
-				});
-			})()
+			//remove requirejs dependency from built package
+			standalone: true,
+			//String or Array of files for which to trace dependencies and build
+			include: 'joss/**',
+			//exclude files from the 'include' list. Useful to add specific
+			//exceptions to globbing.
+			exclude: [],
+			//exclude files and their dependencies from the *built* source
+			//Difference from 'exclude': files in 'excludeBuilt' will be
+			//excluded even if they are dependencies of files in 'include'
+			excludeBuilt: [],
+			//exclude files from the *built* source, but keep any dependencies of the files.
+			excludeShallow: []
 		},
 
 		doc: {

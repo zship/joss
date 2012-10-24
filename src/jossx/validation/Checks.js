@@ -6,6 +6,7 @@ define(function(require) {
 	var date = require('dojo/date/locale');
 
 
+
 	return {
 
 		isPresent: function(value) {

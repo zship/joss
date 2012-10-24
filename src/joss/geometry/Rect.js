@@ -6,6 +6,7 @@ define(function(require) {
 	var Position = require('./Position');
 
 
+
 	var Rect = declare(null, /** @lends joss.geometry.Rect.prototype */ {
 
 		/** 

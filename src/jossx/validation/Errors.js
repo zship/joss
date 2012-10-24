@@ -6,6 +6,7 @@ define(function(require) {
 	var ValidationError = require('./ValidationError');
 
 
+
 	var Errors = declare(null, {
 
 		constructor: function(opts) {

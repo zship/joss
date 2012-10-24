@@ -6,6 +6,7 @@ define(function(require) {
 	require('joss/util/Elements');
 
 
+
 	var ValidationError = declare(null, {
 
 		constructor: function(el, message, type) {

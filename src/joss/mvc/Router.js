@@ -4,9 +4,10 @@ define(function(require) {
 	var declare = require('dojo/_base/declare');
 	require('jquery.hashchange');
 
+
+
 	var routeMatcher = /^\/.*/;
 	var param = /\{([\w\d]+)\}/g;
-
 
 	return declare(null, {
 

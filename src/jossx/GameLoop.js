@@ -8,6 +8,8 @@ define(function(require) {
 	var declare = require('dojo/_base/declare');
 	var lang = require('dojo/_base/lang');
 
+
+
 	// requestAnimationFrame polyfill by Erik Möller
 	// fixes from Paul Irish and Tino Zijdel
 	(function () {

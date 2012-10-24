@@ -12,6 +12,7 @@ define(function(require) {
 	var lang = require('dojo/_base/lang');
 
 
+
 	var Position = declare(null, {
 		constructor: function(opts) {
 

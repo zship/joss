@@ -16,6 +16,7 @@ define(function(require) {
 	require('joss/geometry/DomRect');
 
 
+
 	return declare(null, {
 
 		constructor: function(opts) {

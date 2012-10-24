@@ -4,6 +4,7 @@ define(function(require) {
 	var Point = require('./Point');
 
 
+
 	var Line = declare(null, /** @lends joss.geometry.Line.prototype */ {
 		
 		/**

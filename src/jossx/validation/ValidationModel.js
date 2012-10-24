@@ -6,6 +6,7 @@ define(function(require) {
 	var Objects = require('joss/util/Objects');
 
 
+
 	var ValidationModel = declare(null, {
 
 		constructor: function() {

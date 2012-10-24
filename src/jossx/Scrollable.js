@@ -11,6 +11,7 @@ define(function(require) {
 	require('jquery.jgestures');
 
 
+
 	return declare(Controller, {
 
 		constructor: function() {

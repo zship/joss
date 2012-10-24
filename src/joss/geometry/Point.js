@@ -3,6 +3,7 @@ define(function(require) {
 	var declare = require('dojo/_base/declare');
 
 
+
 	var Point = declare(null, /** @lends joss.geometry.Point.prototype */ {
 
 		/** 

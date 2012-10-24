@@ -6,6 +6,8 @@ define(function(require) {
 	var $ = require('jquery');
 	var lang = require('dojo/_base/lang');
 
+
+
 	var Deferreds = {
 
 		//modified from the excellent jquery.waterfall plugin:

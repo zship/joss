@@ -3,8 +3,9 @@ define(function(require) {
 	var $ = require('jquery');
 	var declare = require('dojo/_base/declare');
 
-	var cache = [];
 
+
+	var cache = [];
 
 	return declare(null, {
 

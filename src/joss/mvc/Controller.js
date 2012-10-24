@@ -7,6 +7,7 @@ define(function(require) {
 	var Deferreds = require('joss/util/Deferreds');
 
 
+
 	$.fn.controller = function() {
 		return this.data("controller");
 	};

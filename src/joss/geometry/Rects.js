@@ -6,6 +6,7 @@ define(function(require) {
 	var Point = require('./Point');
 
 
+
 	var Rects = {
 
 		min: function(list, axis) {

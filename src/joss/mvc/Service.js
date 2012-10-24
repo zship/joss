@@ -6,6 +6,7 @@ define(function(require) {
 	var hub = require('dojo/topic');
 
 
+
 	return declare(null, {
 
 		constructor: function() {

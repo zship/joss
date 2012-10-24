@@ -15,6 +15,7 @@ define(function(require) {
 	var Elements = require('joss/util/Elements');
 
 
+
 	var DomRect = declare(Rect, {
 
 		constructor: function(opts) {

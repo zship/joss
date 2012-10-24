@@ -11,6 +11,7 @@ define(function(require) {
 	require('jquery.event.input');
 
 
+
 	return declare(Controller, {
 
 		constructor: function(opts) {

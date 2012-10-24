@@ -4,6 +4,7 @@ define(function(require) {
 	var declare = require('dojo/_base/declare');
 
 
+
 	return declare(null, {
 
 		constructor: function() {

@@ -7,6 +7,7 @@ define(function(require) {
 	var Point = require('joss/geometry/Point');
 
 
+
 	var scrollIsRelative = !($.browser.opera || $.browser.safari && $.browser.version < "532");
 
 	// Used for matching numbers

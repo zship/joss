@@ -42,25 +42,6 @@ module.exports = function(grunt) {
 	};
 
 
-	var classTpl;
-
-	var renderClass = function(graph, path, callback) {
-
-		if (!graph['methods']) {
-			_.all(graph, function(val, key) {
-				renderClass(val, path + '/' + key, callback);
-				return true;
-			});
-			return;
-		}
-
-		classTpl = classTpl || grunt.file.read(docdir + '/tpl/class.jade', 'utf-8');
-		var write = jade.compile(classTpl)({cl: graph, module: path.substring(1, path.length)});
-		callback(path, write);
-
-	};
-
-
 	var processJsDoc = function(json) {
 
 		//console.log(stdout);
@@ -161,19 +142,18 @@ module.exports = function(grunt) {
 		var graph = {};
 		db({kind: 'class'}).each(function(record) {
 
-			//var packageName = record.memberof;
-			//var className = record.name;
 			var classLongName = record.longname;
 
 			record.description = record.description || '';
 			record.description = md.parse(record.description);
-			setObject(classLongName + '.constructor', record, graph);
 
-			setObject(classLongName + '.members', {}, graph);
-			setObject(classLongName + '.methods', {}, graph);
+			graph[classLongName] = {};
+			graph[classLongName]['constructor'] = record;
+			graph[classLongName]['members'] = {};
+			graph[classLongName]['methods'] = {};
 
 			db({kind: 'member'}, {memberof: classLongName}).each(function(record) {
-				var member = setObject(classLongName + '.members.' + record.name, record, graph);
+				var member = graph[classLongName]['members'][record.name] = record;
 				member.type = typeMap[member.type.names[0]];
 
 				member.description = member.description || '';
@@ -182,15 +162,14 @@ module.exports = function(grunt) {
 
 			db({kind: 'function'}, {memberof: classLongName}).each(function(record) {
 				//console.log(JSON.stringify(record, null, 4));
-				var methodName = record.name;
-				var method = setObject(classLongName + '.methods.' + methodName, record, graph);
+				var method = graph[classLongName]['methods'][record.name] = record;
 
 				method.description = method.description || '';
 				method.description = md.parse(method.description);
 
 				method.params = method.params || [];
 
-				method.params.every(function(param, i) {
+				method.params.every(function(param) {
 					if (!param.type || !param.type.names) {
 						param.type = getType(null);
 						return true; //continue
@@ -216,31 +195,49 @@ module.exports = function(grunt) {
 	};
 
 
+	var classTpl;
 
-	grunt.registerTask('doc', 'Runs requirejs optimizer', function(mode) {
+	var renderClass = function(graph, path, callback) {
+
+		/*
+		 *if (!graph['methods']) {
+		 *    _.all(graph, function(val, key) {
+		 *        renderClass(val, path + '/' + key, callback);
+		 *        return true;
+		 *    });
+		 *    return;
+		 *}
+		 */
+
+		classTpl = classTpl || grunt.file.read(docdir + '/tpl/class.jade', 'utf-8');
+		var data = jade.compile(classTpl)({cl: graph, module: path});
+		callback(graph, path, data);
+
+	};
+
+	//idea: put a search box above class list that filters the class list
+
+
+	grunt.registerTask('doc', 'Runs requirejs optimizer', function() {
 		var config = grunt.config.get(this.name);
 		var done = this.async();
 
 		child.exec(libdir + '/jsdoc/jsdoc -X ' + config.path, {maxBuffer: 2000000}, function(error, stdout, stderr) {
 			var graph = processJsDoc(stdout);
 
-			renderClass(graph, '', function(path, data) {
-				/*
-				 *var backDir = path.substring(0, path.lastIndexOf('/'));
-				 *if (!grunt.file.expand(docdir + '/out/' + backDir)) {
-				 *    var fullPath = docdir + '/out/';
-				 *    backDir.split('/').forEach(function(part) {
-				 *        if (!part) {
-				 *            return true; //continue
-				 *        }
-				 *        fullPath += '/' + part;
-				 *        grunt.file.mkdir(fullPath);
-				 *    });
-				 *}
-				 */
-				var filePath = docdir + '/out' + path + '.html';
-				grunt.log.write('Writing documentation file ' + filePath + ' ...').ok();
-				grunt.file.write(filePath, data, 'utf-8');
+			_.each(graph, function(val, key) {
+				if (!key) {
+					return true; //continue
+				}
+
+				var path = key.replace(/\./g, '/');
+				console.log(path);
+				//console.log(val);
+				renderClass(val, path, function(graph, path, data) {
+					var filePath = docdir + '/out/' + path + '.html';
+					grunt.log.write('Writing documentation file ' + filePath + ' ...').ok();
+					grunt.file.write(filePath, data, 'utf-8');
+				});
 			});
 
 			done();

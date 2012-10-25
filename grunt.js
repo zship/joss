@@ -27,13 +27,11 @@ module.exports = function( grunt ) {
 		},
 
 		dist: {
-			optimize: 'none',
-			baseUrl: 'src',
 			out: 'dist/joss.js',
-			//remove requirejs dependency from built package
+			//remove requirejs dependency from built package (almond)
 			standalone: true,
 			//String or Array of files for which to trace dependencies and build
-			include: 'joss/**',
+			include: ['joss/geometry/**', 'joss/util/**', 'jossx/validation/**'],
 			//exclude files from the 'include' list. Useful to add specific
 			//exceptions to globbing.
 			exclude: [],

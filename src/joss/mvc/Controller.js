@@ -33,6 +33,7 @@ define(function(require) {
 
 
 		constructor: function(opts) {
+			//TODO: allow passing no element for the root, for off-screen rendering
 
 			if (opts && opts.constructor === $) {
 				this._root = opts;

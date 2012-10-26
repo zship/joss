@@ -20,21 +20,15 @@ define(function(require) {
 
 			opts = lang.mixin({
 				root: $('body'),
-				check: function(el, value, errors, model) {
-					//default: call a uniquely-named method on a class extending this one
-					self['validation:check'](el, value, errors, model);
-				},
-				add: function(el, added, errors) {
-					self['validation:add'](el, added, errors);
-				},
-				remove: function(el, removed, errors) {
-					self['validation:remove'](el, removed, errors);
-				}
+				check: null, //function(el, value, errors, model)
+				add: null, //function(el, added, errors)
+				remove: null //function(el, removed, errors)
 			}, opts);
 
-			this._onValidationCheck = opts.check;
-			this._onValidationAdd = opts.add;
-			this._onValidationRemove = opts.remove;
+			//if subclassing, allow callbacks to be defined as members of the subclass
+			this._onValidationCheck = opts.check || this['validation.check'];
+			this._onValidationAdd = opts.add || this['validation.add'];
+			this._onValidationRemove = opts.remove || this['validation.remove'];
 
 			this._validationQueue = {};
 			this._validationModel = new ValidationModel();
@@ -46,8 +40,6 @@ define(function(require) {
 					self._onValidationRemove(err.el(), err.clone(), self._validationErrors.clone());
 				}
 			});
-
-			//console.log(this);
 		
 		},
 
@@ -59,16 +51,6 @@ define(function(require) {
 			delete this._validationErrors;
 		
 		},
-
-
-		/*
-		 *start: function() {
-		 *    this._bindings.every(function(val) {
-		 *        console.log(val.selector, val.eventName);
-		 *        return true;
-		 *    });
-		 *},
-		 */
 
 
 		'input[type="password"], input[type="text"], textarea input': function(ev, tgt) {

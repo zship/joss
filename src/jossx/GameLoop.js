@@ -54,15 +54,18 @@ define(function(require) {
 		constructor: function(opts) {
 
 			opts = $.extend(true, {
-				logic: null, //function(prevState, t, dt) {},
-				interpolate: null, //function(prevState, currState, alpha) {}
-				draw: null, //function(state) {},
+				logic: null, //function(prevState, t, dt)
+				interpolate: null, //function(prevState, currState, alpha)
+				draw: null, //function(state)
 				dt: 1000/60
 			}, opts);
 
-			this._logicCallback = opts.logic;
-			this._interpolateCallback = opts.interpolate;
-			this._drawCallback = opts.draw;
+			this._interpolateCallbackDefined = !!opts.interpolate || this['gameloop.interpolate'];
+
+			//if subclassing, allow callbacks to be defined as members of the subclass
+			this._logicCallback = opts.logic || this['gameloop.logic'];
+			this._interpolateCallback = opts.interpolate || this['gameloop.interpolate'];
+			this._drawCallback = opts.draw || this['gameloop.draw'];
 			this._dt = opts.dt;
 
 			this._killed = false;
@@ -111,8 +114,8 @@ define(function(require) {
 
 				//reminder: mutating state in below callbacks will carry over
 				//into this._logicCallback's previousState arg
-				if (this._interpolateCallback && currentState && previousState) {
-					var state = this._interpolateCallback(previousState, currentState, accumulator / this._dt);
+				if (this._interpolateCallbackDefined && currentState && previousState) {
+					var state = this._interpolateCallback(previousState, currentState, accumulator/this._dt);
 					this._drawCallback(state);
 				}
 				//if interpolation is not being used, don't render partial time steps
@@ -130,6 +133,7 @@ define(function(require) {
 
 
 		stop: function() {
+			//set kill flag, wait for the current tick to finish
 			var deferred = $.Deferred();
 			this._killed = true;
 			var interval = window.setInterval(lang.hitch(this, function() {

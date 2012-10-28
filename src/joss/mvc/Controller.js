@@ -320,7 +320,7 @@ define(function(require) {
 					if (args.length) {
 						list.unshift(args);
 					}
-					return Deferreds.series.apply(this, list);
+					return Deferreds.waterfall.apply(this, list);
 				});
 			}));
 		}

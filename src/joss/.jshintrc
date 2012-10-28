@@ -3,7 +3,6 @@
 		"define": false
 	},
 
-	"es5":       true,
 	"browser":   true,
 	"devel":     true,
 

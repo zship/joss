@@ -4,7 +4,7 @@
 define(function(require) {
 
 	var $ = require('jquery');
-	var lang = require('dojo/_base/lang');
+	var Objects = require('joss/util/Objects');
 	var Collections = require('joss/util/Collections');
 
 
@@ -12,85 +12,29 @@ define(function(require) {
 	var Deferreds = {};
 
 
-	//modified from the excellent jquery.waterfall plugin:
-	//https://github.com/dio-el-claire/jquery.waterfall
-	//Runs all passed functions in order, passing results to the next
-	//function in the series. Returns $.Deferred object.
-	Deferreds.series = function() {
-		var steps = [],
-		dfrd = $.Deferred(),
-		pointer = 0;
-
-		var args = [].slice.apply(arguments);
-		if (args.length === 1 && args[0].length) {
-			args = args[0];
-		}
-
-		$.each(args, lang.hitch(this, function(i, a) {
-			steps.push(lang.hitch(this, function() {
-				var args = [].slice.apply(arguments), d;
-
-				if (typeof(a) === 'function') {
-					d = a.apply(this, args);
-					if (!(d && d.promise)) {
-						d = $.Deferred()[d === false ? 'reject' : 'resolve'](d);
-					}
-				} else if (a && a.promise) {
-					d = a;
-				} else {
-					d = $.Deferred()[a === false ? 'reject' : 'resolve'](a);
-				}
-
-				d.fail(function() {
-					dfrd.reject.apply(dfrd, [].slice.apply(arguments));
-				})
-				.done(lang.hitch(this, function(data) {
-					pointer++;
-					args.push(data);
-
-					if (pointer === steps.length) {
-						dfrd.resolve.apply(dfrd, args);
-					}
-					else {
-						steps[pointer].apply(this, args);
-					}
-				}));
-			}));
-		}));
-
-		if (steps.length) {
-			steps[0]();
-		}
-		else {
-			dfrd.resolve();
-		}
-
-		return dfrd;
-	};
-
-
-	Deferreds.parallel = function() {
-		return $.when.apply(this, arguments);
-	};
-
-
-	Deferreds.each = function(arr, iterator) {
+	/**
+	 * Invoke **iterator** once for each function in **arr**.
+	 * @param {Array|Object} list
+	 * @param {Function} iterator
+	 * @return {jQuery.Deferred}
+	 */
+	Deferreds.forEach = function(list, iterator) {
 
 		var superDeferred = $.Deferred();
 
-		if (!arr.length) {
+		if (!Collections.size(list)) {
 			superDeferred.reject();
 		}
 
 		var completed = 0;
-		Collections.each(arr, function(item, key) {
+		Collections.forEach(list, function(item, key) {
 			iterator(item, key)
-			.fail(function(err) {
-				superDeferred.reject(err);
+			.fail(function() {
+				superDeferred.reject();
 			})
 			.done(function() {
 				completed++;
-				if (completed === arr.length) {
+				if (completed === Collections.size(list)) {
 					superDeferred.resolve();
 				}
 			});
@@ -101,23 +45,47 @@ define(function(require) {
 	};
 
 
-	Deferreds.eachSeries = function(arr, iterator) {
+	/**
+	 * Version of Deferreds#forEach which is guaranteed to execute passed
+	 * functions in order.
+	 * @param {Array|Object} list
+	 * @param {Function} iterator
+	 * @return {jQuery.Deferred}
+	 */
+	Deferreds.forEachSeries = function(list, iterator) {
 
 		var superDeferred = $.Deferred();
 
-		if (!arr.length) {
+		if (!Collections.size(list)) {
 			superDeferred.reject();
 		}
 
 		var completed = 0;
+		var keys;
+		if (!Objects.isArray(list)) {
+			keys = Objects.keys(list);
+		}
+
 		var iterate = function() {
-			iterator(arr[completed])
-			.fail(function(err) {
-				superDeferred.reject(err);
+			var item;
+			var key;
+
+			if (Objects.isArray(list)) {
+				key = completed;
+				item = list[key];
+			}
+			else {
+				key = keys[completed];
+				item = list[key];
+			}
+
+			iterator(item, key)
+			.fail(function() {
+				superDeferred.reject();
 			})
 			.done(function() {
 				completed += 1;
-				if (completed === arr.length) {
+				if (completed === Collections.size(list)) {
 					superDeferred.resolve();
 				}
 				else {
@@ -133,17 +101,17 @@ define(function(require) {
 
 
 	var doParallel = function(fn) {
-		return function () {
-			var args = Array.prototype.slice.call(arguments);
-			return fn.apply(null, [Deferreds.each].concat(args));
+		return function() {
+			var args = Collections.toArray(arguments);
+			return fn.apply(null, [Deferreds.forEach].concat(args));
 		};
 	};
 
 
 	var doSeries = function(fn) {
-		return function () {
-			var args = Array.prototype.slice.call(arguments);
-			return fn.apply(null, [Deferreds.eachSeries].concat(args));
+		return function() {
+			var args = Collections.toArray(arguments);
+			return fn.apply(null, [Deferreds.forEachSeries].concat(args));
 		};
 	};
 
@@ -186,12 +154,11 @@ define(function(require) {
 
 		var superDeferred = $.Deferred();
 
-		Deferreds.eachSeries(arr, function(item, key) {
-			return iterator(memo, item, key, arr)
-			.fail(function(val) {
-				memo = val;
-				superDeferred.reject(memo);
-			});
+		Deferreds.everySeries(arr, function(item, key) {
+			return iterator(memo, item, key, arr);
+		})
+		.fail(function() {
+			superDeferred.reject();
 		})
 		.done(function() {
 			superDeferred.resolve(memo);
@@ -202,19 +169,13 @@ define(function(require) {
 	};
 
 
-	Deferreds.inject = Deferreds.reduce;
-	Deferreds.foldl = Deferreds.reduce;
-
-
-	Deferreds.reduceRight = function(arr, memo, deferred) {
+	Deferreds.reduceRight = function(arr, memo, iterator) {
 		var reversed = Collections.map(arr, function(val, i) {
 			return {index: i, value: val};
 		}).reverse();
-		return Deferreds.reduce(reversed, memo, deferred);
+		reversed = Collections.pluck(reversed, 'value');
+		return Deferreds.reduce(reversed, memo, iterator);
 	};
-
-
-	Deferreds.foldr = Deferreds.reduceRight;
 
 
 	/**
@@ -225,7 +186,7 @@ define(function(require) {
 		var superDeferred = $.Deferred();
 		var results = [];
 
-		arr = Collections.map(arr, function(val, i) {
+		arr = Collections.map(function(val, i) {
 			return {index: i, value: val};
 		});
 
@@ -242,9 +203,7 @@ define(function(require) {
 			results = results.sort(function(a, b) {
 				return a.index - b.index;
 			});
-			results = Collections.map(results, function(item) {
-				return item.value;
-			});
+			results = Collections.pluck(results, 'value');
 			superDeferred.resolve(results);
 		});
 
@@ -255,8 +214,6 @@ define(function(require) {
 
 	Deferreds.filter = doParallel(_filter);
 	Deferreds.filterSeries = doSeries(_filter);
-	Deferreds.select = Deferreds.filter;
-	Deferreds.selectSeries = Deferreds.filterSeries;
 
 
 	var _reject = function(eachfn, arr, iterator) {
@@ -274,13 +231,14 @@ define(function(require) {
 				results.push(item);
 			});
 		})
+		.fail(function() {
+			superDeferred.reject();
+		})
 		.done(function() {
 			results = results.sort(function(a, b) {
 				return a.index - b.index;
 			});
-			results = Collections.map(results, function(item) {
-				return item.value;
-			});
+			results = Collections.pluck(results, 'value');
 			superDeferred.resolve(results);
 		});
 
@@ -292,7 +250,7 @@ define(function(require) {
 	Deferreds.rejectSeries = doSeries(_reject);
 
 
-	var _detect = function(eachfn, arr, iterator) {
+	var _find = function(eachfn, arr, iterator) {
 
 		var superDeferred = $.Deferred();
 
@@ -314,17 +272,15 @@ define(function(require) {
 	};
 
 
-	Deferreds.detect = doParallel(_detect);
-	Deferreds.detectSeries = doSeries(_detect);
-	Deferreds.find = Deferreds.detect;
-	Deferreds.findSeries = Deferreds.detectSeries;
+	Deferreds.find = doParallel(_find);
+	Deferreds.findSeries = doSeries(_find);
 
 
 	Deferreds.some = function(arr, iterator) {
 
 		var superDeferred = $.Deferred();
 
-		Deferreds.each(arr, function(item) {
+		Deferreds.forEach(arr, function(item) {
 			return iterator(item)
 			.done(function() {
 				superDeferred.resolve();
@@ -332,28 +288,6 @@ define(function(require) {
 		})
 		.fail(function() {
 			superDeferred.reject();
-		})
-		.done(function() {
-			superDeferred.reject();
-		});
-
-		return superDeferred;
-
-	};
-
-
-	Deferreds.any = Deferreds.some;
-
-
-	Deferreds.every = function(arr, iterator) {
-
-		var superDeferred = $.Deferred();
-
-		Deferreds.each(arr, function(item) {
-			return iterator(item)
-				.fail(function() {
-					superDeferred.reject();
-				});
 		})
 		.done(function() {
 			superDeferred.resolve();
@@ -364,7 +298,218 @@ define(function(require) {
 	};
 
 
-	Deferreds.all = Deferreds.every;
+	Deferreds.every = function(arr, iterator) {
+
+		var superDeferred = $.Deferred();
+
+		Deferreds.forEach(arr, function(item) {
+			return iterator(item)
+			.fail(function() {
+				superDeferred.reject();
+			});
+		})
+		.fail(function() {
+			superDeferred.reject();
+		})
+		.done(function() {
+			superDeferred.resolve();
+		});
+
+		return superDeferred;
+
+	};
+
+
+	var _isDeferredObject = function(obj) {
+		return obj && obj.promise;
+	};
+
+
+	Deferreds.anyToDeferred = function(obj) {
+		//any arguments after obj will be passed to obj(), if obj is a function
+		var args = Array.prototype.slice.call(arguments, 1);
+		if (_isDeferredObject(obj)) {
+			return obj;
+		}
+		else if (Objects.isFunction(obj)) {
+			var result = obj.apply(obj, args);
+			if (!_isDeferredObject(result)) {
+				return $.Deferred().resolve(result);
+			}
+			return result;
+		}
+		else {
+			return $.Deferred().resolve(obj);
+		}
+	};
+
+
+	Deferreds.parallel = function(tasks) {
+
+		var superDeferred = $.Deferred();
+
+		if (Objects.isArray(tasks)) {
+			Deferreds.map(tasks, function(task) {
+				return Deferreds.anyToDeferred(task);
+			})
+			.fail(function() {
+				superDeferred.reject();
+			})
+			.done(function(results) {
+				superDeferred.resolve(results);
+			});
+		}
+		else {
+			var results = {};
+			Deferreds.forEach(tasks, function(task, key) {
+				var deferred = Deferreds.anyToDeferred(task);
+				return deferred.done(function(result) {
+					results[key] = result;
+				});
+			})
+			.fail(function() {
+				superDeferred.reject();
+			})
+			.done(function() {
+				superDeferred.resolve(results);
+			});
+		}
+
+		return superDeferred;
+
+	};
+
+
+	Deferreds.series = function(tasks) {
+
+		var superDeferred = $.Deferred();
+
+		if (Objects.isArray(tasks)) {
+			Deferreds.mapSeries(tasks, function(task) {
+				return Deferreds.anyToDeferred(task);
+			})
+			.fail(function() {
+				superDeferred.reject();
+			})
+			.done(function(result) {
+				superDeferred.resolve(result);
+			});
+		}
+		else {
+			var results = {};
+			Deferreds.forEachSeries(tasks, function(task, key) {
+				var deferred = Deferreds.anyToDeferred(task);
+				return deferred.done(function(result) {
+					results[key] = result;
+				});
+			})
+			.fail(function() {
+				superDeferred.reject();
+			})
+			.done(function() {
+				superDeferred.resolve(results);
+			});
+		}
+
+		return superDeferred;
+
+	};
+
+
+	Deferreds.waterfall = function(tasks) {
+
+		var superDeferred = $.Deferred();
+
+		if (!Collections.size(tasks)) {
+			superDeferred.reject();
+		}
+
+
+		var completed = 0;
+		var keys;
+		if (!Objects.isArray(tasks)) {
+			keys = Objects.keys(tasks);
+		}
+
+		var iterate = function() {
+			var args = Collections.toArray(arguments);
+			var task;
+			var key;
+
+			if (Objects.isArray(tasks)) {
+				key = completed;
+				task = tasks[key];
+			}
+			else {
+				key = keys[completed];
+				task = tasks[key];
+			}
+
+			Deferreds.anyToDeferred(args.unshift(task))
+			.fail(function(err) {
+				superDeferred.reject(key, err);
+			})
+			.done(function(result) {
+				completed += 1;
+				if (completed === Collections.size(tasks)) {
+					superDeferred.resolve(result);
+				}
+				else {
+					iterate(result);
+				}
+			});
+		};
+
+		iterate();
+
+		return superDeferred;
+
+	};
+
+
+	Deferreds.whilst = function(test, iterator) {
+
+		var superDeferred = $.Deferred();
+
+		if (test()) {
+			iterator()
+			.fail(function(err) {
+				superDeferred.reject(err);
+			})
+			.done(function() {
+				Deferreds.whilst(test, iterator);
+			});
+		}
+		else {
+			superDeferred.resolve();
+		}
+
+		return superDeferred;
+
+	};
+
+
+	Deferreds.until = function(test, iterator) {
+
+		var superDeferred = $.Deferred();
+
+		if (!test()) {
+			iterator()
+			.fail(function(err) {
+				superDeferred.reject(err);
+			})
+			.done(function() {
+				Deferreds.until(test, iterator);
+			});
+		}
+		else {
+			superDeferred.resolve();
+		}
+
+		return superDeferred;
+
+	};
+
 
 
 	return Deferreds;

@@ -32,6 +32,7 @@ module.exports = function( grunt ) {
 			standalone: true,
 			//String or Array of files for which to trace dependencies and build
 			include: ['joss/geometry/**', 'joss/util/**', 'jossx/validation/**'],
+			//include: ['joss/**', 'jossx/**'],
 			//exclude files from the 'include' list. Useful to add specific
 			//exceptions to globbing.
 			exclude: [],

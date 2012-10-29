@@ -4,6 +4,11 @@ module.exports = {
 
 	optimize: 'none',
 
+	packages: [
+		{ name: 'dojo', location: 'lib/dojo' },
+		{ name: 'jade', location: 'lib/jade' }
+	],
+
 	paths: {
 		//dojo's i18n module doesn't build with r.js (errors out)
 		'dojo/i18n': '../dist/lib/i18n-patched',

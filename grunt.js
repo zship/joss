@@ -44,8 +44,8 @@ module.exports = function( grunt ) {
 		},
 
 		doc: {
-			//path: 'src/joss/geometry/Rect.js'
-			path: 'src/joss/mvc/Controller.js'
+			path: 'src/joss/geometry/Rect.js'
+			//path: 'src/joss/mvc/Controller.js'
 		},
 
 		min: {

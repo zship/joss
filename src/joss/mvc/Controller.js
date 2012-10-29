@@ -31,28 +31,27 @@ define(function(require) {
 
 		/**
 		 * @class Controller
-		 * @param {Object} opts
+		 * @param {Object|jQuery|Element} opts
 		 * @constructs
 		 */
 		constructor: function(opts) {
 
-			if (!opts) {
-				//useful for off-screen rendering
-				this.root = $('<div></div>');
-			}
 			if (opts && opts.constructor === $) {
 				this.root = opts;
 			}
 			else {
 				opts = lang.mixin({
-					root: $('body'),
-					view: null
+					root: null
 				}, opts);
+
+				//useful for off-screen rendering
+				if (!opts.root) {
+					opts.root = $('<div></div>');
+				}
 
 				this.root = opts.root;
 			}
 
-			this.$root = $(this.root);
 
 			this._bindings = {};
 			//store a reference to the controller in the root element
@@ -68,7 +67,7 @@ define(function(require) {
 		 */
 		destroy: function() {
 			this.stop().then(lang.hitch(this, function() {
-				this.root().empty();
+				this.root.empty();
 			}));
 		},
 
@@ -97,7 +96,7 @@ define(function(require) {
 		 * @return {joss.mvc.Controller} this
 		 */
 		html: function(val) {
-			this.root().empty().append(val);
+			this.root.empty().append(val);
 			return this;
 		},
 
@@ -169,7 +168,7 @@ define(function(require) {
 				});
 
 				//allow binding to object references or elements outside of
-				//this.root()
+				//this.root
 				if ((match = selector.match(rSpecialEvent)) !== null) {
 					var target = match[1];
 					var subSelector = match[2];
@@ -188,7 +187,7 @@ define(function(require) {
 						obj = lang.getObject(target);
 					}
 					//bind to a selector string, but make it the delegation
-					//target instead of this.root()
+					//target instead of this.root
 					else {
 						obj = target;
 					}
@@ -225,7 +224,7 @@ define(function(require) {
 					return true; //continue
 				}
 
-				//for everything else, use event delegation with this.root() as
+				//for everything else, use event delegation with this.root as
 				//the delegation target for performance and versatility
 				this.root.on(eventName, selector, eventData[key], handler);
 
@@ -272,7 +271,7 @@ define(function(require) {
 		 */
 		rebind: function() {
 			//only unbind events that could possibly have become detached:
-			//those outside this.root() or bound without delegation
+			//those outside this.root or bound without delegation
 			var toDelete = [];
 			$.each(this._bindings, function(key, binding) {
 				if (binding.type === 'bind') {

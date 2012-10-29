@@ -28,6 +28,7 @@ define(function(require) {
 
 		if (!Collections.size(list)) {
 			superDeferred.reject();
+			return superDeferred;
 		}
 
 		var completed = 0;
@@ -62,6 +63,7 @@ define(function(require) {
 
 		if (!Collections.size(list)) {
 			superDeferred.reject();
+			return superDeferred;
 		}
 
 		var completed = 0;
@@ -352,6 +354,10 @@ define(function(require) {
 
 		var superDeferred = $.Deferred();
 
+		if (arguments.length > 1) {
+			tasks = Collections.toArray(arguments);
+		}
+
 		if (Objects.isArray(tasks)) {
 			Deferreds.map(tasks, function(task) {
 				return Deferreds.anyToDeferred(task);
@@ -387,6 +393,10 @@ define(function(require) {
 	Deferreds.series = function(tasks) {
 
 		var superDeferred = $.Deferred();
+
+		if (arguments.length > 1) {
+			tasks = Collections.toArray(arguments);
+		}
 
 		if (Objects.isArray(tasks)) {
 			Deferreds.mapSeries(tasks, function(task) {
@@ -424,10 +434,14 @@ define(function(require) {
 
 		var superDeferred = $.Deferred();
 
-		if (!Collections.size(tasks)) {
-			superDeferred.reject();
+		if (arguments.length > 1) {
+			tasks = Collections.toArray(arguments);
 		}
 
+		if (!Collections.size(tasks)) {
+			superDeferred.reject();
+			return superDeferred;
+		}
 
 		var completed = 0;
 		var keys;
@@ -449,7 +463,9 @@ define(function(require) {
 				task = tasks[key];
 			}
 
-			Deferreds.anyToDeferred(args.unshift(task))
+			args.unshift(task);
+
+			Deferreds.anyToDeferred.apply(this, args)
 			.fail(function(err) {
 				superDeferred.reject(key, err);
 			})

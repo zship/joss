@@ -36,7 +36,7 @@ define(function(require) {
 		}
 		else {
 			for (var key in list) {
-				if (Collections.has(list, key)) {
+				if (Objects.has(list, key)) {
 					iterator.call(context, list[key], key, list);
 				}
 			}

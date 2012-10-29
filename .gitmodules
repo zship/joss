@@ -7,3 +7,6 @@
 [submodule "src/lib/jade"]
 	path = src/lib/jade
 	url = https://github.com/visionmedia/jade
+[submodule "src/lib/amd-utils"]
+	path = src/lib/amd-utils
+	url = git://github.com/millermedeiros/amd-utils.git

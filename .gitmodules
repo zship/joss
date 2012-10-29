@@ -1,9 +1,9 @@
-[submodule "src/jade"]
-	path = src/jade
-	url = https://github.com/visionmedia/jade
 [submodule "doc/lib/jsdoc"]
 	path = doc/lib/jsdoc
 	url = https://github.com/jsdoc3/jsdoc
 [submodule "src/lib/dojo"]
 	path = src/lib/dojo
 	url = https://github.com/dojo/dojo
+[submodule "src/lib/jade"]
+	path = src/lib/jade
+	url = https://github.com/visionmedia/jade

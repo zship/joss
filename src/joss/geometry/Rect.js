@@ -7,14 +7,13 @@ define(function(require) {
 
 
 
+	//Describes a rectangle in two-dimensional Euclidian space and provides
+	//methods for manipulating it.
 	var Rect = declare(null, /** @lends joss.geometry.Rect.prototype */ {
 
-		/** 
-		 * Describes a rectangle and provides methods for manipulating it.
-		 * Inspired by the Qt library's [QRect](http://doc.qt.digia.com/4.7-snapshot/qrect.html) class.
-		 *
+		/**
 		 * @class Rect
-		 * @param {Object.<String, Number>} opts - the coordinates of the rectangle.
+		 * @param {Object} opts : the coordinates of the rectangle.
 		 * four of these properties are required: any four that
 		 * can logically be used to construct a rectangle.
 		 * @constructs
@@ -81,7 +80,7 @@ define(function(require) {
 		/**
 		 * Moves the rectangle vertically, leaving the rectangle's bottom edge
 		 * at the given y coordinate. The rectangle's size is unchanged.
-		 * @param {Number} y
+		 * @param {Number|String} [y]
 		 * @return {joss.geometry.Rect}
 		 */
 		moveBottom: function(y) {

@@ -44,16 +44,3 @@ define(function(require) {
  * block in most of the joss geometry classes.
  */
 
-
-/**
- * @name joss.geometry.Point#translate
- * @description
- * test
- * test
- *
- *     var code = 'test';
- *     est;
- *
- * **test**
- */
-

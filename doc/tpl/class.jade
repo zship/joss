@@ -1,34 +1,73 @@
 h2=module
-div.description!=cl.constructor.description
 
-each member in cl.members
-    div.member
+- if (cl.module)
+    div.description!=cl.module.description
+
+- if (cl.constructor && cl.constructor.kind === 'class')
+    h3 Constructor
+    div.constructor
         h4
-            - if (member.type.link)
-                a.type(href=member.type.link)=member.type.shortName
-            - else
-                span.type=member.type.shortName
-            &nbsp;
-            span.name=member.name
-        div.description!=member.description
+            span.name=cl.constructor.name
+            span.params
+                span.paren &#40;
+                each param, i in cl.constructor.params
+                    - if (param.optional)
+                        span.opt [
+                    - if (i !== 0)
+                        span.sep=','
+                    each type, j in param.types
+                        a.paramType(href=type.link, rel=type.longName)=type.name
+                        - if (j < param.types.length - 1)
+                            span.or='|'
+                    &nbsp;
+                    span.param=param.name
+                    - if (param.optional)
+                        span.opt ]
+                span.paren &#41;
+        div.description!=cl.constructor.description
 
+- if (cl.properties && Object.keys(cl.properties).length)
+    h3 Properties
+    each prop in cl.properties
+        a(class='permalink', href='#', rel=prop.longName, alt='Permalink to ' + prop.longName, title='Permalink to ' + prop.longName) #
+        div.property
+            h4
+                span.returns
+                    each type, j in prop.types
+                        a.returnType(href=type.link, rel=type.longName)=type.name
+                        - if (j < prop.types.length - 1)
+                            span.or='|'
+                &nbsp;
+                span.name=prop.name
+            div.description!=prop.description
+
+h3 Methods
 each method in cl.methods
     //-- console.log(JSON.stringify(method, null, 4))
     div.method
-        a(class='permalink', href='#'+method.name, alt='Permalink to '+module+'#'+method.name, title='Permalink to '+module+'#'+method.name) #
+        a(class='permalink', href='#', rel=method.longName, alt='Permalink to ' + method.longName, title='Permalink to ' + method.longName) #
         h4(id=method.name)
-            - if (method.returns.link)
-                a.returns(href=method.returns.link)=method.returns.shortName
-            - else
-                span.returns=method.returns.shortName
-            &nbsp;
-            span.name=method.name
-            &#40;
-            each param, i in method.params
-                a.paramType(href=param.type.link)=param.type.shortName
+            span.returns
+                each type, j in method.returns.types
+                    a.returnType(href=type.link, rel=type.longName)=type.name
+                    - if (j < method.returns.types.length - 1)
+                        span.or='|'
                 &nbsp;
-                span.param=param.name
-                - if (i < method.params.length - 1)
-                    ,&nbsp;
-            &#41;
+            span.name=method.name
+            span.params
+                span.paren &#40;
+                each param, i in method.params
+                    - if (param.optional)
+                        span.opt [
+                    - if (i !== 0)
+                        span.sep=','
+                    each type, j in param.types
+                        a.paramType(href=type.link, type.longName)=type.name
+                        - if (j < param.types.length - 1)
+                            span.or='|'
+                    &nbsp;
+                    span.param=param.name
+                    - if (param.optional)
+                        span.opt ]
+                span.paren &#41;
         div.description!=method.description

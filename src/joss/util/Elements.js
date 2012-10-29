@@ -8,18 +8,19 @@ define(function(require) {
 
 
 
+	/**
+	 * @namespace
+	 * @alias joss.util.Elements
+	 */
 	var Elements = {};
 
 
 	/**
-	 * Return a unique ID for a DOM Element,
-	 * regardless of the presence of an id attribute.
-	 * Uses the jQuery expando property which is set on elements when using
-	 * the data() method, something like jQuery239847923 = ID.
-	 * This is easy enough to code ourselves, but piggybacking on jQuery
-	 * means the 'id' is more likely to already be set.
+	 * Return a unique ID for a DOM Element, regardless of the presence of an
+	 * id attribute.
 	 *
-	 * @param {HTMLElement} el
+	 * @param {Element} el
+	 * @return {Number}
 	 */
 	Elements.hash = function(el) {
 
@@ -42,6 +43,7 @@ define(function(require) {
 	 * Returns a DOM element lying at a point
 	 *
 	 * @param {Point} p
+	 * @return {Element}
 	 */
 	Elements.fromPoint = function(x, y) {
 
@@ -70,15 +72,9 @@ define(function(require) {
 
 
 	/**
-	 * Performant way to get multiple CSS styles all at once, inspired by
-	 * jQuery.curstyles plugin and mostly based on jQuery 1.8.2's curCSS +
-	 * cssHooks. Performs no normalization of property names, so for
-	 * example 'border-top-width' must be passed as 'borderTopWidth'.
-	 * 'float' is the exception, as the property name is browser-specific
-	 * ('cssFloat' or 'styleFloat'). **Returned values**, however, are normalized
-	 * cross-browser (with most of that code coming directly from jQuery).
+	 * Performant way to get multiple CSS styles all at once. 
 	 *
-	 * @param {HTMLElement} el
+	 * @param {Element} el
 	 * @param {Array} styles : Style names
 	 * @return {Object} : Map of style name -> CSS 'used' value
 	 */
@@ -217,13 +213,9 @@ define(function(require) {
 
 
 	/**
-	 * Performant way to set multiple CSS styles all at once. The
-	 * disadvantage compared to $.css is that it doesn't perform
-	 * any normalization for properties. As with $.css, try to avoid browser
-	 * repaints when calling this method in a loop. More on that here:
-	 * http://calendar.perfplanet.com/2009/rendering-repaint-reflow-relayout-restyle/
+	 * Performant way to set multiple CSS styles all at once.
 	 *
-	 * @param {HTMLElement} el
+	 * @param {Element} el
 	 * @param {Object} styles : Map of style names to style values
 	 */
 	Elements.setStyles = function(el, styles) {
@@ -246,9 +238,9 @@ define(function(require) {
 
 
 	/**
-	 * Performant way to get all dimensions of a DOM element
+	 * Performant way to accurately get all dimensions of a DOM element.
 	 *
-	 * @param {HTMLElement} el
+	 * @param {Element} el
 	 */
 	Elements.getDimensions = function(el) {
 

@@ -8,10 +8,6 @@ define(function(require) {
 
 
 
-	$.fn.controller = function() {
-		return this.data('controller');
-	};
-
 	//object:create
 	var rPubsub = /^\S*:\S*$/;
 	//input[type="text"] click
@@ -24,7 +20,8 @@ define(function(require) {
 	//body > #container > div.child keyup _data
 	var rEventData = /^(.*\s[a-z]*?)\s*_data/;
 
-	return declare(null, {
+
+	var Controller = declare(null, /** @lends joss.mvc.Controller.prototype */ {
 
 		'-chains-': {
 			destroy: 'before',
@@ -32,11 +29,19 @@ define(function(require) {
 		},
 
 
+		/**
+		 * @class Controller
+		 * @param {Object} opts
+		 * @constructs
+		 */
 		constructor: function(opts) {
-			//TODO: allow passing no element for the root, for off-screen rendering
 
+			if (!opts) {
+				//useful for off-screen rendering
+				this.root = $('<div></div>');
+			}
 			if (opts && opts.constructor === $) {
-				this._root = opts;
+				this.root = opts;
 			}
 			else {
 				opts = lang.mixin({
@@ -44,19 +49,23 @@ define(function(require) {
 					view: null
 				}, opts);
 
-				this._root = opts.root;
-				this._view = opts.view;
+				this.root = opts.root;
 			}
 
-			this._bindings = {};
+			this.$root = $(this.root);
 
+			this._bindings = {};
 			//store a reference to the controller in the root element
-			this._root.data('controller', this);
+			this.root.data('controller', this);
 			this._chainLifecycleMethods();
 
 		},
 
 
+		/**
+		 * Call joss.mvc.Controller#stop and then remove the Controller's
+		 * root element.
+		 */
 		destroy: function() {
 			this.stop().then(lang.hitch(this, function() {
 				this.root().empty();
@@ -64,23 +73,26 @@ define(function(require) {
 		},
 
 
+		/**
+		 * Lifecycle method. Calls are automatically chained in order from
+		 * superclass (joss.mvc.Controller) to subclass (your controller).
+		 */
 		start: function() {
 			this.bind();
 		},
 
 
+		/**
+		 * Lifecycle method. Calls are automatically chained in order from
+		 * subclass (your controller) to superclass (joss.mvc.Controller).
+		 */
 		stop: function() {
 			this.unbind();
 		},
 
 
-		root: function() {
-			return this._root;
-		},
-
-
 		/**
-		 * Replace the inner HTML of this.root() with **val**
+		 * Replace the inner HTML of `this.root` with **val**
 		 * @param {String} val
 		 * @return {joss.mvc.Controller} this
 		 */
@@ -92,7 +104,8 @@ define(function(require) {
 
 		/**
 		 * Handle methods matching particular patterns as events.  This allows
-		 * us to guarantee proper unbinding.
+		 * us to guarantee proper unbinding when joss.mvc.Controller#stop is
+		 * called.
 		 * @return {joss.mvc.Controller} this
 		 */
 		bind: function() {
@@ -110,24 +123,6 @@ define(function(require) {
 				eventData[lang.trim(match[1])] = data;
 			
 			}));
-
-			//console.log(eventData);
-
-			//var methodList = {};
-
-			//pre-run to process comma-separated bindings
-			/*
-			 *$.each(this, function(key, method) {
-			 *    if (key.search(/,/) !== -1) {
-			 *        $.each(key.split(','), function(i, subkey) {
-			 *            methodList[lang.trim(subkey)] = method;
-			 *        });
-			 *    }
-			 *    else {
-			 *        methodList[key] = method;
-			 *    }
-			 *});
-			 */
 
 			//loop through this controller's methods, looking for keys that
 			//match the patterns defined at the top of this file
@@ -182,7 +177,7 @@ define(function(require) {
 
 					//special case: binding to this controller's root element
 					if (target === 'root') {
-						obj = this._root[0];
+						obj = this.root[0];
 					}
 					//bind to a property of this controller
 					else if (lang.getObject(target, false, this)) {
@@ -232,11 +227,11 @@ define(function(require) {
 
 				//for everything else, use event delegation with this.root() as
 				//the delegation target for performance and versatility
-				this._root.on(eventName, selector, eventData[key], handler);
+				this.root.on(eventName, selector, eventData[key], handler);
 
 				this._bindings[key] = {
 					type: 'delegate',
-					root: this._root,
+					root: this.root,
 					selector: selector,
 					eventName: eventName,
 					handler: handler
@@ -249,6 +244,10 @@ define(function(require) {
 		},
 
 
+		/**
+		 * Unbind all events previously bound with joss.mvc.Controller#bind.
+		 * @return {joss.mvc.Controller} this
+		 */
 		unbind: function() {
 			$.each(this._bindings, function(key, binding) {
 				if (binding.type === 'pubsub') {
@@ -266,6 +265,11 @@ define(function(require) {
 		},
 
 
+		/**
+		 * Re-bind only those events which do not delegate to this Controller's
+		 * root element (as their delegation targets may have changed).
+		 * @return {joss.mvc.Controller} this
+		 */
 		rebind: function() {
 			//only unbind events that could possibly have become detached:
 			//those outside this.root() or bound without delegation
@@ -287,7 +291,8 @@ define(function(require) {
 		},
 
 
-		//like dojo's -chains-, but with (potential) deferred objects
+		//perform special chaining which can wait for Deferred objects in the
+		//chain to complete
 		_chainLifecycleMethods: function() {
 			var chains = {
 				'start': 'after',
@@ -327,5 +332,12 @@ define(function(require) {
 	
 	});
 
+
+	$.fn.controller = function() {
+		return this.data('controller');
+	};
+
+
+	return Controller;
 
 });

@@ -7,14 +7,20 @@ define(function(require) {
 
 
 
+	/**
+	 * @namespace
+	 * @alias joss.util.Forms
+	 */
 	var Forms = {};
 	
-	//modified from the jQuery form library (http://jquery.malsup.com/form/)
-	//grab the value of any form input, as it would be submitted to the server
-	//_getVal differs from $.fn.val() in that it works with <select> and radio buttons
+
 	/**
+	 * Get the value of any form input, as it would be submitted to the server.
+	 * Pass **val** to set the form input.
+	 *
 	 * @param {Object|jQuery|Element} el
-	 * @param {String} val
+	 * @param {String} [val]
+	 * @return {String|Array|void}
 	 */
 	Forms.val = function(el, val) {
 
@@ -135,11 +141,11 @@ define(function(require) {
 
 
 	/**
-	 * Returns whether a form element is 'successful', that is, whether it
-	 * would be submitted to the server in a normal form submit.
-	 * More info: http://www.w3.org/TR/html4/interact/forms.html#successful-controls
+	 * Returns whether a form element is
+	 * [successful](http://www.w3.org/TR/html4/interact/forms.html#successful-controls).
 	 *
 	 * @param {jQuery|Element} el
+	 * @return {Boolean}
 	 */
 	Forms.successful = function(el) {
 

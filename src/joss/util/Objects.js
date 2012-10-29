@@ -3,9 +3,18 @@
  */
 define(function() {
 
+	/**
+	 * @namespace
+	 * @alias joss.util.Objects
+	 */
 	var Objects = {};
 
 
+	/**
+	 * Returns all keys of **obj**.
+	 * @param {Object} obj
+	 * @return {Array}
+	 */
 	Objects.keys = Object.keys || function(obj) {
 		var keys = [];
 		for (var key in obj) {
@@ -17,6 +26,11 @@ define(function() {
 	};
 
 
+	/**
+	 * Returns all values of **obj**.
+	 * @param {Object} obj
+	 * @return {Array}
+	 */
 	Objects.values = function(obj) {
 		var values = [];
 		for (var key in obj) {
@@ -28,6 +42,11 @@ define(function() {
 	};
 
 
+	/**
+	 * Returns the names of all Functions which are members of **obj**
+	 * @param {Object} obj
+	 * @return {Array}
+	 */
 	Objects.methods = function(obj) {
 		var names = [];
 		for (var key in obj) {
@@ -39,11 +58,22 @@ define(function() {
 	};
 
 
+	/**
+	 * Check if **obj** has a key "**key**" using `Object.hasOwnProperty`.
+	 * @param {Object} obj
+	 * @return {Boolean}
+	 */
 	Objects.has = function(obj, key) {
 		return Object.prototype.hasOwnProperty.call(obj, key);
 	};
 
 
+	/**
+	 * Returns true if **obj** is an Object. JavaScript Objects can be of type
+	 * Object, Array, or Function (among others).
+	 * @param {Object} obj
+	 * @return {Boolean}
+	 */
 	Objects.isObject = function(obj) {
 		return obj === Object(obj);
 	};

@@ -9,6 +9,10 @@ define(function(require) {
 
 
 
+	/**
+	 * @namespace
+	 * @alias joss.util.Deferreds
+	 */
 	var Deferreds = {};
 
 

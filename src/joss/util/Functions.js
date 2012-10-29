@@ -8,6 +8,13 @@ define(function(require) {
 
 
 	/**
+	 * @namespace
+	 * @alias joss.util.Functions
+	 */
+	var Functions = {};
+
+
+	/*
 	 * execute **after** after **ms** milliseconds, keeping a record of the
 	 * timer on **fn** for later canceling.
 	 */
@@ -19,9 +26,6 @@ define(function(require) {
 			after.apply(scope, args || []);
 		}, ms));
 	};
-
-
-	var Functions = {};
 
 
 	/**

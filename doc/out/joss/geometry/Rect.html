@@ -1,8 +1,69 @@
-<h2>joss/geometry/Rect</h2><div class="description"><p>Describes a rectangle and provides methods for manipulating it.
-Inspired by the Qt library&#39;s <a href="http://doc.qt.digia.com/4.7-snapshot/qrect.html">QRect</a> class.</p></div><div class="member"><h4><a href="https://developer.mozilla.org/en-US/docs/JavaScript/Reference/Global_Objects/Number" class="type">Number</a>&nbsp;<span class="name">left</span></h4><div class="description"><p>The x coordinate of the left edge of this rectangle</p></div></div><div class="member"><h4><a href="https://developer.mozilla.org/en-US/docs/JavaScript/Reference/Global_Objects/Number" class="type">Number</a>&nbsp;<span class="name">top</span></h4><div class="description"><p>The y coordinate of the top edge of this rectangle</p></div></div><div class="member"><h4><a href="https://developer.mozilla.org/en-US/docs/JavaScript/Reference/Global_Objects/Number" class="type">Number</a>&nbsp;<span class="name">right</span></h4><div class="description"><p>The x coordinate of the right edge of this rectangle</p></div></div><div class="member"><h4><a href="https://developer.mozilla.org/en-US/docs/JavaScript/Reference/Global_Objects/Number" class="type">Number</a>&nbsp;<span class="name">bottom</span></h4><div class="description"><p>The y coordinate of the bottom edge of this rectangle</p></div></div><div class="method"><a href="#position" alt="Permalink to joss/geometry/Rect#position" title="Permalink to joss/geometry/Rect#position" class="permalink">#</a><h4 id="position"><a href="/doc/joss/geometry/Rect" class="returns">Rect</a>&nbsp;<span class="name">position</span>&#40;<a href="" class="paramType">Object</a>&nbsp;<span class="param">opts</span>&#41;</h4><div class="description"><p>Shorthand for relative positioning to another Rectangle
-object; an alternative to the move* and center* methods above
-using Position objects.</p>
+<h2>joss/geometry/Rect</h2><div class="description"><p>Inspired by the Qt library&#39;s
+<a href="http://doc.qt.digia.com/4.7-snapshot/qrect.html">QRect</a> class.
 
-<p><strong>opts</strong> is an Object with the following fields:</p></div></div><div class="method"><a href="#moveBottom" alt="Permalink to joss/geometry/Rect#moveBottom" title="Permalink to joss/geometry/Rect#moveBottom" class="permalink">#</a><h4 id="moveBottom"><a href="/doc/joss/geometry/Rect" class="returns">Rect</a>&nbsp;<span class="name">moveBottom</span>&#40;<a href="https://developer.mozilla.org/en-US/docs/JavaScript/Reference/Global_Objects/Number" class="paramType">Number</a>&nbsp;<span class="param">y</span>&#41;</h4><div class="description"><p>Moves the rectangle vertically, leaving the rectangle&#39;s bottom edge
-at the given y coordinate. The rectangle&#39;s size is unchanged.</p></div></div><div class="method"><a href="#moveTo" alt="Permalink to joss/geometry/Rect#moveTo" title="Permalink to joss/geometry/Rect#moveTo" class="permalink">#</a><h4 id="moveTo"><a href="/doc/joss/geometry/Rect" class="returns">Rect</a>&nbsp;<span class="name">moveTo</span>&#40;<a href="/doc/joss/geometry/Point" class="paramType">Point</a>&nbsp;<span class="param">p</span>&#41;</h4><div class="description"><p>Moves the rectangle, leaving the top-left corner at the given
-position (x, y). The rectangle&#39;s size is unchanged.</p></div></div>
+
+</p>
+</div><h3>Constructor</h3><div class="constructor"><h4><span class="name">Rect</span>&#40;&nbsp;<a href="https://developer.mozilla.org/en-US/docs/JavaScript/Reference/Global_Objects/Object" class="paramType">Object</a>&nbsp;<span class="param">opts</span>&nbsp;&#41;</h4><div class="description"><p><strong>opts</strong> may have the following properties:
+
+</p>
+<ul>
+<li><code>top</code>: y-coordinate of the top edge</li>
+<li><code>right</code>: x-coordinate of the right edge</li>
+<li><code>bottom</code>: y-coordinate of the bottom edge</li>
+<li><code>left</code>: x-coordinate of the left edge</li>
+<li><code>width</code>: the width of the rectangle</li>
+<li><code>height</code>: the height of the rectangle</li>
+<li><code>t</code>: alias for <code>top</code></li>
+<li><code>r</code>: alias for <code>right</code></li>
+<li><code>b</code>: alias for <code>bottom</code></li>
+<li><code>l</code>: alias for <code>left</code></li>
+<li><code>w</code>: alias for <code>width</code></li>
+<li><code>h</code>: alias for <code>height</code></li>
+</ul>
+<p>You may use any four which can logically be construed to represent a rectangle.
+For example:
+
+</p>
+<pre><code class="lang-js"><span class="keyword">var</span> rect = <span class="keyword">new</span> Rect({
+    top: <span class="number">0</span>,
+    left: <span class="number">25</span>,
+    right: <span class="number">50</span>,
+    bottom: <span class="number">100</span>
+});
+
+console.log(rect.top); <span class="comment">//&gt; 0</span>
+console.log(rect.left); <span class="comment">//&gt; 25</span>
+console.log(rect.width()); <span class="comment">//&gt; 25</span>
+console.log(rect.height()); <span class="comment">//&gt; 100</span>
+
+<span class="keyword">var</span> rect2 = <span class="keyword">new</span> Rect({
+    top: <span class="number">0</span>,
+    left: <span class="number">0</span>,
+    width: <span class="number">50</span>,
+    height: <span class="number">100</span>
+});
+
+console.log(rect2.top); <span class="comment">//&gt; 0</span>
+console.log(rect2.left); <span class="comment">//&gt; 0</span>
+console.log(rect2.width()); <span class="comment">//&gt; 50</span>
+console.log(rect2.height()); <span class="comment">//&gt; 100</span>
+
+<span class="keyword">var</span> rect3 = <span class="keyword">new</span> Rect({
+    top: <span class="number">0</span>,
+    right: <span class="number">100</span>,
+    width: <span class="number">25</span>,
+    height: <span class="number">100</span>
+});
+
+console.log(rect3.top); <span class="comment">//&gt; 0</span>
+console.log(rect3.left); <span class="comment">//&gt; 75</span>
+console.log(rect3.right); <span class="comment">//&gt; 100</span>
+console.log(rect3.width()); <span class="comment">//&gt; 25</span>
+console.log(rect3.height()); <span class="comment">//&gt; 100</span></code></pre>
+</div></div><h3>Properties</h3><div class="property"><h4><a href="https://developer.mozilla.org/en-US/docs/JavaScript/Reference/Global_Objects/Number" class="returns">Number</a>&nbsp;<span class="name">left</span></h4><div class="description"><p>The x coordinate of the left edge of this rectangle</p>
+</div></div><div class="property"><h4><a href="https://developer.mozilla.org/en-US/docs/JavaScript/Reference/Global_Objects/Number" class="returns">Number</a>&nbsp;<span class="name">top</span></h4><div class="description"><p>The y coordinate of the top edge of this rectangle</p>
+</div></div><div class="property"><h4><a href="https://developer.mozilla.org/en-US/docs/JavaScript/Reference/Global_Objects/Number" class="returns">Number</a>&nbsp;<span class="name">right</span></h4><div class="description"><p>The x coordinate of the right edge of this rectangle</p>
+</div></div><div class="property"><h4><a href="https://developer.mozilla.org/en-US/docs/JavaScript/Reference/Global_Objects/Number" class="returns">Number</a>&nbsp;<span class="name">bottom</span></h4><div class="description"><p>The y coordinate of the bottom edge of this rectangle</p>
+</div></div><h3>Methods</h3><div class="method"><a href="#position" alt="Permalink to joss/geometry/Rect#position" title="Permalink to joss/geometry/Rect#position" class="permalink">#</a><h4 id="position"><a href="/doc/joss/geometry/Rect" class="returns">Rect</a>&nbsp;<span class="name">position</span>&#40;&nbsp;<a href="https://developer.mozilla.org/en-US/docs/JavaScript/Reference/Global_Objects/Object" class="paramType">Object</a>&nbsp;<span class="param">opts</span>&nbsp;&#41;</h4><div class="description"><p><strong>opts</strong> is an Object with the following fields:</p>
+</div></div><div class="method"><a href="#moveBottom" alt="Permalink to joss/geometry/Rect#moveBottom" title="Permalink to joss/geometry/Rect#moveBottom" class="permalink">#</a><h4 id="moveBottom"><a href="/doc/joss/geometry/Rect" class="returns">Rect</a>&nbsp;<span class="name">moveBottom</span>&#40;&nbsp;[<a href="https://developer.mozilla.org/en-US/docs/JavaScript/Reference/Global_Objects/Number" class="paramType">Number</a>&nbsp;|&nbsp;<a href="https://developer.mozilla.org/en-US/docs/JavaScript/Reference/Global_Objects/String" class="paramType">String</a>&nbsp;<span class="param">y</span>]&nbsp;&#41;</h4><div class="description"><pre><code class="lang-js">example.code();</code></pre>
+</div></div><div class="method"><a href="#moveTo" alt="Permalink to joss/geometry/Rect#moveTo" title="Permalink to joss/geometry/Rect#moveTo" class="permalink">#</a><h4 id="moveTo"><a href="/doc/joss/geometry/Rect" class="returns">Rect</a>&nbsp;<span class="name">moveTo</span>&#40;&nbsp;<a href="/doc/joss/geometry/Point" class="paramType">Point</a>&nbsp;<span class="param">p</span>&nbsp;&#41;</h4><div class="description"></div></div>

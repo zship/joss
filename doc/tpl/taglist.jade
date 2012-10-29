@@ -1,0 +1,23 @@
+h2=module
+
+- if (cl.constructor && cl.constructor.kind === 'class')
+    div.constructor
+        h3 Constructor
+        ul
+            li
+                a.name(href='#', rel=cl.constructor.longName)=cl.constructor.name
+
+- if (cl.properties && Object.keys(cl.properties).length)
+    div.properties
+        h3 Properties
+        ul
+            each prop in cl.properties
+                li
+                    a.name(href='#', rel=prop.longName)=prop.name
+
+div.methods
+    h3 Methods
+    ul
+        each method in cl.methods
+            li
+                a.name(href='#', rel=method.longName)=method.name

@@ -8,6 +8,10 @@ define(function(require) {
 
 
 
+	/** 
+	 * @namespace
+	 * @alias joss.util.Collections
+	 */
 	var Collections = {};
 
 
@@ -237,7 +241,7 @@ define(function(require) {
 	 *   `function(element, index, list)` or `function(value, key, list)`
 	 * @return {Boolean}
 	 */
-	Collections.every = Collections.all = function(list, iterator, context) {
+	Collections.every = function(list, iterator, context) {
 		list = list || [];
 		var result = true;
 
@@ -288,7 +292,7 @@ define(function(require) {
 	 * @param {Any} target
 	 * @return {Boolean}
 	 */
-	Collections.contains = Collections.include = function(list, target) {
+	Collections.contains = function(list, target) {
 		list = list || [];
 		var found = false;
 

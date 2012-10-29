@@ -388,31 +388,3 @@ define(function(require) {
 
 
 });
-
-
-
-/**
- * @name joss.geometry.Rect#left
- * @description The x coordinate of the left edge of this rectangle
- */
-
-/**
- * @name joss.geometry.Rect#top
- * @description The y coordinate of the top edge of this rectangle
- */
-
-/**
- * @name joss.geometry.Rect#right
- * @description The x coordinate of the right edge of this rectangle
- */
-
-/**
- * @name joss.geometry.Rect#bottom
- * @description The y coordinate of the bottom edge of this rectangle
- */
-
-/**
- * @name joss.geometry.Rect#position
- * @description
- * **opts** is an Object with the following fields:
- */

@@ -152,7 +152,7 @@ module.exports = function(grunt) {
 
 
 		var graph = {};
-		db({kind: ['class', 'namespace']}).each(function(record) {
+		db({kind: ['class']}).each(function(record) {
 
 			var classLongName = record.longname;
 
@@ -300,6 +300,7 @@ module.exports = function(grunt) {
 		});
 
 		var descriptions = _getDescriptions(graph);
+		//console.log(descriptions);
 
 		descriptions.forEach(function(path) {
 			var obj = getObject(path, false, graph);

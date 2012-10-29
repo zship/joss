@@ -45,8 +45,8 @@ module.exports = function( grunt ) {
 
 		doc: {
 			repoview: 'https://github.com/zship/joss/blob/develop/',
+			//path: 'src/joss/**'
 			path: 'src/joss/geometry/Rect.js'
-			//path: 'src/joss/mvc/Controller.js'
 		},
 
 		min: {

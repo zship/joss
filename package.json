@@ -11,10 +11,12 @@
 		"license": "MIT",
 		"dependencies": {},
 		"devDependencies": {
-			"grunt-update-submodules": ">=0.1.2",
-			"grunt": "~0.3.17",
+			"grunt": "0.3.x",
+			"grunt-contrib-clean": "0.3.x",
 			"jade": "0.x.x",
-			"markdown": "0.4.x"
+			"marked": "0.2.x",
+			"highlight.js": "7.3.x",
+			"async": "0.1.x"
 		},
 		"keywords": []
 }

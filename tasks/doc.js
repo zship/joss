@@ -13,7 +13,7 @@ module.exports = function(grunt) {
 	var hljs = require('highlight.js');
 	var async = require('async');
 
-	var requirejs = require('../dist/lib/r.js/dist/r.js');
+	var requirejs = require('../dist/lib/r.js');
 
 	requirejs.config({
 		baseUrl: __dirname,
@@ -410,7 +410,7 @@ module.exports = function(grunt) {
 		var config = grunt.config.get(this.name);
 		var done = this.async();
 
-		requirejs(['../dist/lib/r.js/build/jslib/parse'], function(parse) {
+		requirejs(['../dist/lib/parse'], function(parse) {
 
 			var files = grunt.file.expandFiles(config.path);
 			grunt.log.write('Running jsdoc...');

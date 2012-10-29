@@ -6,7 +6,7 @@ module.exports = {
 
 	paths: {
 		//dojo's i18n module doesn't build with r.js (errors out)
-		'dojo/i18n': '../dist/lib/i18n',
+		'dojo/i18n': '../dist/lib/i18n-patched',
 		'jquery': 'lib/jquery',
 		'jquery.hashchange': 'lib/jquery.ba-hashchange',
 		'jquery.mousewheel': 'lib/jquery.mousewheel',

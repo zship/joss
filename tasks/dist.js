@@ -2,7 +2,7 @@ module.exports = function(grunt) {
 	'use strict';
 
 	var libdir = '../dist/lib';
-	var requirejs = require(libdir + '/r.js/dist/r.js');
+	var requirejs = require(libdir + '/r.js');
 	var rjsconfig = require('./rjsconfig');
 	var _ = grunt.utils._;
 

@@ -49,6 +49,12 @@ module.exports = function( grunt ) {
 			path: 'src/joss/geometry/Rect.js'
 		},
 
+		clean: [
+			'doc/out',
+			'<config:dist.out>',
+			'<config:min.dist.dest>'
+		],
+
 		min: {
 			dist: {
 				src: ['<banner>', 'dist/joss.js'],
@@ -76,11 +82,8 @@ module.exports = function( grunt ) {
 
 	// no-arg grunt
 	//grunt.registerTask( 'default', 'update_submodules dist min' );
-
-	// Load grunt tasks from NPM packages
-	//grunt.loadNpmTasks( 'grunt-compare-size' );
-	//grunt.loadNpmTasks( 'grunt-git-authors' );
-	//grunt.loadNpmTasks( 'grunt-update-submodules' );
+	
+	grunt.loadNpmTasks('grunt-contrib-clean');
 
 	grunt.loadTasks('tasks');
 

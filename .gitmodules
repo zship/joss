@@ -7,3 +7,6 @@
 [submodule "doc/lib/jsdoc"]
 	path = doc/lib/jsdoc
 	url = https://github.com/jsdoc3/jsdoc
+[submodule "dist/lib/r.js"]
+	path = dist/lib/r.js
+	url = git://github.com/jrburke/r.js.git

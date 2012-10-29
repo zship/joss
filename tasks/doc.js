@@ -4,7 +4,6 @@ module.exports = function(grunt) {
 	var docdir = 'doc';
 	var libdir = 'doc/lib';
 
-	var fs = require("fs");
 	var child = require("child_process");
 	var _ = grunt.utils._;
 
@@ -13,6 +12,15 @@ module.exports = function(grunt) {
 	var md = require('marked');
 	var hljs = require('highlight.js');
 	var async = require('async');
+
+	var requirejs = require('../dist/lib/r.js/dist/r.js');
+
+	requirejs.config({
+		baseUrl: __dirname,
+		nodeRequire: require
+	});
+
+
 
 
 	md.setOptions({
@@ -112,7 +120,7 @@ module.exports = function(grunt) {
 	}
 
 
-	var processJsDoc = function(json) {
+	var processJsDoc = function(json, meta) {
 
 		var doc = taffy(json);
 		doc({undocumented: true}).remove();
@@ -151,6 +159,7 @@ module.exports = function(grunt) {
 			record.description = record.description || '';
 
 			graph[classLongName] = {};
+			graph[classLongName]['meta'] = meta[classLongName];
 			graph[classLongName]['constructor'] = record;
 			graph[classLongName]['properties'] = {};
 			graph[classLongName]['methods'] = {};
@@ -348,10 +357,10 @@ module.exports = function(grunt) {
 
 	var classTpl;
 
-	var renderClass = function(graph, path, callback) {
+	var renderClass = function(graph, path, config, callback) {
 		classTpl = classTpl || grunt.file.read(docdir + '/tpl/class.jade', 'utf-8');
 		//console.log(JSON.stringify(graph, false, 4));
-		var data = jade.compile(classTpl)({cl: graph, module: path});
+		var data = jade.compile(classTpl)({cl: graph, module: path, config: config});
 		callback(graph, path, data);
 	};
 
@@ -400,95 +409,122 @@ module.exports = function(grunt) {
 		var config = grunt.config.get(this.name);
 		var done = this.async();
 
-		var files = grunt.file.expandFiles(config.path);
-		grunt.log.write('Running jsdoc...');
-		async.map(files, function(path, callback) {
-			grunt.verbose.writeln('Running jsdoc on ' + path + '...');
-			child.exec(libdir + '/jsdoc/jsdoc -X ' + path, {maxBuffer: 2000000}, function(error, stdout, stderr) {
-				grunt.verbose.ok('jsdoc on ' + path + ' DONE');
-				callback(null, stdout);
-			});
-		}, function(err, result) {
+		requirejs(['../dist/lib/r.js/build/jslib/parse'], function(parse) {
 
-			var graph = {};
-			_.each(result, function(json) {
-				json = json.replace(/<Object>/gm, "\"Object\"");
-				json = json.replace(/:\sundefined/gm, ": \"undef\"");
-				//console.log(json);
-				graph = JSON.parse(json).concat(graph);
-			});
-
-			//console.log(JSON.stringify(graph, false, 4));
-
-			grunt.log.write('Parsing jsdoc output...');
-			graph = processJsDoc(graph);
-			grunt.log.ok();
-
-			//console.log(JSON.stringify(graph, false, 4));
-
-			grunt.log.write('Mixing in markdown documentation...');
-			mixinMarkdown(graph);
-			grunt.log.ok();
-
-			grunt.log.write('Transforming references to defined methods into links...');
-			transformLongNames(graph);
-			grunt.log.ok();
-
-			grunt.log.write('Parsing markdown in member descriptions...');
-			parseMarkdown(graph);
-			grunt.log.ok();
-
-
-			grunt.log.write('Rendering class definition files into ' + docdir + '/out/classes...');
-			_.each(graph, function(val, key) {
-				if (!key) {
-					return true; //continue
-				}
-
-				var path = key.replace(/\./g, '/');
-				grunt.verbose.write('Rendering class definition file ' + path + '...');
-				//console.log(path);
-				//console.log(val);
-				renderClass(val, path, function(graph, path, data) {
-					var filePath = docdir + '/out/classes/' + path + '.html';
-					grunt.file.write(filePath, data, 'utf-8');
+			var files = grunt.file.expandFiles(config.path);
+			grunt.log.write('Running jsdoc...');
+			async.map(files, function(path, callback) {
+				grunt.verbose.writeln('Running jsdoc on ' + path + '...');
+				var contents = grunt.file.read(path);
+				child.exec(libdir + '/jsdoc/jsdoc -X ' + path, {maxBuffer: 2000000}, function(error, stdout, stderr) {
+					grunt.verbose.ok('jsdoc on ' + path + ' DONE');
+					callback(null, {
+						path: path,
+						deps: parse.findDependencies(path, contents),
+						json: stdout
+					});
 				});
-				grunt.verbose.ok();
-			});
+			}, function(err, resultList) {
 
+				var meta = {};
+				var graph = [];
+				_.each(resultList, function(result) {
+					var json = result.json;
+					//strip out error-causing lines
+					json = json.replace(/<Object>/gm, "\"Object\"");
+					json = json.replace(/:\sundefined/gm, ": \"undef\"");
 
-			grunt.log.write('Rendering taglist files into ' + docdir + '/out/taglists...');
-			_.each(graph, function(val, key) {
-				if (!key) {
-					return true; //continue
-				}
-
-				var path = key.replace(/\./g, '/');
-				grunt.verbose.write('Rendering taglist file ' + path + '...');
-				//console.log(path);
-				//console.log(val);
-				renderTagList(val, path, function(graph, path, data) {
-					var filePath = docdir + '/out/taglists/' + path + '.html';
-					grunt.file.write(filePath, data, 'utf-8');
+					//collect meta information like class -> file name and
+					//class -> dependencies. We'll apply it to `graph` inside
+					//processJsDoc()
+					var clazz = JSON.parse(json);
+					clazz.every(function(item) {
+						if (item.kind && item.kind === 'class') {
+							meta[item.longname] = {
+								filename: result.path,
+								deps: result.deps
+							};
+							return false; //break;
+						}
+						return true;
+					});
+					//console.log(json);
+					graph = graph.concat(clazz);
 				});
+
+				//console.log(JSON.stringify(graph, false, 4));
+
+				grunt.log.write('Parsing jsdoc output...');
+				graph = processJsDoc(graph, meta);
+				grunt.log.ok();
+
+				//console.log(JSON.stringify(graph, false, 4));
+
+				grunt.log.write('Mixing in markdown documentation...');
+				mixinMarkdown(graph);
+				grunt.log.ok();
+
+				grunt.log.write('Transforming references to defined methods into links...');
+				transformLongNames(graph);
+				grunt.log.ok();
+
+				grunt.log.write('Parsing markdown in member descriptions...');
+				parseMarkdown(graph);
+				grunt.log.ok();
+
+
+				grunt.log.write('Rendering class definition files into ' + docdir + '/out/classes...');
+				_.each(graph, function(val, key) {
+					if (!key) {
+						return true; //continue
+					}
+
+					var path = key.replace(/\./g, '/');
+					grunt.verbose.write('Rendering class definition file ' + path + '...');
+					//console.log(path);
+					//console.log(val);
+					renderClass(val, path, config, function(graph, path, data) {
+						var filePath = docdir + '/out/classes/' + path + '.html';
+						grunt.file.write(filePath, data, 'utf-8');
+					});
+					grunt.verbose.ok();
+				});
+
+
+				grunt.log.write('Rendering taglist files into ' + docdir + '/out/taglists...');
+				_.each(graph, function(val, key) {
+					if (!key) {
+						return true; //continue
+					}
+
+					var path = key.replace(/\./g, '/');
+					grunt.verbose.write('Rendering taglist file ' + path + '...');
+					//console.log(path);
+					//console.log(val);
+					renderTagList(val, path, function(graph, path, data) {
+						var filePath = docdir + '/out/taglists/' + path + '.html';
+						grunt.file.write(filePath, data, 'utf-8');
+					});
+					grunt.verbose.ok();
+				});
+
+
+				grunt.verbose.write('Rendering menu...');
+				var classList = Object.keys(graph);
+				var classStructure = {};
+				_.each(classList, function(className) {
+					setObject(className, className, classStructure);
+				});
+
+				var menu = renderMenu(classStructure, '');
+				grunt.file.write(docdir + '/out/menu.html', menu, 'utf-8');
 				grunt.verbose.ok();
+				grunt.log.ok();
+
+				done();
 			});
 
-
-			grunt.verbose.write('Rendering menu...');
-			var classList = Object.keys(graph);
-			var classStructure = {};
-			_.each(classList, function(className) {
-				setObject(className, className, classStructure);
-			});
-
-			var menu = renderMenu(classStructure, '');
-			grunt.file.write(docdir + '/out/menu.html', menu, 'utf-8');
-			grunt.verbose.ok();
-			grunt.log.ok();
-
-			done();
-		});
+		}); //requirejs parse
 
 	});
 

@@ -3,7 +3,7 @@
  */
 define(function(require) {
 
-	var Objects = require('./Objects');
+	var isArray = require('amd-utils/lang/isArray');
 
 
 
@@ -87,7 +87,7 @@ define(function(require) {
 	 * @param {Function} fn
 	 */
 	Functions.cancel = function(fn) {
-		if (!Objects.isArray(fn.timers)) {
+		if (!isArray(fn.timers)) {
 			return fn;
 		}
 

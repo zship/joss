@@ -10,3 +10,6 @@
 [submodule "src/lib/amd-utils"]
 	path = src/lib/amd-utils
 	url = git://github.com/millermedeiros/amd-utils.git
+[submodule "src/lib/deferreds"]
+	path = src/lib/deferreds
+	url = git://github.com/zship/deferreds.js.git

@@ -1,9 +1,11 @@
 define(function(require) {
 
+	var $ = require('jquery');
 	var declare = require('dojo/_base/declare');
 	var lang = require('dojo/_base/lang');
 	var Elements = require('joss/util/Elements');
-	var Objects = require('joss/util/Objects');
+	var isElement = require('joss/util/lang/isElement');
+	var objectIs = require('joss/util/lang/is');
 
 
 
@@ -15,11 +17,11 @@ define(function(require) {
 
 
 		_hash: function(el) {
-			if (Objects.isElement(el)) {
+			if (isElement(el)) {
 				return Elements.hash(el);
 			}
 
-			if (Objects.isJQuery(el)) {
+			if (objectIs(el, $)) {
 				return Elements.hash(el[0]);
 			}
 

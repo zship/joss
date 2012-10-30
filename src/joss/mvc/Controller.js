@@ -4,7 +4,9 @@ define(function(require) {
 	var declare = require('dojo/_base/declare');
 	var lang = require('dojo/_base/lang');
 	var hub = require('dojo/topic');
-	var Deferreds = require('joss/util/Deferreds');
+	var waterfall = require('deferreds/waterfall');
+	var Objects = {};
+	Objects.methods = require('joss/util/object/methods');
 
 
 
@@ -109,11 +111,13 @@ define(function(require) {
 		 */
 		bind: function() {
 
+			var methods = Objects.methods(this);
+
 			//check for event data (denoted with " _data" at the end of the
 			//method name) before binding events, and include that data in the
 			//bindings if present
 			var eventData = {};
-			$.each(this, lang.hitch(this, function(key, data) {
+			$.each(methods, lang.hitch(this, function(key, data) {
 
 				var match = rEventData.exec(key);
 				if (match === null) {
@@ -125,7 +129,7 @@ define(function(require) {
 
 			//loop through this controller's methods, looking for keys that
 			//match the patterns defined at the top of this file
-			$.each(this, lang.hitch(this, function(key, method) {
+			$.each(methods, lang.hitch(this, function(key, method) {
 
 				//don't bind the same selector more than once (for calls to
 				//rebind() or multiple calls to bind())
@@ -324,7 +328,7 @@ define(function(require) {
 					if (args.length) {
 						list.unshift(args);
 					}
-					return Deferreds.waterfall.apply(this, list);
+					return waterfall.apply(this, list);
 				});
 			}));
 		}

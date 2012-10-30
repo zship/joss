@@ -7,7 +7,8 @@ module.exports = {
 	packages: [
 		{ name: 'dojo', location: 'lib/dojo' },
 		{ name: 'jade', location: 'lib/jade' },
-		{ name: 'amd-utils', location: 'lib/amd-utils/src' }
+		{ name: 'amd-utils', location: 'lib/amd-utils/src' },
+		{ name: 'deferreds', location: 'lib/deferreds/src' }
 	],
 
 	paths: {

@@ -31,11 +31,11 @@ module.exports = function( grunt ) {
 			//remove requirejs dependency from built package (almond)
 			standalone: true,
 			//String or Array of files for which to trace dependencies and build
-			include: ['joss/geometry/**', 'joss/util/**', 'jossx/validation/**'],
-			//include: ['joss/**', 'jossx/**'],
+			//include: ['joss/geometry/**', 'joss/util/**', 'jossx/validation/**'],
+			include: ['joss/**', 'jossx/**'],
 			//exclude files from the 'include' list. Useful to add specific
 			//exceptions to globbing.
-			exclude: [],
+			exclude: ['joss/util/collection/**'],
 			//exclude files and their dependencies from the *built* source
 			//Difference from 'exclude': files in 'excludeBuilt' will be
 			//excluded even if they are dependencies of files in 'include'

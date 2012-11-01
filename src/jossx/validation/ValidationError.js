@@ -1,9 +1,8 @@
 define(function(require) {
 
-	var $ = require('jquery');
 	var declare = require('dojo/_base/declare');
 	var lang = require('dojo/_base/lang');
-	require('joss/util/Elements');
+	var Elements = require('joss/util/Elements');
 
 
 
@@ -37,7 +36,7 @@ define(function(require) {
 
 
 		hash: function() {
-			return $(this._el).hash() + ':' + this._message + ':' + this._type;
+			return Elements.hash(this._el) + ':' + this._message + ':' + this._type;
 		},
 
 

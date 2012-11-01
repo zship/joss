@@ -6,7 +6,6 @@ module.exports = {
 
 	packages: [
 		{ name: 'dojo', location: 'lib/dojo' },
-		{ name: 'jade', location: 'lib/jade' },
 		{ name: 'amd-utils', location: 'lib/amd-utils/src' },
 		{ name: 'deferreds', location: 'lib/deferreds/src' }
 	],
@@ -14,12 +13,19 @@ module.exports = {
 	paths: {
 		//dojo's i18n module doesn't build with r.js (errors out)
 		'dojo/i18n': '../dist/lib/i18n-patched',
-		'jquery': 'lib/jquery',
+		'jade': 'lib/jade/jade',
+		'jquery': 'empty:',
 		'jquery.hashchange': 'lib/jquery.ba-hashchange',
 		'jquery.mousewheel': 'lib/jquery.mousewheel',
 		'jquery.event.drag': 'lib/jquery.event.drag-2.0',
 		'jquery.event.input': 'lib/jquery.event.input',
-		'jquery.jgestures': 'lib/jgestures'
+		'jquery.jgestures': 'lib/jgestures',
+	},
+
+	shim: {
+		'jade': {
+			exports: 'jade'
+		}
 	},
 
 	keepBuildDir: true,

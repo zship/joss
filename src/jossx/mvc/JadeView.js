@@ -2,7 +2,7 @@ define(function(require) {
 
 	var $ = require('jquery');
 	var declare = require('dojo/_base/declare');
-	var jade = require('jade/jade');
+	var jade = require('jade');
 
 
 

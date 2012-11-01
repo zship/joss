@@ -284,6 +284,17 @@ define(function(require) {
 
 		Elements.setStyles(el[0], styles);
 
+		return new DomRect({
+			el: el,
+			padding: rect.padding,
+			border: rect.border,
+			margin: rect.margin,
+			top: next.offset.top,
+			left: next.offset.left,
+			width: next.width,
+			height: next.height
+		});
+
 	};
 
 

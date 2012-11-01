@@ -7,19 +7,21 @@ define(function(require) {
 	var Errors = require('./Errors');
 	var ValidationModel = require('./ValidationModel');
 	var Forms = require('joss/util/Forms');
+	var Elements = require('joss/util/Elements');
 	var Functions = require('joss/util/Functions');
+	var objectSize = require('amd-utils/object/size');
+	var objectKeys = require('amd-utils/object/keys');
 	require('jquery.event.input');
 
 
 
-	return declare(Controller, {
+	var Validator = declare(Controller, {
 
 		constructor: function(opts) {
 
 			var self = this;
 
 			opts = lang.mixin({
-				root: $('body'),
 				check: null, //function(el, value, errors, model)
 				add: null, //function(el, added, errors)
 				remove: null //function(el, removed, errors)
@@ -40,6 +42,7 @@ define(function(require) {
 					self._onValidationRemove(err.el(), err.clone(), self._validationErrors.clone());
 				}
 			});
+
 		
 		},
 
@@ -81,51 +84,41 @@ define(function(require) {
 				return;
 			}
 			
-			this._validationQueue[$(tgt).hash()] = tgt;
+			this._validationQueue[Elements.hash(tgt)] = tgt;
 			this._processValidationQueue();
 		
 		},
 
-		
-		_processValidationQueue: function() {
 
-			if (!this._throttledProcessValidationQueue) {
+		_processValidationQueue: Functions.throttle(function() {
+			
+			//clone the validationQueue and clear it immediately so the queue
+			//can continue to be built while this method runs
+			var queue = {};
+			var keys = objectKeys(this._validationQueue);
+			var size = objectSize(this._validationQueue);
+			var i;
 
-				this._throttledProcessValidationQueue = Functions.throttle(function() {
-					//console.log(this);
+			for (i = 0; i < size; i++) {
+				queue[keys[i]] = this._validationQueue[keys[i]];
+			}
+			this._validationQueue = {};
 
-					//console.log('validate: ', tgt.name, Forms.val(tgt), $(tgt).data('firstChange'));
+			for (i = 0; i < size; i++) {
+				var hash = keys[i];
+				var tgt = queue[hash];
 
-					//clone the validationQueue and clear it immediately so the queue
-					//can continue to be built while this method runs
-					var queue = {};
-					if (this._validationQueue) {
-						$.each(this._validationQueue, function(hash, tgt) {
-							queue[hash] = tgt;
-						});
-					}
-					this._validationQueue = {};
+				//_validationModel represents the form's inputs for which a user has
+				//had the chance to enter a value
+				this._validationModel.set(hash, Forms.val(tgt));
 
-					$.each(queue, lang.hitch(this, function(hash, tgt) {
-
-						//_validationModel represents the form's inputs for which a user has
-						//had the chance to enter a value
-						this._validationModel.set(hash, Forms.val(tgt));
-
-						//_onValidationCheck mutates our _validationErrors object.
-						//the Errors class will publish events on successful add() or remove() calls,
-						//which should be listened to by subclasses of ValidatingController
-						this._onValidationCheck(tgt, this._validationModel.get(hash), this._validationErrors, this._validationModel.clone());
-					
-					}));
-				
-				}, 500);
-
+				//_onValidationCheck mutates our _validationErrors object.
+				//the Errors class will publish events on successful add() or remove() calls,
+				//which should be listened to by subclasses of ValidatingController
+				this._onValidationCheck(tgt, this._validationModel.get(hash), this._validationErrors, this._validationModel.clone());
 			}
 
-			this._throttledProcessValidationQueue();
-		
-		},
+		}, 500),
 
 
 		//validate all fields, or just the fields under el
@@ -135,7 +128,7 @@ define(function(require) {
 			var isFullCheck = !el;
 
 			if (!el) {
-				inputs = this.root().find('input, textarea, select');
+				inputs = this.$root.find('input, textarea, select');
 			}
 			else {
 				inputs = el.find('input, textarea, select');
@@ -181,5 +174,8 @@ define(function(require) {
 		}
 
 	});
+
+
+	return Validator;
 
 });

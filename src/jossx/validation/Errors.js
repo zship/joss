@@ -1,9 +1,13 @@
 define(function(require) {
 
-	var $ = require('jquery');
 	var declare = require('dojo/_base/declare');
 	var lang = require('dojo/_base/lang');
 	var ValidationError = require('./ValidationError');
+	var Elements = require('joss/util/Elements');
+	var forEach = require('joss/util/collection/forEach');
+	var toArray = require('amd-utils/lang/toArray');
+	var isFunction = require('amd-utils/lang/isFunction');
+	var size = require('amd-utils/object/size');
 
 
 
@@ -37,8 +41,8 @@ define(function(require) {
 			//if we were only given an element, return all errors starting with that element's hash
 			var self = this;
 			var ret = [];
-			$.each(this._errors, function(key, err) {
-				if (key.search(new RegExp('^' + $(el).hash() + ':')) !== -1) {
+			forEach(this._errors, function(err, key) {
+				if (key.search(new RegExp('^' + Elements.hash(el) + ':')) !== -1) {
 					ret.push(self._errors[key].clone());
 				}
 			});
@@ -48,7 +52,7 @@ define(function(require) {
 		},
 
 
-		check: function(isValid, el, message, type) {
+		addIf: function(isValid, el, message, type) {
 
 			if (isValid === true) {
 				this.remove(el, message, type);
@@ -62,8 +66,60 @@ define(function(require) {
 		},
 
 
+		check: function() {
+			return this.addIf.apply(this, arguments);
+		},
+
+
+		addAny: function(el, list) {
+			if (arguments.length > 2) {
+				list = toArray(arguments).slice(1);
+			}
+
+			var self = this;
+			forEach(list, function(item) {
+				var message = item.message;
+				var valid = item.valid;
+				var type = item.type;
+
+				self.addIf(valid, el, message, type);
+			});
+		},
+
+
+		addOne: function(el, list) {
+
+			if (arguments.length > 2) {
+				list = toArray(arguments).slice(1);
+			}
+
+			var self = this;
+			var addedOne = false;
+			forEach(list, function(item) {
+				var message = item.message;
+				var valid = item.valid;
+				var type = item.type;
+
+				if (isFunction(valid)) {
+					valid = valid();
+				}
+
+				if (!addedOne) {
+					var result = self.addIf(valid, el, message, type);
+					if (result > 0) {
+						addedOne = true;
+					}
+				}
+				else {
+					self.remove(el, message, type);
+				}
+			});
+
+		},
+
+
 		add: function(el, message, type) {
-			//console.log('add called: ', el, message);
+			console.log(arguments);
 
 			if (!type) {
 				type = ValidationError.ERROR;
@@ -77,13 +133,11 @@ define(function(require) {
 
 			this._errors[err.hash()] = err;
 			this._onAddCallback(err);
-			//dojo.publish('validation:add', [err.el(), err, this.clone()]);
 		
 		},
 
 
 		remove: function(el, message, type) {
-			//console.log('remove called: ', el, message);
 
 			if (!type) {
 				type = ValidationError.ERROR;
@@ -91,9 +145,6 @@ define(function(require) {
 
 			if (message) {
 				var err = new ValidationError(el, message, type);
-				//console.log('remove by message: ', el, message);
-				//console.log(this._errors);
-				
 				var key = err.hash();
 
 				if (!this._errors[key]) {
@@ -102,43 +153,37 @@ define(function(require) {
 
 				delete this._errors[key];
 				this._onRmCallback(err);
-				//dojo.publish('validation:remove', [err.el(), err, this.clone()]);
-
 				return;
 			}
 
 			//if we were only given an element, delete all errors starting with
 			//that element's hash
 			var self = this;
-			$.each(this.get(el), function(i, err) {
-				//console.log('removed by el: ', el, message);
+			forEach(this.get(el), function(err) {
 				err = err.clone();
 				var key = err.hash();
 				delete self._errors[key]; 
-				this._onRmCallback(err);
-				//dojo.publish('validation:remove', [err.el(), err.clone(), self.clone()]);
-			}.bind(this));
+				self._onRmCallback(err);
+			});
 		
 		},
 
 
 		removeAll: function(regexp) {
-			//console.log('removeAll called: ', regexp);
 		
 			var self = this;
 
 			//remove everything
 			if (!regexp) {
-				$.each(this._errors, function(key, err) {
+				forEach(this._errors, function(err) {
 					this._onRmCallback.call(self, err);
-					//dojo.publish('validation:remove', [err.el(), err.clone(), self.clone()]);
 				});
 				this._errors = {};
 				return;
 			}
 
 			//remove only errors matching the regexp
-			$.each(this._errors, function(key, err) {
+			forEach(this._errors, function(err, key) {
 				if (key.search(regexp) !== -1) {
 					this._onRmCallback.call(self, err);
 					//dojo.publish('validation:remove', [err.el(), err.clone(), self.clone()]);
@@ -149,13 +194,7 @@ define(function(require) {
 
 
 		size: function() {
-		
-			var count = 0;
-			$.each(this._errors, function(i, val) {
-				count++;
-			});
-			return count;
-		
+			return size(this._errors);
 		},
 
 

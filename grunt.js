@@ -32,7 +32,7 @@ module.exports = function( grunt ) {
 			standalone: true,
 			//String or Array of files for which to trace dependencies and build
 			//include: ['joss/geometry/**', 'joss/util/**', 'jossx/validation/**'],
-			include: ['joss/**', 'jossx/**', 'lib/deferreds/src/**'],
+			include: ['joss/**', 'jossx/**'],
 			//exclude files from the 'include' list. Useful to add specific
 			//exceptions to globbing.
 			exclude: ['joss/util/collection/**'],
@@ -58,7 +58,7 @@ module.exports = function( grunt ) {
 
 		min: {
 			dist: {
-				src: ['<banner>', 'dist/joss.js'],
+				src: ['<banner>', '<config:dist.out>'],
 				dest: 'dist/joss.min.js'
 			}
 		},

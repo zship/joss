@@ -18,71 +18,32 @@ module.exports = function(grunt) {
 		//------------------------------------------------------------
 		// Transform globbed config values into lists of files
 		//------------------------------------------------------------
-		if (_.isString(config.include)) {
-			config.include = [config.include];
-		}
-
-		config.include.forEach(function(val) {
-			files = files.concat(
-				grunt.file.expandFiles(baseUrl + '/' + val).map(function(path) {
-					return path.replace(rStripBaseUrl, '').replace('.js', '');
-				})
-			);
-		});
-
-
-		config.exclude = config.exclude || [];
-		if (_.isString(config.exclude)) {
-			config.exclude = [config.exclude];
-		}
-
-		config.exclude.forEach(function(val) {
-			var excludedFiles = grunt.file.expandFiles(baseUrl + '/' + val).map(function(path) {
-				return path.replace(rStripBaseUrl, '').replace('.js', '');
+		var _expanded = function(arr) {
+			var files = [];
+			arr.forEach(function(val) {
+				files = files.concat(
+					grunt.file.expandFiles(baseUrl + '/' + val).map(function(path) {
+						return path.replace(rStripBaseUrl, '').replace('.js', '');
+					})
+				);
 			});
-			files = _.difference(files, excludedFiles);
+			return _.uniq(files);
+		};
+
+		['include', 'exclude', 'excludeBuilt', 'excludeShallow'].forEach(function(name) {
+			config[name] = config[name] || [];
+			if (_.isString(config[name])) {
+				config[name] = [config[name]];
+			}
+			config[name] = _expanded(config[name]);
 		});
 
-		//'include' is a requirejs property. We used the name for our own
-		//purpose, now reassign it to align with requirejs' meaning.
-		config.include = _.uniq(files);
-		files = [];
-
-
-		config.excludeBuilt = config.excludeBuilt || [];
-		if (_.isString(config.excludeBuilt)) {
-			config.excludeBuilt = [config.excludeBuilt];
-		}
-
-		config.excludeBuilt.forEach(function(val) {
-			files = files.concat(
-				grunt.file.expandFiles(baseUrl + '/' + val).map(function(path) {
-					return path.replace(rStripBaseUrl, '').replace('.js', '');
-				})
-			);
-		});
+		config.include = _.difference(config.include, config.exclude);
 
 		//'exclude' is a requirejs property meaning 'exclude a module and its
 		//dependencies'. We used the name for our own purpose, now reassign it
 		//to align with requirejs' meaning.
-		config.exclude = _.uniq(files);
-		files = [];
-
-
-		config.excludeShallow = config.excludeShallow || [];
-		if (_.isString(config.excludeShallow)) {
-			config.excludeShallow = [config.excludeShallow];
-		}
-
-		config.excludeShallow.forEach(function(val) {
-			files = files.concat(
-				grunt.file.expandFiles(baseUrl + '/' + val).map(function(path) {
-					return path.replace(rStripBaseUrl, '').replace('.js', '');
-				})
-			);
-		});
-
-		config.excludeShallow = _.uniq(files);
+		config.exclude = _.uniq(config.excludeBuilt);
 
 
 		//use almond to remove requirejs dependency

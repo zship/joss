@@ -7,6 +7,11 @@ define(function(require) {
 	var waterfall = require('deferreds/waterfall');
 	var Objects = {};
 	Objects.methods = require('joss/util/object/methods');
+	var isElement = require('joss/util/lang/isElement');
+	var isString = require('amd-utils/lang/isString');
+	var forEach = require('joss/util/collection/forEach');
+	var every = require('amd-utils/array/every');
+	var bind = require('amd-utils/function/bind');
 
 
 
@@ -38,27 +43,29 @@ define(function(require) {
 		 */
 		constructor: function(opts) {
 
-			if (opts && opts.constructor === $) {
-				this.root = opts;
+			opts = lang.mixin({
+				root: null
+			}, opts);
+
+			//useful for off-screen rendering
+			if (!opts.root) {
+				this.$root = $('<div></div>');
+				this.root = this.$root[0];
+			}
+			else if (isElement(opts.root)) {
+				this.root = opts.root;
+				this.$root = $(opts.root);
 			}
 			else {
-				opts = lang.mixin({
-					root: null
-				}, opts);
-
-				//useful for off-screen rendering
-				if (!opts.root) {
-					opts.root = $('<div></div>');
-				}
-
-				this.root = opts.root;
+				this.$root = opts.root;
+				this.root = opts.root[0];
 			}
 
-
-			this._bindings = {};
 			//store a reference to the controller in the root element
-			this.root.data('controller', this);
+			this.$root.data('controller', this);
+			this._bindings = {};
 			this._chainLifecycleMethods();
+			this._lifecycleRunning = false;
 
 		},
 
@@ -69,7 +76,7 @@ define(function(require) {
 		 */
 		destroy: function() {
 			this.stop().then(lang.hitch(this, function() {
-				this.root.empty();
+				this.$root.empty();
 			}));
 		},
 
@@ -79,6 +86,7 @@ define(function(require) {
 		 * superclass (joss.mvc.Controller) to subclass (your controller).
 		 */
 		start: function() {
+			this._lifecycleRunning = true;
 			this.bind();
 		},
 
@@ -89,16 +97,44 @@ define(function(require) {
 		 */
 		stop: function() {
 			this.unbind();
+			this._lifecycleRunning = false;
+		},
+
+
+		setRoot: function(el) {
+
+			if (el.constructor === $) {
+				el = el[0];
+			}
+			else if (isString(el)) {
+				el = $(el)[0];
+			}
+
+			if (el === this.root) {
+				return this;
+			}
+
+			this.unbind();
+
+			this.root = el;
+			this.$root = $(el);
+
+			if (this._lifecycleRunning) {
+				this.bind();
+			}
+
+			return this;
+
 		},
 
 
 		/**
-		 * Replace the inner HTML of `this.root` with **val**
+		 * Replace the contents of `this.root` with **val**
 		 * @param {String} val
 		 * @return {joss.mvc.Controller} this
 		 */
-		html: function(val) {
-			this.root.empty().append(val);
+		contents: function(val) {
+			this.$root.empty().append(val);
 			return this;
 		},
 
@@ -117,19 +153,23 @@ define(function(require) {
 			//method name) before binding events, and include that data in the
 			//bindings if present
 			var eventData = {};
-			$.each(methods, lang.hitch(this, function(key, data) {
+			every(methods, lang.hitch(this, function(key) {
 
+				var method = this[key];
 				var match = rEventData.exec(key);
 				if (match === null) {
 					return true; //continue
 				}
-				eventData[lang.trim(match[1])] = data;
+				eventData[lang.trim(match[1])] = method;
+				return true;
 			
 			}));
 
 			//loop through this controller's methods, looking for keys that
 			//match the patterns defined at the top of this file
-			$.each(methods, lang.hitch(this, function(key, method) {
+			every(methods, lang.hitch(this, function(key) {
+
+				var method = this[key];
 
 				//don't bind the same selector more than once (for calls to
 				//rebind() or multiple calls to bind())
@@ -180,7 +220,7 @@ define(function(require) {
 
 					//special case: binding to this controller's root element
 					if (target === 'root') {
-						obj = this.root[0];
+						obj = this.root;
 					}
 					//bind to a property of this controller
 					else if (lang.getObject(target, false, this)) {
@@ -230,15 +270,17 @@ define(function(require) {
 
 				//for everything else, use event delegation with this.root as
 				//the delegation target for performance and versatility
-				this.root.on(eventName, selector, eventData[key], handler);
+				this.$root.on(eventName, selector, eventData[key], handler);
 
 				this._bindings[key] = {
 					type: 'delegate',
-					root: this.root,
+					root: this.$root,
 					selector: selector,
 					eventName: eventName,
 					handler: handler
 				};
+
+				return true;
 			
 			}));
 
@@ -252,7 +294,7 @@ define(function(require) {
 		 * @return {joss.mvc.Controller} this
 		 */
 		unbind: function() {
-			$.each(this._bindings, function(key, binding) {
+			forEach(this._bindings, function(binding) {
 				if (binding.type === 'pubsub') {
 					hub.unsubscribe(binding.handle);
 				}
@@ -277,7 +319,7 @@ define(function(require) {
 			//only unbind events that could possibly have become detached:
 			//those outside this.root or bound without delegation
 			var toDelete = [];
-			$.each(this._bindings, function(key, binding) {
+			forEach(this._bindings, function(binding, key) {
 				if (binding.type === 'bind') {
 					$(binding.selector).off(binding.eventName, binding.handler);
 					toDelete.push(key);
@@ -287,7 +329,7 @@ define(function(require) {
 					toDelete.push(key);
 				}
 			});
-			$.each(toDelete, function(i, key) {
+			forEach(toDelete, function(key) {
 				delete this._bindings[key];
 			});
 			this.bind();
@@ -304,7 +346,7 @@ define(function(require) {
 
 			var bases = this.constructor._meta.bases;
 
-			$.each(chains, lang.hitch(this, function(key, val) {
+			forEach(chains, bind(function(val, key) {
 				var i = 0;
 				var step = 1;
 				var methodList = [];
@@ -318,19 +360,20 @@ define(function(require) {
 					var base = bases[i];
 					var method = (base._meta ? base._meta.hidden : base.prototype)[key];
 					if (method) {
-						methodList.push(method);
+						methodList.push(bind(method, this));
 					}
 				}
 
-				this[key] = lang.hitch(this, function() {
-					var args = [].slice.apply(arguments);
-					var list = lang.clone(methodList);
+				this[key] = function() {
+					var args = Array.prototype.slice.apply(arguments);
+					var list = methodList;
 					if (args.length) {
 						list.unshift(args);
 					}
-					return waterfall.apply(this, list);
-				});
-			}));
+					return waterfall(list);
+				};
+
+			}, this));
 		}
 	
 	});

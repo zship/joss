@@ -14,7 +14,7 @@ define(['amd-utils/lang/isArray', 'amd-utils/object/hasOwn'], function (isArray,
 		}
 		else {
 			for (var key in list) {
-				if (hasOwn(list, key)) {
+				if (!hasOwn(list, key)) {
 					continue;
 				}
 				if (iterator.call(context, list[key], key, list) === false) {

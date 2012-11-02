@@ -138,7 +138,9 @@ define(function(require) {
 	};
 
 
-	Checks.required = Checks.isPresent;
+	Checks.required = function(value) {
+		return (value === true || Checks.isPresent(value));
+	};
 
 
 	return Checks;

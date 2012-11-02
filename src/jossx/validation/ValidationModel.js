@@ -1,11 +1,9 @@
 define(function(require) {
 
-	var $ = require('jquery');
 	var declare = require('dojo/_base/declare');
 	var lang = require('dojo/_base/lang');
 	var Elements = require('joss/util/Elements');
-	var isElement = require('joss/util/lang/isElement');
-	var objectIs = require('joss/util/lang/is');
+	var isNumber = require('amd-utils/lang/isNumber');
 
 
 
@@ -17,15 +15,12 @@ define(function(require) {
 
 
 		_hash: function(el) {
-			if (isElement(el)) {
-				return Elements.hash(el);
+			if (!isNaN(parseInt(el, 10))) {
+				return el;
 			}
 
-			if (objectIs(el, $)) {
-				return Elements.hash(el[0]);
-			}
-
-			return el;
+			el = Elements.fromAny(el);
+			return Elements.hash(el);
 		},
 
 

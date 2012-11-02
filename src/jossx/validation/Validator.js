@@ -42,7 +42,6 @@ define(function(require) {
 					self._onValidationRemove(err.el(), err.clone(), self._validationErrors.clone());
 				}
 			});
-
 		
 		},
 

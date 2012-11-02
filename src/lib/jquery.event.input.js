@@ -1,7 +1,7 @@
 /*
  * jQuery.event.input
  *
- * Zach Shipley | MIT license
+ * (C) 2012 Zach Shipley | MIT license
  * www.opensource.org/licenses/mit-license.php
  */
 (function($) {
@@ -19,31 +19,37 @@
 	};
 
 
-
 	/*
 	 * `contexts`, conceptually, is a 
-	 * Map<(parent HTMLElement), List<Map<(child selector), (handler object)>>>
+	 * Map<(HTMLElement), Map<(selector), (handler object)>>
 	 * It looks like this:
 	 * {
-	 *   '<HTMLElement "hash">': [
-	 *     {
-	 *       '<selector string>': <handler object>,
-	 *     },
-	 *     {
-	 *       '<selector string 2>': <handler object 2>
-	 *     }
-	 *   ],
-	 *   '<HTMLElement "hash" 2>': [
+	 *   '<HTMLElement "hash">': {
+	 *       'ROOT': <handler object for either a regular bind() or a delegateTarget>,
+	 *       '<child selector>': <handler object>,
+	 *       '<child selector 2>': <handler object 2>
+	 *   },
+	 *   '<HTMLElement "hash" 2>': {
 	 *   ...
 	 * }
 	 */
 	var contexts = {};
 
+	//switches to "true" in mainHandler the first time an actual 'input' event
+	//makes it through
+	var hasNativeOnInput = false; 
+
 	$.event.special.input = {
 
 		setup: function() {
 			contexts[Util.hash(this)] = {};
-			$(this).bind('input propertychange paste cut keydown drop', mainHandler);
+
+			if (hasNativeOnInput) {
+				$(this).bind('input', mainHandler);
+			}
+			else {
+				$(this).bind('input propertychange paste cut keydown drop', mainHandler);
+			}
 
 			//we're hijacking the input event except in the body of this
 			//plugin. returning false will cause the above bind() to bind to the
@@ -57,7 +63,6 @@
 			if (context.length > 0) {
 				return;
 			}
-			console.log('unbound');
 			$(this).unbind('input propertychange paste cut keydown drop', mainHandler);
 			delete contexts[Util.hash(this)];
 		},
@@ -69,7 +74,7 @@
 
 			var oldHandler = obj.handler;
 			obj.handler = function(ev) {
-				//Block events other than what we provide.
+				//Block oninput events other than what we provide.
 				//Evil? Eh, it's either this or don't use the name 'input' for
 				//the event (because you can't reliably determine oninput
 				//support in browsers without actually trying it out)
@@ -89,13 +94,13 @@
 	};
 
 
-	var hasNativeOnInput = false;
-
 	var mainHandler = function(ev) {
 
 		var context = contexts[Util.hash(this)];
 		var length = 0;
-		for (var name in context) length++;
+		for (var name in context) {
+			length++;
+		}
 		var target;
 
 		//regular bind
@@ -116,10 +121,9 @@
 			});
 		}
 
-		//ev.target is not bound through us (probably bubbled up to $(this) but
-		//not bound to anything in particular)
+		//ev.target is not bound through us
 		if (!target) {
-			return false;
+			return true;
 		}
 
 		var newEvent = $.extend(
@@ -167,7 +171,7 @@
 
 
 	//events hit this method as fast as they can; first one to hit with a
-	//changed value wins.
+	//changed value wins (handler is triggered).
 	var firstChangedTrigger = function(event, target) {
 		var el = event.currentTarget;
 		if (el.value !== $(el).data('event.special.input.value')) {
@@ -177,7 +181,6 @@
 	};
 
 
-	//shorthand method (do people use these?)
 	$.fn.input = function(handler) {
 		return handler ? this.bind("input", handler) : this.trigger("input");
 	};

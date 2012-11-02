@@ -77,7 +77,12 @@ module.exports = function( grunt ) {
 
 		jshint: (function() {
 			return readJshint('src/joss/.jshintrc') || {};
-		})()
+		})(),
+
+		whatrequires: {
+			module: 'src/jossx/mvc/JadeView.js',
+			pool: 'src/**/*.js'
+		}
 
 	});
 

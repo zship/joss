@@ -319,8 +319,8 @@ define(function(require) {
 		var dim = {
 			positioning: styles['position'],
 			precedence: {
-				x: (styles['right'] === 'auto') ? 'left' : 'right',
-				y: (styles['bottom'] === 'auto') ? 'top' : 'bottom'
+				x: (styles['left'] !== 'auto' || styles['right'] === 'auto') ? 'left' : 'right',
+				y: (styles['top'] !== 'auto' || styles['bottom'] === 'auto') ? 'top' : 'bottom'
 			},
 			//we're doing offsets relative to the *document*
 			//in order to normalize between elements with different offset

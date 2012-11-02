@@ -109,11 +109,11 @@ define(function(require) {
 			}
 
 			if (this.borderWidth() === null) {
-				this.borderWidth(parseInt(this.$element.css('border-width'), 10));
+				this.borderWidth(parseInt(this.$element.css('border-top-width'), 10));
 			}
 
 			if (this.borderColor() === null) {
-				this.borderColor(this.$element.css('border-color'));
+				this.borderColor(this.$element.css('border-top-color'));
 			}
 
 			if (this.backgroundColor() === null) {

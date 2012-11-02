@@ -278,7 +278,6 @@ define(function(require) {
 				});
 			}
 
-
 			// Grab canvas context and clear/save it
 			var context = this.canvas().getContext('2d');
 			context.restore(); 

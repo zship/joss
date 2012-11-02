@@ -1,37 +1,24 @@
 define(function(require) {
 
-	var declare = require('dojo/_base/declare');
 	var lang = require('dojo/_base/lang');
 	var Elements = require('joss/util/Elements');
+	var Classes = require('joss/util/Classes');
 
 
-
-	var ValidationError = declare(null, {
+	
+	var ValidationError = Classes.getset(['el', 'message', 'type'], null, {
 
 		constructor: function(el, message, type) {
 
-			this._el = el;
-			this._message = message;
-			this._type = type;
+			this.el(el);
+			this.message(message);
+			this.type(type);
 		
 		},
 
 
-		el: function(val) {
-			if (val) { this._el = val; return this; }
-			return this._el;
-		},
-
-
-		message: function(val) {
-			if (val) { this._message = val; return this; }
-			return this._message;
-		},
-
-
-		type: function(val) {
-			if (val) { this._type = val; return this; }
-			return this._type;
+		_setType: function(val) {
+			this._type = val || ValidationError.ERROR;
 		},
 
 

@@ -20,18 +20,34 @@ define(function(require) {
 
 		constructor: function(opts) {
 			opts = lang.mixin({
-				el: null,
-				padding: true,
-				margin: false,
-				border: true
+				element: null,
+				dimensions: {},
+				countsPadding: true,
+				countsMargin: false,
+				countsBorder: true
 			}, opts);
 
-			this._element = opts.el;
-			this.padding = opts.padding;
-			this.margin = opts.margin;
-			this.border = opts.border;
+			this._element = opts.element;
+			this._dimensions = opts.dimensions;
+			this.countsPadding = opts.countsPadding;
+			this.countsMargin = opts.countsMargin;
+			this.countsBorder = opts.countsBorder;
 
-			return this;
+
+
+		},
+
+
+		element: function(el) {
+			if (el === undefined) {
+				return this._element;
+			}
+			this._element = el;
+		},
+
+
+		dimensions: function() {
+			return this._dimensions;
 		},
 
 
@@ -91,34 +107,81 @@ define(function(require) {
 	}; //jQuery.fn.rect
 
 
+	var _nullDimensions = {
+		positioning: 'static',
+		precedence: {
+			x: 'left',
+			y: 'top'
+		},
+		offset: {
+			top: 0,
+			left: 0
+		},
+		position: {
+			top: 0,
+			left: 0
+		},
+		border: {
+			top: 0,
+			bottom: 0,
+			left: 0,
+			right: 0
+		},
+		margin: {
+			top: 0,
+			bottom: 0,
+			left: 0,
+			right: 0
+		},
+		padding: {
+			top: 0,
+			bottom: 0,
+			left: 0,
+			right: 0
+		}
+	};
+
+
 	var getRect = function(els, opts) {
 		//some special cases:
 		//entire document
 		if (els[0] === document) {
+			var docWidth = $(document).width();
+			var docHeight = $(document).height();
 			return new DomRect({
 				t: 0,
 				l: 0,
-				w: $(document).width(),
-				h: $(document).height(),
-				padding: false,
-				margin: false,
-				border: false
+				w: docWidth,
+				h: docHeight,
+				dimensions: lang.mixin(_nullDimensions, {
+					width: docWidth,
+					height: docHeight
+				}),
+				countsPadding: false,
+				countsMargin: false,
+				countsBorder: false
 			});
 		}
 
 		//viewport, with scrolling
 		if (els[0] === window) {
+			var winWidth = $(window).width();
+			var winHeight = $(window).height();
 			var st = parseInt($(window).scrollTop(), 10);
 			var sl = parseInt($(window).scrollLeft(), 10);
 
 			return new DomRect({
 				t: st,
 				l: sl,
-				w: $(window).width(),
-				h: $(window).height(),
-				padding: false,
-				margin: false,
-				border: false
+				w: winWidth,
+				h: winHeight,
+				dimensions: lang.mixin(_nullDimensions, {
+					width: winWidth,
+					height: winHeight
+				}),
+				countsPadding: false,
+				countsMargin: false,
+				countsBorder: false
 			});
 		}
 
@@ -136,9 +199,10 @@ define(function(require) {
 				t: dim.offset.top + dim.padding.top + dim.border.top,
 				w: dim.width,
 				h: dim.height,
-				padding: opts.padding,
-				margin: opts.margin,
-				border: opts.border
+				dimensions: dim,
+				countsPadding: opts.padding,
+				countsMargin: opts.margin,
+				countsBorder: opts.border
 			});
 
 			if (opts.padding) {
@@ -185,7 +249,7 @@ define(function(require) {
 	 */
 	var setRect = function(el, rect) {
 
-		var curr = Elements.getDimensions(el[0]);
+		var curr = rect.dimensions();
 		var next = {
 			offset: {
 				top: rect.top,
@@ -196,7 +260,7 @@ define(function(require) {
 		};
 
 		//calculate next values (the ones to set)
-		if (rect.padding) {
+		if (rect.countsPadding) {
 			next.width -= curr.padding.left + curr.padding.right;
 			next.height -= curr.padding.top + curr.padding.bottom;
 		}
@@ -205,7 +269,7 @@ define(function(require) {
 			next.offset.left -= curr.padding.left;
 		}
 
-		if (rect.border) {
+		if (rect.countsBorder) {
 			next.width -= curr.border.left + curr.border.right;
 			next.height -= curr.border.top + curr.border.bottom;
 		}
@@ -214,7 +278,7 @@ define(function(require) {
 			next.offset.left -= curr.border.left;
 		}
 
-		if (rect.margin) {
+		if (rect.countsMargin) {
 			next.width -= curr.margin.left + curr.margin.right;
 			next.height -= curr.margin.top + curr.margin.bottom;
 			next.offset.top += curr.margin.top;
@@ -232,63 +296,77 @@ define(function(require) {
 		var styles = {};
 
 		if (changed.width) {
-			styles['width'] = Math.round(next.width);
+			styles.width = Math.round(next.width);
 		}
 		if (changed.height) {
-			styles['height'] = Math.round(next.height);
+			styles.height = Math.round(next.height);
 		}
 
 		//adjust offsets for position: relative elements (still valid for position: absolute)
 		//reads: (parent-relative offset) + (change in absolute offset)
 		var adjusted = {
-			top: curr.position.top + (next.offset.top - curr.offset.top),
-			left: curr.position.left + (next.offset.left - curr.offset.left),
-			right: -1 * (curr.position.right + (next.offset.left - curr.offset.left)),
-			bottom: -1 * (curr.position.bottom + (next.offset.top - curr.offset.top))
+			top: Math.round(curr.position.top + (next.offset.top - curr.offset.top)),
+			left: Math.round(curr.position.left + (next.offset.left - curr.offset.left)),
+			right: Math.round(-1 * (curr.position.right + (next.offset.left - curr.offset.left))),
+			bottom: Math.round(-1 * (curr.position.bottom + (next.offset.top - curr.offset.top)))
 		};
 
 		if (changed.top) {
 			if (curr.precedence.y === 'bottom') {
-				styles['bottom'] = Math.round(adjusted.bottom);
+				styles.bottom = Math.round(adjusted.bottom);
 				//if we're not depending on 'top' to set height, disable it
 				if (changed.height) {
-					styles['top'] = 'auto';
+					styles.top = 'auto';
 				}
 			}
 			else {
-				styles['top'] = Math.round(adjusted.top);
+				styles.top = Math.round(adjusted.top);
 				if (changed.height) {
-					styles['bottom'] = 'auto';
+					styles.bottom = 'auto';
 				}
 			}
 		}
 
 		if (changed.left) {
 			if (curr.precedence.x === 'right') {
-				styles['right'] = Math.round(adjusted.right);
+				styles.right = Math.round(adjusted.right);
 				if (changed.width) {
-					styles['left'] = 'auto';
+					styles.left = 'auto';
 				}
 			}
 			else {
-				styles['left'] = Math.round(adjusted.left);
+				styles.left = Math.round(adjusted.left);
 				if (changed.width) {
-					styles['right'] = 'auto';
+					styles.right = 'auto';
 				}
 			}
 		}
 
 		if (curr.positioning === 'static' && (changed.top || changed.left)) {
-			styles['position'] = 'absolute';
+			styles.position = 'absolute';
 		}
 
 		Elements.setStyles(el[0], styles);
 
 		return new DomRect({
 			el: el,
-			padding: rect.padding,
-			border: rect.border,
-			margin: rect.margin,
+			countsPadding: rect.padding,
+			countsBorder: rect.border,
+			countsMargin: rect.margin,
+			dimensions: lang.mixin(curr, {
+				offset: {
+					top: next.offset.top,
+					left: next.offset.left
+				},
+				position: {
+					top: adjusted.top,
+					left: adjusted.left,
+					right: adjusted.right,
+					bottom: adjusted.bottom
+				},
+				width: styles.width,
+				height: styles.height
+			}),
 			top: next.offset.top,
 			left: next.offset.left,
 			width: next.width,

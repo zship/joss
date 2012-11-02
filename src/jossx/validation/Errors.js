@@ -1,13 +1,22 @@
 define(function(require) {
 
+	var $ = require('jquery');
 	var declare = require('dojo/_base/declare');
 	var lang = require('dojo/_base/lang');
 	var ValidationError = require('./ValidationError');
 	var Elements = require('joss/util/Elements');
 	var forEach = require('joss/util/collection/forEach');
+	var map = require('joss/util/collection/map');
 	var toArray = require('amd-utils/lang/toArray');
 	var isFunction = require('amd-utils/lang/isFunction');
 	var size = require('amd-utils/object/size');
+	var Deferreds = {
+		anyToDeferred: require('deferreds/anyToDeferred'),
+		map: require('deferreds/map'),
+		mapSeries: require('deferreds/mapSeries'),
+		forEach: require('deferreds/forEach'),
+		forEachSeries: require('deferreds/forEachSeries')
+	};
 
 
 
@@ -23,19 +32,17 @@ define(function(require) {
 			this._onAddCallback = opts.onAdd;
 			this._onRmCallback = opts.onRemove;
 
+			this._pending = {};
+
 		},
 
 
 		get: function(el, message, type) {
 
-			if (!type) {
-				type = ValidationError.ERROR;
-			}
-
 			if (message) {
 				var err = new ValidationError(el, message, type);
-
-				return [this._errors[err.hash()]] || [];
+				var existing = this._errors[err.hash()];
+				return existing ? [existing] : [];
 			}
 
 			//if we were only given an element, return all errors starting with that element's hash
@@ -54,15 +61,27 @@ define(function(require) {
 
 		addIf: function(isValid, el, message, type) {
 
-			if (isValid === true) {
-				this.remove(el, message, type);
-				return -1;
+			var err = new ValidationError(el, message, type);
+			if (this._pending[err.hash()]) {
+				return;
 			}
-			else {
-				this.add(el, message, type);
-				return 1;
-			}
-		
+
+			this._pending[err.hash()] = true;
+
+			var self = this;
+			return Deferreds.anyToDeferred(isValid)
+			.done(function(value) {
+				if (value === true || value === 'true') {
+					self.remove(el, message, type);
+				}
+				else {
+					self.add(el, message, type);
+				}
+			})
+			.always(function() {
+				self._pending[err.hash()] = false;
+			});
+
 		},
 
 
@@ -72,18 +91,16 @@ define(function(require) {
 
 
 		addAny: function(el, list) {
+
 			if (arguments.length > 2) {
 				list = toArray(arguments).slice(1);
 			}
 
 			var self = this;
 			forEach(list, function(item) {
-				var message = item.message;
-				var valid = item.valid;
-				var type = item.type;
-
-				self.addIf(valid, el, message, type);
+				self.addIf(item.test, el, item.message, item.type);
 			});
+
 		},
 
 
@@ -94,36 +111,61 @@ define(function(require) {
 			}
 
 			var self = this;
-			var addedOne = false;
-			forEach(list, function(item) {
-				var message = item.message;
-				var valid = item.valid;
-				var type = item.type;
+			Deferreds.forEachSeries(list, function(item, index) {
+				var deferred = $.Deferred();
 
-				if (isFunction(valid)) {
-					valid = valid();
+				var err = new ValidationError(el, item.message, item.type);
+				if (self._pending[err.hash()]) {
+					deferred.resolve(); //continue
+					return deferred;
 				}
 
-				if (!addedOne) {
-					var result = self.addIf(valid, el, message, type);
-					if (result > 0) {
-						addedOne = true;
+				self._pending[err.hash()] = true;
+
+				Deferreds.anyToDeferred(item.test)
+				.done(function(isValid) {
+
+					var i;
+					//check if addOne() was called while the deferred was
+					//running, and if it generated an error higher in the chain
+					for (i = 0; i < index; i++) {
+						var higherItem = list[i];
+						//if so, that event removed errors lower in the chain. we can just break.
+						if (self.get(el, higherItem.message, higherItem.type).length) {
+							deferred.reject();
+							return;
+						}
 					}
-				}
-				else {
-					self.remove(el, message, type);
-				}
+					
+					//if the test passed, remove a possibly-existing error in this spot
+					if (isValid === true || isValid === 'true'){
+						self.remove(el, item.message, item.type);
+						deferred.resolve(); //continue
+						return;
+					}
+
+					//otherwise, upon the first failed test add the error
+					self.add(el, item.message, item.type);
+					
+					//and remove everything in the list below this item
+					for (i = index + 1; i < list.length; i++) {
+						var lowerItem = list[i];
+						self.remove(el, lowerItem.message, lowerItem.type);
+					}
+
+					deferred.reject(); //break
+				})
+				.always(function() {
+					self._pending[err.hash()] = false;
+				});
+
+				return deferred.promise();
 			});
 
 		},
 
 
 		add: function(el, message, type) {
-			console.log(arguments);
-
-			if (!type) {
-				type = ValidationError.ERROR;
-			}
 
 			var err = new ValidationError(el, message, type);
 
@@ -138,10 +180,6 @@ define(function(require) {
 
 
 		remove: function(el, message, type) {
-
-			if (!type) {
-				type = ValidationError.ERROR;
-			}
 
 			if (message) {
 				var err = new ValidationError(el, message, type);

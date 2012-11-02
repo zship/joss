@@ -1,47 +1,49 @@
 define(function(require) {
 
 	var $ = require('jquery');
-	var declare = require('dojo/_base/declare');
 	var lang = require('dojo/_base/lang');
 	var Callout = require('./Callout');
 	var Position = require('joss/geometry/Position');
 	var Point = require('joss/geometry/Point');
 	var Rect = require('joss/geometry/Rect');
+	var Classes = require('joss/util/Classes');
+	var Elements = require('joss/util/Elements');
+	var objectKeys = require('amd-utils/object/keys');
 	require('joss/geometry/DomRect');
-	require('joss/util/Elements');
 
 
 
-	return declare(null, {
+	var defaults = {
+		element: null,
+		target: null,
+		position: Position.fromString('bottom center'),
+		className: 'tooltip',
+		borderWidth: null,
+		borderColor: null,
+		backgroundColor: null,
+		offset: {
+			x: 0,
+			y: 0
+		},
+		tipSize: 12
+	};
+
+	var getset = objectKeys(defaults).concat(['tip', 'inner']);
+
+
+	var Tooltip = Classes.getset(getset, null, {
 
 		constructor: function(opts) {
-			
-			opts = lang.mixin({
-				target: null,
-				position: Position.fromString('bottom center'),
-				offset: {
-					x: 0,
-					y: 0
-				},
-				tipSize: 12,
-				content: 'test'
-			}, opts);
 
-			this._target = opts.target;
+			opts = lang.mixin(defaults, opts);
+			opts.element = opts.element || $('<div></div>').addClass(opts.className).appendTo('body');
 
-			if (opts.position.constructor === String) {
-				opts.position = Position.fromString(opts.position);
-			}
+			Classes.applyOptions(this, opts);
 
-			this._position = opts.position;
-			//console.log(this._position.reverse().toString());
-			this._offset = opts.offset;
+			this._inner = $('<div class="inner"></div>').appendTo(this.$element);
 
-			this._element = $('<div class="tooltip"></div>').appendTo('body');
-			this._content = $('<div class="content"></div>').appendTo(this._element);
-			this._content.html(opts.content);
 			this._tip = new Callout({
-				element: $('<div class="tip"></div>').css({position: 'absolute', width: opts.tipSize, height: opts.tipSize}).appendTo(this._element),
+				element: $('<div class="tip"></div>').css({position: 'absolute', width: opts.tipSize, height: opts.tipSize}).appendTo(this.$element),
 				width: opts.tipSize,
 				height: opts.tipSize,
 				direction: this._position.reverse().toString()
@@ -51,62 +53,50 @@ define(function(require) {
 
 
 		destroy: function() {
-			this._element.remove();
+			this.$element.remove();
+			this.tip().destroy();
 		},
 
 
-		element: function(val) {
-			if (val) { this._element = val; return this; }
-			return this._element;
+		hide: function() {
+			this.$element.hide();
 		},
 
 
-		content: function(val) {
-			if (val) { this._content = val; return this; }
-			return this._content;
+		show: function() {
+			this.$element.show();
 		},
 
 
-		position: function(val) {
-			if (val) { 
-				if (val.constructor === String) {
-					val = Position.fromString(val);
-				}
-				this._position = val; return this; 
+		_setElement: function(el) {
+			this._element = Elements.fromAny(el);
+			this.$element = $(this._element);
+			return this;
+		},
+
+
+		_setTarget: function(el) {
+			if (el instanceof Point) {
+				this._target = el;
+				return this;
 			}
-			return this._position;
+			this._target = Elements.fromAny(el);
+			this.$target = $(this._target);
+			return this;
 		},
 
 
-		/**
-		 * @param {Point|jQuery} val
-		 */
-		target: function(val) {
-			if (val) { this._target = val; return this; }
-			return this._target;
+		_setPosition: function(pos) {
+			this._position = new Position(pos);
+			return this;
 		},
 
 
-		offset: function(val) {
-			if (val) { this._offset = val; return this; }
-			return this._offset;
-		},
-
-
-		tip: function(val) {
-			if (val) { this._tip = val; return this; }
-			return this._tip;
-		},
-
-
-		refresh: function() {
+		render: function() {
 
 			var tgtRect;
 
-			if (this.target().constructor === $) {
-				tgtRect = this.target().rect();
-			}
-			else if (this.target().constructor === Point) {
+			if (this.target() instanceof Point) {
 				tgtRect = new Rect({
 					t: this.target().y,
 					l: this.target().x,
@@ -114,37 +104,85 @@ define(function(require) {
 					h: 1
 				});
 			}
+			else {
+				tgtRect = this.$target.rect();
+			}
 
-			this.element().show();
-			var rect = this.element().rect().position({
-				my: this.position().reverse(),
-				at: this.position(),
-				of: tgtRect,
-				offset: this.offset()
-			}).apply();
+			if (this.borderWidth() === null) {
+				this.borderWidth(parseInt(this.$element.css('border-width'), 10));
+			}
 
-			var dim = this.element().dimensions();
+			if (this.borderColor() === null) {
+				this.borderColor(this.$element.css('border-color'));
+			}
 
+			if (this.backgroundColor() === null) {
+				this.backgroundColor(this.$element.css('background-color'));
+			}
+
+			this.$element.show();
+			var rect = this.$element.rect();
+			rect
+				.position({
+					my: this.position().reverse(),
+					at: this.position(),
+					of: tgtRect,
+					offset: this.offset()
+				})
+				.translate((function(self) {
+					switch(self.position().x()) {
+						case 'left':
+							return -1 * self._tipSize;
+						case 'right':
+							return self._tipSize;
+						default:
+							return 0;
+					}
+				})(this), (function(self) {
+					switch(self.position().y()) {
+						case 'top':
+							return -1 * self._tipSize;
+						case 'bottom':
+							return self._tipSize;
+						default:
+							return 0;
+					}
+				})(this))
+				.apply();
+
+
+			this.tip().borderWidth(this.borderWidth());
+			this.tip().borderColor(this.borderColor());
+			this.tip().fillColor(this.backgroundColor());
 			this.tip().direction(this.position().reverse());
 			this.tip().render();
 
 
 			var tipInset = {};
 			if (this.position().precedence() === 'x') {
-				tipInset.x = (this.position().x() === 'left' ? -1 * dim.border.right : dim.border.left);
 				tipInset.y = 0;
+				if (this.position().x() === 'left') {
+					tipInset.x = -1 * rect.dimensions().border.right;
+				}
+				else {
+					tipInset.x = rect.dimensions().border.left;
+				}
 			}
 			else {
 				tipInset.x = 0;
-				tipInset.y = (this.position().y() === 'top' ? -1 * dim.border.bottom : dim.border.top);
+				if (this.position().y() === 'top') {
+					tipInset.y = -1 * rect.dimensions().border.bottom;
+				}
+				else {
+					tipInset.y = rect.dimensions().border.top;
+				}
 			}
 
 
-			this.tip().element().css('top', 0);
-			this.tip().element().css('left', 0);
-			//console.log(this.tip().element()[0].offsetTop);
+			this.tip().$element.css('top', 0);
+			this.tip().$element.css('left', 0);
 
-			this.tip().element().rect().position({
+			this.tip().$element.rect().position({
 				my: this.position(),
 				at: this.position().reverse(),
 				of: rect,
@@ -153,7 +191,9 @@ define(function(require) {
 
 		}
 
-
 	});
+
+
+	return Tooltip;
 
 });

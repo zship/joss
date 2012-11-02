@@ -3,39 +3,42 @@
  * used for other things, like creating an arrow.  For that reason, I'm being
  * exact here and defining a callout as a partial triangle whose two
  * visible sides, including stroke, precisely fill the specified width and
- * height.  
+ * height.
  */
 define(function(require) {
 
 	var $ = require('jquery');
-	var declare = require('dojo/_base/declare');
 	var lang = require('dojo/_base/lang');
 	var Position = require('joss/geometry/Position');
 	var Point = require('joss/geometry/Point');
 	var Line = require('joss/geometry/Line');
+	var Classes = require('joss/util/Classes');
+	var Elements = require('joss/util/Elements');
+	var objectKeys = require('amd-utils/object/keys');
 	require('joss/geometry/DomRect');
 
 
 
-	return declare(null, {
+	var defaults = {
+		element: null,
+		canvas: null,
+		width: 0,
+		height: 0,
+		borderWidth: 1,
+		borderColor: 'rgb(0, 0, 0)',
+		fillColor: 'rgb(255, 255, 255)',
+		direction: new Position('right center')
+	};
+
+	var getset = objectKeys(defaults);
+
+
+	var Callout = Classes.getset(getset, null, {
 
 		constructor: function(opts) {
-			
-			opts = lang.mixin({
-				element: null,
-				canvas: null,
-				width: 0,
-				height: 0,
-				borderWidth: 1,
-				borderColor: 'rgba(255, 255, 255, 0.5)',
-				fillColor: 'rgba(0, 0, 0, 0.5)',
-				direction: new Position('right center')
-			}, opts);
 
-			if (opts.element === null) {
-				opts.element = $('<div class="callout"></div>').appendTo('body');
-				opts.element.css('position', 'absolute');
-			}
+			opts = lang.mixin(defaults, opts);
+			opts.element = opts.element || $('<div class="callout"></div>').appendTo('body');
 
 			if (opts.width !== 0 && opts.height !== 0) {
 				//var rect = opts.element.rect();
@@ -43,62 +46,27 @@ define(function(require) {
 				opts.element.css('height', opts.height);
 			}
 
-			this._element = opts.element;
-			this._canvas = opts.canvas;
-			this._width = opts.width;
-			this._height = opts.height;
-			this._borderWidth = opts.borderWidth;
-			this._borderColor = opts.borderColor;
-			this._fillColor = opts.fillColor;
-			this._direction = opts.direction;
+			Classes.applyOptions(this, opts);
 
 		},
 
 
 		destroy: function() {
-			this._element.remove();
+			this.$element.remove();
 		},
 
 
-		element: function(val) {
-			if (val) { this._element = val; return this; }
-			return this._element;
+		_setElement: function(el) {
+			this._element = Elements.fromAny(el);
+			this.$element = $(this._element);
+			return this;
 		},
 
 
-		width: function(val) {
-			if (val) { this._width = val; return this; }
-			return this._width;
-		},
-
-
-		height: function(val) {
-			if (val) { this._height = val; return this; }
-			return this._height;
-		},
-
-
-		borderWidth: function(val) {
-			if (val) { this._borderWidth = val; return this; }
-			return this._borderWidth;
-		},
-
-
-		borderColor: function(val) {
-			if (val) { this._borderColor = val; return this; }
-			return this._borderColor;
-		},
-
-
-		fillColor: function(val) {
-			if (val) { this._fillColor = val; return this; }
-			return this._fillColor;
-		},
-
-
-		direction: function(val) {
-			if (val) { this._direction = val; return this; }
-			return this._direction;
+		_setCanvas: function(el) {
+			this._canvas = Elements.fromAny(el);
+			this.$canvas = $(this._canvas);
+			return this;
 		},
 
 
@@ -287,24 +255,24 @@ define(function(require) {
 
 		render: function() {
 
-			var rect = this._element.rect();
+			var rect = this.$element.rect();
 			this._width = rect.width();
 			this._height = rect.height();
 
-			if (!this._canvas) {
+			if (!this.canvas()) {
 				//define dimensions before initializing excanvas
-				this._canvas = $('<canvas width="' + this.width() + '" height="' + this.height() + '" />').appendTo(this._element)[0];
-				$(this._canvas).css('display', 'block');
+				this.canvas($('<canvas width="' + this.width() + '" height="' + this.height() + '" />').appendTo(this.$element));
+				this.$canvas.css('display', 'block');
 				//excanvas for ie < 9
 				if (window.G_vmlCanvasManager) {
-					window.G_vmlCanvasManager.initElement(this._canvas);
+					window.G_vmlCanvasManager.initElement(this.canvas());
 				}
 				//our first restore will cause errors with excanvas and also
 				//FF2 unless we save() the context immediately
-				this._canvas.getContext('2d').save();
+				this.canvas().getContext('2d').save();
 			}
 			else {
-				$(this._canvas).css({
+				this.$canvas.css({
 					width: this.width(),
 					height: this.height()
 				});
@@ -312,7 +280,7 @@ define(function(require) {
 
 
 			// Grab canvas context and clear/save it
-			var context = this._canvas.getContext('2d');
+			var context = this.canvas().getContext('2d');
 			context.restore(); 
 			context.save();
 			context.clearRect(0,0,this.width(),this.height());
@@ -328,7 +296,7 @@ define(function(require) {
 			context.fillStyle = this._fillColor;
 			context.strokeStyle = this._borderColor;
 			//console.log('borderWidth: ', this._borderWidth);
-			context.lineWidth = this._borderWidth;
+			context.lineWidth = this._borderWidth + 2;
 			context.lineJoin = 'miter';
 			context.miterLimit = 100;
 			if(this._borderWidth) {
@@ -340,5 +308,7 @@ define(function(require) {
 
 
 	});
+
+	return Callout;
 
 });

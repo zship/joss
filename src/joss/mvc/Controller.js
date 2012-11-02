@@ -7,8 +7,7 @@ define(function(require) {
 	var waterfall = require('deferreds/waterfall');
 	var Objects = {};
 	Objects.methods = require('joss/util/object/methods');
-	var isElement = require('joss/util/lang/isElement');
-	var isString = require('amd-utils/lang/isString');
+	var Elements = require('joss/util/Elements');
 	var forEach = require('joss/util/collection/forEach');
 	var every = require('amd-utils/array/every');
 	var bind = require('amd-utils/function/bind');
@@ -52,13 +51,9 @@ define(function(require) {
 				this.$root = $('<div></div>');
 				this.root = this.$root[0];
 			}
-			else if (isElement(opts.root)) {
-				this.root = opts.root;
-				this.$root = $(opts.root);
-			}
 			else {
-				this.$root = opts.root;
-				this.root = opts.root[0];
+				this.root = Elements.fromAny(opts.root);
+				this.$root = $(this.root);
 			}
 
 			//store a reference to the controller in the root element
@@ -103,12 +98,7 @@ define(function(require) {
 
 		setRoot: function(el) {
 
-			if (el.constructor === $) {
-				el = el[0];
-			}
-			else if (isString(el)) {
-				el = $(el)[0];
-			}
+			el = Elements.fromAny(el);
 
 			if (el === this.root) {
 				return this;

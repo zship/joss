@@ -56,7 +56,14 @@ define(function(require) {
 		},
 
 
+		//normal entry (detect when values actually change)
 		'input[type="password"], input[type="text"], textarea input': function(ev, tgt) {
+			this._queueField(tgt);
+		},
+
+
+		//browser autofill
+		'input[type="password"], input[type="text"], textarea change': function(ev, tgt) {
 			this._queueField(tgt);
 		},
 
@@ -67,11 +74,16 @@ define(function(require) {
 		},
 
 
-		'input blur': function(ev, tgt) {
-			if ($(tgt).val() !== '' && $(tgt).data('firstChange') !== false) {
-				$(tgt).data('firstChange', false);
-				this._queueField(tgt);
+		//a completed attempt to enter a value
+		'input[type="password"], input[type="text"], textarea blur': function(ev, tgt) {
+			if (Forms.val(tgt) === '') {
+				return;
 			}
+
+			if ($(tgt).data('firstChange') !== false) {
+				$(tgt).data('firstChange', false);
+			}
+			this._queueField(tgt);
 		},
 
 

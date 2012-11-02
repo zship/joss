@@ -5,6 +5,9 @@ define(function(require) {
 
 	var $ = require('jquery');
 	var Point = require('joss/geometry/Point');
+	var isString = require('amd-utils/lang/isString');
+	var isArray = require('amd-utils/lang/isArray');
+	var isElement = require('joss/util/lang/isElement');
 
 
 
@@ -68,6 +71,38 @@ define(function(require) {
 
 		return document.elementFromPoint(p.x, p.y);
 	
+	};
+
+
+	/**
+	 * Create a jQuery element from **el**. Avoids calling jQuery if **el** is
+	 * already a jQuery object.
+	 * @param {Element|jQuery|String|Array} el
+	 * @return {jQuery}
+	 */
+	Elements.toJquery = function(el) {
+		if (el instanceof $) {
+			return el;
+		}
+		return $(el);
+	};
+
+
+	/**
+	 * Coerce a *single* DOM Element out of a string or jQuery element
+	 * @param {Element|String|jQuery} el
+	 * @return {Element}
+	 */
+	Elements.fromAny = function(el) {
+		if (isElement(el)) {
+			return el;
+		}
+		else if (el instanceof $) {
+			return el[0];
+		}
+		else if (isString(el)) {
+			return $(el)[0];
+		}
 	};
 
 

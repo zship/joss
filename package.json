@@ -3,6 +3,7 @@
 		"title": "joss",
 		"description": "AMD-compliant MVC JavaScript library",
 		"version": "0.1",
+		"homepage": "https://github.com/zship/joss",
 		"author": "Zach Shipley <zach@zachshipley.com>",
 		"repository": {
 			"type": "git",

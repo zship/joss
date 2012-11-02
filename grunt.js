@@ -23,7 +23,7 @@ module.exports = function( grunt ) {
 		pkg: '<json:package.json>',
 
 		meta: {
-			banner: '/*! <%= pkg.title %> v<%= pkg.version %> | MIT license */'
+			banner: '/*! <%= pkg.title %> v<%= pkg.version %> | MIT license | <%= pkg.homepage %> */'
 		},
 
 		dist: {

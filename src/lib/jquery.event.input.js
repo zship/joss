@@ -13,67 +13,128 @@
 			if (el[ex]) {
 				return el[ex];
 			}
-			$(el).data('event.special.input-hash-gen', '');
+			$(el).data('event.special.input.hash', '');
 			return el[ex];
 		}
 	};
 
 
-	/*
-	 * `contexts`, conceptually, is a 
-	 * Map<(HTMLElement), Map<(selector), (handler object)>>
-	 * It looks like this:
-	 * {
-	 *   '<HTMLElement "hash">': {
-	 *       'ROOT': <handler object for either a regular bind() or a delegateTarget>,
-	 *       '<child selector>': <handler object>,
-	 *       '<child selector 2>': <handler object 2>
-	 *   },
-	 *   '<HTMLElement "hash" 2>': {
-	 *   ...
-	 * }
-	 */
-	var contexts = {};
+	//the data structure keeping track of delegate parents and their children
+	//and their children's handlers was getting too unclear, so I introduced an
+	//object-oriented one below.
 
-	//switches to "true" in mainHandler the first time an actual 'input' event
-	//makes it through
-	var hasNativeOnInput = false; 
+
+	//Map<(Bound) DOMElement, HandlerMap>
+	var BoundElementMap = function() {
+		this.map = {};
+	};
+
+	BoundElementMap.prototype.put = function(element, handlerMap) {
+		var hash = Util.hash(element);
+		this.map[hash] = handlerMap;
+		return this;
+	};
+
+	//return HandlerMap
+	BoundElementMap.prototype.get = function(element) {
+		var hash = Util.hash(element);
+		return this.map[hash] || new HandlerMap();
+	};
+
+	BoundElementMap.prototype.remove = function(element) {
+		var hash = Util.hash(element);
+		delete this.map[hash];
+		return this;
+	};
+
+
+	//Multimap<(Selector) String, (Event Handler) Function>
+	//explanation of Multimaps: http://docs.guava-libraries.googlecode.com/git-history/release/javadoc/index.html
+	//I'm only implementing the methods used in this plugin, of course
+	var HandlerMap = function() {
+		this.handlers = {};
+	};
+
+	HandlerMap.prototype.put = function(selector, handler) {
+		//ROOT means no selector: a non-delegated binding on this.element
+		selector = selector || 'ROOT';
+		this.handlers[selector] = this.handlers[selector] || [];
+		this.handlers[selector].push(handler);
+		return this;
+	};
+
+	//return Array<Handle Object>
+	HandlerMap.prototype.get = function(selector) {
+		return this.handlers[selector] || [];
+	};
+
+	//return Array<(Selector) String>
+	HandlerMap.prototype.keys = function() {
+		var ret = [];
+		for (var key in this.handlers) {
+			ret.push(key);
+		}
+		return ret;
+	};
+
+	HandlerMap.prototype.remove = function(selector, handler) {
+		var handlerList = this.handlers[selector] || [];
+
+		for (var i = 0, len = handlerList.length; i < len; i++) {
+			var childHandler = handlerList[i];
+			if (childHandler === handler) {
+				this.handlers[selector].splice(i, 1);
+				break;
+			}
+		}
+
+		if (!this.handlers[selector].length) {
+			delete this.handlers[selector];
+		}
+
+		return this;
+	};
+
+
+
+
+	//switches to "true" the first time an actual 'input' event registers
+	var hasNativeOnInput = false;
+	//Map<(Bound) DOMElement, Multimap<(Selector) String, (Event Handler) Function>>
+	var boundElements = new BoundElementMap();
 
 	$.event.special.input = {
 
 		setup: function() {
-			contexts[Util.hash(this)] = {};
+			boundElements.put(this, new HandlerMap());
 
 			if (hasNativeOnInput) {
-				$(this).bind('input', mainHandler);
+				$(this).bind('input', {'event.special.input': true}, mainHandler);
 			}
 			else {
-				$(this).bind('input propertychange paste cut keydown drop', mainHandler);
+				$(this).bind('input propertychange paste cut keydown drop', {'event.special.input': true}, mainHandler);
 			}
 
 			//we're hijacking the input event except in the body of this
 			//plugin. returning false will cause the above bind() to bind to the
 			//native 'input' event rather than $.event.special.input
-			return false; 
+			return false;
 		},
 
 
 		teardown: function() {
-			var context = contexts[Util.hash(this)];
-			if (context.length > 0) {
-				return;
-			}
 			$(this).unbind('input propertychange paste cut keydown drop', mainHandler);
-			delete contexts[Util.hash(this)];
+			boundElements.remove(this);
 		},
 
 
-		add: function(obj) {
-			obj.selector = obj.selector || 'ROOT';
-			contexts[Util.hash(this)][obj.selector] = obj;
+		add: function(handle) {
+			if (handle.data && handle.data['event.special.input']) {
+				return;
+			}
 
-			var oldHandler = obj.handler;
-			obj.handler = function(ev) {
+			var oldHandler = handle.handler;
+			handle.handler = function(ev) {
 				//Block oninput events other than what we provide.
 				//Evil? Eh, it's either this or don't use the name 'input' for
 				//the event (because you can't reliably determine oninput
@@ -81,48 +142,43 @@
 				if (!ev.synthesized) {
 					return;
 				}
-				oldHandler.apply(ev.currentTarget, arguments);
+				return oldHandler.apply(ev.currentTarget, arguments);
 			};
+
+			boundElements.get(this).put(handle.selector, handle.handler);
 		},
 
 
-		remove: function(obj) {
-			obj.selector = obj.selector || 'ROOT';
-			delete contexts[Util.hash(this)][obj.selector];
+		remove: function(handle) {
+			boundElements.get(this).remove(handle.selector, handle.handler);
 		}
 
 	};
 
 
+
+
 	var mainHandler = function(ev) {
 
-		var context = contexts[Util.hash(this)];
-		var length = 0;
-		for (var name in context) {
-			length++;
-		}
-		var target;
+		var handlers = [];
+		var handlerMap = boundElements.get(this);
+		var selectors = handlerMap.keys();
 
-		//regular bind
-		if (length === 1 && context['ROOT']) {
-			target = context['ROOT'];
-		}
-		//delegation
-		else {
-			//determine if the event target is bound through this plugin
-			$.each(context, function(key, obj) {
-				if (key === 'ROOT') {
-					return true; //continue
+		for (var i = 0, len = selectors.length; i < len; i++) {
+			//regular bind
+			if (selectors[i] === 'ROOT') {
+				handlers = handlers.concat(handlerMap.get(selectors[i]));
+			}
+			//delegation
+			else {
+				if ($(ev.target).is(selectors[i])) {
+					handlers = handlers.concat(handlerMap.get(selectors[i]));
 				}
-				if ($(ev.target).is(key)) {
-					target = obj;
-					return false; //break
-				}
-			});
+			}
 		}
 
 		//ev.target is not bound through us
-		if (!target) {
+		if (!handlers.length) {
 			return true;
 		}
 
@@ -138,20 +194,19 @@
 		);
 
 		switch (ev.type) {
-			//input event works. unbind everything else.
 			case 'input':
+				//native input event works. unbind everything else and skip
+				//checking for changed values.
 				if (!hasNativeOnInput) {
-					//fast-track successive calls. this plugin's just a dumb
-					//forwarder in that case.
 					hasNativeOnInput = true;
 					$(this).unbind('propertychange paste cut keydown drop', mainHandler);
 				}
-				target.handler(newEvent);
+				triggerList(handlers, newEvent);
 				break;
 			//emulation by comparing values for everyone else.
 			case 'propertychange':
 				if (ev.originalEvent.propertyName === "value") {
-					firstChangedTrigger(newEvent, target);
+					triggerFirstChanged(handlers, newEvent);
 				}
 				break;
 			//these four fire before the value is updated, so delay them.
@@ -160,23 +215,29 @@
 			case 'keydown':
 			case 'drop':
 				window.setTimeout(function() {
-					firstChangedTrigger(newEvent, target);
-				}, 1000/60);
+					triggerFirstChanged(handlers, newEvent);
+				}, 0); //minimum setTimeout is typically ~16ms
 				break;
 		}
 
-		//console.log($(this).data('events'));
+	};
 
+
+	//trigger an event on a list of handlers
+	var triggerList = function(handlers, event) {
+		for (var i = 0, len = handlers.length; i < len; i++) {
+			handlers[i](event);
+		}
 	};
 
 
 	//events hit this method as fast as they can; first one to hit with a
 	//changed value wins (handler is triggered).
-	var firstChangedTrigger = function(event, target) {
+	var triggerFirstChanged = function(handlers, event) {
 		var el = event.currentTarget;
 		if (el.value !== $(el).data('event.special.input.value')) {
 			$(el).data('event.special.input.value', el.value);
-			target.handler(event);
+			triggerList(handlers, event);
 		}
 	};
 

@@ -68,7 +68,7 @@ define(function(require) {
 
 
 		'input[type="radio"], select change': function(ev, tgt) {
-			$(tgt).data('firstChange', false);
+			$(tgt).data('validation.firstChange', false);
 			this._queueField(tgt);
 		},
 
@@ -79,8 +79,8 @@ define(function(require) {
 				return;
 			}
 
-			if ($(tgt).data('firstChange') !== false) {
-				$(tgt).data('firstChange', false);
+			if ($(tgt).data('validation.firstChange') !== false) {
+				$(tgt).data('validation.firstChange', false);
 			}
 			this._queueField(tgt);
 		},
@@ -91,7 +91,7 @@ define(function(require) {
 		//method
 		_queueField: function(tgt) {
 
-			if ($(tgt).data('firstChange') !== false) {
+			if ($(tgt).data('validation.firstChange') !== false) {
 				return;
 			}
 			
@@ -150,7 +150,7 @@ define(function(require) {
 			var self = this;
 			inputs.each(function() {
 				//make all fields eligible for event-based validation
-				$(this).data('firstChange', false);
+				$(this).data('validation.firstChange', false);
 
 				//fully populate the model
 				self._validationModel.set(this, Forms.val(this));

@@ -44,6 +44,9 @@ define(function(require) {
 			var self = this;
 
 			$.each(this, function(key, method) {
+				if (key === '*') {
+					return; //continue;
+				}
 
 				if (routeMatcher.test(key) !== true) {
 					return; //continue;
@@ -68,6 +71,11 @@ define(function(require) {
 			//special case: no hash triggers the '/' mapping, if there is one
 			if (!fragment && this['/']) {
 				this['/']();
+				return;
+			}
+
+			if (this['*']) {
+				this['*'](fragment);
 				return;
 			}
 

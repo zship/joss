@@ -4,6 +4,7 @@ module.exports = function(grunt) {
 	var docdir = 'doc';
 	var libdir = 'doc/lib';
 
+	var path = require('path');
 	var child = require("child_process");
 	var _ = grunt.utils._;
 
@@ -14,6 +15,7 @@ module.exports = function(grunt) {
 	var async = require('async');
 
 	var requirejs = require('../dist/lib/r.js');
+	var rjsconfig = require('./rjsconfig.js');
 
 	requirejs.config({
 		baseUrl: __dirname,
@@ -95,6 +97,12 @@ module.exports = function(grunt) {
 		link: 'http://api.jquery.com/jQuery/'
 	};
 
+	typeMap['require'] = {
+		longName: 'require',
+		name: 'require',
+		link: 'http://requirejs.org/'
+	};
+
 	function getTypes(names) {
 		if (!names) {
 			return [typeMap['void']];
@@ -107,12 +115,15 @@ module.exports = function(grunt) {
 				return true;
 			}
 
-			console.log('WARNING: The type ' + name + ' was not declared anywhere in the project. Documentation will not present a link.');
+			//a class, not a method/member
+			if (name.search(/#/g) === -1) {
+				console.log('WARNING: The type ' + name + ' was not declared anywhere in the project. Documentation will not present a link.');
+			}
 
 			types.push({
 				name: name,
 				longName: name,
-				link: '#'
+				link: '/#/' + name.replace(/\./g, '/')
 			});
 		});
 
@@ -146,8 +157,19 @@ module.exports = function(grunt) {
 				userDefined: true,
 				longName: classLongName,
 				name: className,
-				link: '#'
+				link: '/#/' + classLongName.replace(/\./g, '/')
 			};
+		});
+
+		//see if items in the dependency array are in the type map (for linking
+		//in final documentation)
+		_.each(meta, function(value) {
+			_.each(value.deps, function(dep) {
+				var type = typeMap[dep.path.replace(/\//g, '.')];
+				if (type) {
+					dep.link = type.link;
+				}
+			});
 		});
 
 
@@ -166,6 +188,7 @@ module.exports = function(grunt) {
 
 			var constructor = graph[classLongName]['constructor'];
 			constructor.longName = constructor.longname;
+			constructor.link = getTypes([constructor.longname])[0].link;
 			constructor.description = constructor.description || '';
 
 			constructor.params = constructor.params || [];
@@ -182,6 +205,7 @@ module.exports = function(grunt) {
 			db({kind: 'member'}, {memberof: classLongName}).each(function(record) {
 				var member = graph[classLongName]['properties'][record.name] = record;
 				member.longName = member.longname;
+				member.link = getTypes([member.longname])[0].link;
 				member.types = member.type ? getTypes(member.type.names) : getTypes(null);
 				member.description = member.description || '';
 			});
@@ -191,6 +215,7 @@ module.exports = function(grunt) {
 				//console.log(JSON.stringify(record, null, 4));
 				var method = graph[classLongName]['methods'][record.name] = record;
 				method.longName = method.longname;
+				method.link = getTypes([method.longname])[0].link;
 				method.description = method.description || '';
 
 				method.params = method.params || [];
@@ -304,6 +329,11 @@ module.exports = function(grunt) {
 
 		descriptions.forEach(function(path) {
 			var obj = getObject(path, false, graph);
+
+			if (!obj) {
+				return true;
+			}
+
 			var desc = obj['description'];
 
 			_.each(typeMap, function(type) {
@@ -319,7 +349,7 @@ module.exports = function(grunt) {
 						var submatches = match.match(rLongName);
 						var longName = submatches[0];
 						var name = submatches[1];
-						desc = desc.replace(new RegExp(longName, 'g'), '<a href="#" rel="' + longName + '">' + type.name + '.' + name + '</a>');
+						desc = desc.replace(new RegExp(longName, 'g'), '<a href="/#/' + longName + '" rel="' + longName + '">' + type.name + '.' + name + '</a>');
 					});
 					obj['description'] = desc;
 				}
@@ -345,7 +375,7 @@ module.exports = function(grunt) {
 				}
 
 				_.each(type, function(member) {
-					if (member.description) {
+					if (member && member.description) {
 						member.description = md.parse(member.description);
 					}
 				});
@@ -384,12 +414,13 @@ module.exports = function(grunt) {
 		_.every(obj, function(child, key) {
 
 			if (_.isString(_.values(obj)[0])) {
+				var type = getTypes([child])[0];
 				html += '<li>';
-				html += '<a href="#" data-class="' + child + '">' + key + '</a>';
+				html += '<a href="' + type.link + '#SOverview">' + key + '</a>';
 				return true;
 			}
 			else {
-				html += '<li>' + key;
+				html += '<li><span class="section-header">' + key + '</span>';
 			}
 
 			html += renderMenu(child);
@@ -404,24 +435,52 @@ module.exports = function(grunt) {
 
 
 	//idea: put a search box above class list that filters the class list
+	
+	//------------------------------------------------------------
+	// Transform globbed config values into lists of files
+	//------------------------------------------------------------
+	var _expanded = function(arr) {
+		var files = [];
+		arr.forEach(function(val) {
+			files = files.concat(grunt.file.expandFiles(val));
+		});
+		return _.uniq(files);
+	};
 
 
 	grunt.registerTask('doc', 'Runs requirejs optimizer', function() {
 		var config = grunt.config.get(this.name);
 		var done = this.async();
 
+		['include', 'exclude'].forEach(function(name) {
+			config[name] = config[name] || [];
+			if (_.isString(config[name])) {
+				config[name] = [config[name]];
+			}
+			config[name] = _expanded(config[name]);
+		});
+
+		config.include = _.difference(config.include, config.exclude);
+
 		requirejs(['../dist/lib/parse'], function(parse) {
 
-			var files = grunt.file.expandFiles(config.path);
+			var files = config.include;
 			grunt.log.write('Running jsdoc...');
 			async.map(files, function(path, callback) {
 				grunt.verbose.writeln('Running jsdoc on ' + path + '...');
 				var contents = grunt.file.read(path);
 				child.exec(libdir + '/jsdoc/jsdoc -X ' + path, {maxBuffer: 2000000}, function(error, stdout, stderr) {
 					grunt.verbose.ok('jsdoc on ' + path + ' DONE');
+					var deps;
+					try {
+						deps = parse.findDependencies(path, contents);
+					}
+					catch(e) {
+						deps = [];
+					}
 					callback(null, {
 						path: path,
-						deps: parse.findDependencies(path, contents),
+						deps: deps,
 						json: stdout
 					});
 				});
@@ -434,6 +493,31 @@ module.exports = function(grunt) {
 					//strip out error-causing lines
 					json = json.replace(/<Object>/gm, "\"Object\"");
 					json = json.replace(/:\sundefined/gm, ": \"undef\"");
+
+					//resolve requirejs dependencies relative to src path
+					//(as opposed to relative to the file in which they're require'd)
+					var resultDirectory = path.resolve(process.cwd() + '/' + _.initial(result.path.split('/')).join('/'));
+					var srcDirectory = path.resolve(process.cwd() + '/' + rjsconfig.baseUrl);
+					result.deps = result.deps.map(function(depPath) {
+						depPath = depPath.replace(/\.js/, '');
+						var absolutePath;
+
+						//directory-relative path
+						if (depPath.search(/^\.\.\//g) !== -1 || depPath.search(/^\.\//) !== -1) {
+							absolutePath = path.resolve(resultDirectory + '/' + depPath + '.js');
+							return absolutePath.replace(srcDirectory + '/', '').replace('.js', '');
+						}
+
+						absolutePath = path.resolve(srcDirectory + '/' + depPath + '.js');
+						return absolutePath.replace(srcDirectory + '/', '').replace('.js', '');
+					});
+
+					result.deps = result.deps.map(function(depPath) {
+						return {
+							path: depPath,
+							link: ''
+						};
+					});
 
 					//collect meta information like class -> file name and
 					//class -> dependencies. We'll apply it to `graph` inside
@@ -490,6 +574,7 @@ module.exports = function(grunt) {
 					});
 					grunt.verbose.ok();
 				});
+				grunt.log.ok();
 
 
 				grunt.log.write('Rendering taglist files into ' + docdir + '/out/taglists...');
@@ -508,12 +593,14 @@ module.exports = function(grunt) {
 					});
 					grunt.verbose.ok();
 				});
+				grunt.log.ok();
 
 
 				grunt.verbose.write('Rendering menu...');
 				var classList = Object.keys(graph);
 				var classStructure = {};
 				_.each(classList, function(className) {
+					className = className.replace(/\//g,'.');
 					setObject(className, className, classStructure);
 				});
 

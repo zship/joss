@@ -92,7 +92,11 @@ define(function(require) {
 		},
 
 
-		render: function() {
+		render: function(opts) {
+
+			opts = lang.mixin({
+				recalculate: true
+			}, opts);
 
 			var tgtRect;
 
@@ -108,15 +112,15 @@ define(function(require) {
 				tgtRect = this.$target.rect();
 			}
 
-			if (this.borderWidth() === null) {
+			if (opts.recalculate || this.borderWidth() === null) {
 				this.borderWidth(parseInt(this.$element.css('border-top-width'), 10));
 			}
 
-			if (this.borderColor() === null) {
+			if (opts.recalculate || this.borderColor() === null) {
 				this.borderColor(this.$element.css('border-top-color'));
 			}
 
-			if (this.backgroundColor() === null) {
+			if (opts.recalculate || this.backgroundColor() === null) {
 				this.backgroundColor(this.$element.css('background-color'));
 			}
 

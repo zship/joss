@@ -13,7 +13,7 @@ define(function(require) {
 			this.el(el);
 			this.message(message);
 			this.type(type);
-		
+
 		},
 
 
@@ -28,7 +28,11 @@ define(function(require) {
 
 
 		clone: function() {
-			return lang.clone(this);
+			return new ValidationError(this._el, this._message, this._type);
+		},
+
+		toString: function() {
+			return this.hash();
 		}
 	
 	});

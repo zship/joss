@@ -49,8 +49,8 @@ define(function(require) {
 				};
 			}
 
-			props[key] = function(val) {
-				if (val === undefined) {
+			props[key] = function() {
+				if (arguments.length === 0) {
 					return this['_get' + keyUpper]();
 				}
 				var args = toArray(arguments);

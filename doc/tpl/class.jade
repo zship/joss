@@ -1,28 +1,36 @@
-
 - if (cl.module)
-    div.module
-        h3(rel='/#/' + module + '#SOverview') Overview
-        div.description!=cl.module.description
+    div.module.section
+        h3.section-header(rel='/#/' + module + '#SOverview') Overview
+        div.subsection
+            div.meta
+                a(class='permalink', href='/#/' + module + '#SOverview', alt='Permalink to ' + module + ' overview', title='Permalink to ' + module + ' overview')
+                    i.icomoon-hash
+            div.description!=cl.module.description
 
 - if (cl.meta && cl.meta.deps)
-    div.dependencies
-        h3(rel='/#/' + module + '#SDependencies') Dependencies
-        ul
-            each dep in cl.meta.deps
-                - if (dep.link)
-                    li
-                        a(href=dep.link)=dep.path
-                - else
-                    li=dep.path
+    div.dependencies.section
+        h3.section-header(rel='/#/' + module + '#SDependencies') Dependencies
+        div.subsection
+            div.meta
+                a(class='permalink', href='/#/' + module + '#SDependencies', alt='Permalink to ' + module + ' dependencies', title='Permalink to ' + module + ' dependencies ')
+                    i.icomoon-hash
+            ul
+                each dep in cl.meta.deps
+                    - if (dep.link)
+                        li
+                            a(href=dep.link)=dep.path
+                    - else
+                        li=dep.path
 
 - if (cl.constructor && cl.constructor.kind === 'class')
-    div.constructors
-        h3(rel='/#/' + module + '#SConstructor') Constructor
-        div.constructor
-            a(class='srclink', alt='View Source', title='View Source', href=config.repoview + cl.constructor.meta.path + '/' + cl.constructor.meta.filename + '#L' + cl.constructor.meta.lineno)
-                i.icon-github
-            a(class='permalink', href=cl.constructor.link, rel=cl.constructor.longName, alt='Permalink to ' + cl.constructor.longName, title='Permalink to ' + cl.constructor.longName)
-                i.icon-link
+    div.constructors.section
+        h3.section-header(rel='/#/' + module + '#SConstructor') Constructor
+        div.constructor.subsection
+            div.meta
+                a(class='permalink', href='/#/' + module + '#SConstructor', alt='Permalink to ' + cl.constructor.longName, title='Permalink to ' + cl.constructor.longName)
+                    i.icomoon-hash
+                a(class='srclink', alt='View Source', title='View Source', href=config.repoview + cl.constructor.meta.path + '/' + cl.constructor.meta.filename + '#L' + cl.constructor.meta.lineno)
+                    i.icomoon-code
             h4(rel=cl.constructor.link)
                 span.name=cl.constructor.name
                 span.params
@@ -44,15 +52,16 @@
             div.description!=cl.constructor.description
 
 - if (cl.properties && Object.keys(cl.properties).length)
-    div.properties
-        h3(rel='/#/' + module + '#SProperties') Properties
+    div.properties.section
+        h3.section-header(rel='/#/' + module + '#SProperties') Properties
         each prop in cl.properties
-            div.property
-                a(class='srclink', alt='View Source', title='View Source', href=config.repoview + prop.meta.path + '/' + prop.meta.filename + '#L' + prop.meta.lineno)
-                    i.icon-github
-                a(class='permalink', href=prop.link, rel=prop.longName, alt='Permalink to ' + prop.longName, title='Permalink to ' + prop.longName)
-                    i.icon-link
-                h4(rel=prop.link)
+            div.property.subsection(rel=prop.link)
+                div.meta
+                    a(class='permalink', href=prop.link, alt='Permalink to ' + prop.longName, title='Permalink to ' + prop.longName)
+                        i.icomoon-hash
+                    a(class='srclink', alt='View Source', title='View Source', href=config.repoview + prop.meta.path + '/' + prop.meta.filename + '#L' + prop.meta.lineno)
+                        i.icomoon-code
+                h4.subsection-header
                     span.returns
                         each type, j in prop.types
                             a.returnType(href=type.link, rel=type.longName)=type.name
@@ -62,37 +71,38 @@
                     span.name=prop.name
                 div.description!=prop.description
 
-div.methods
-    h3(rel='/#/' + module + '#SMethods') Methods
-    each method in cl.methods
-        //-- console.log(JSON.stringify(method, null, 4))
-        div.method
-            a(class='srclink', alt='View Source', title='View Source', href=config.repoview + method.meta.path + '/' + method.meta.filename + '#L' + method.meta.lineno)
-                i.icon-github
-            a(class='permalink', href=method.link, rel=method.longName, alt='Permalink to ' + method.longName, title='Permalink to ' + method.longName)
-                i.icon-link
-            h4(rel=method.link)
-                span.returns
-                    each type, j in method.returns.types
-                        a.returnType(href=type.link, rel=type.longName)=type.name
-                        - if (j < method.returns.types.length - 1)
-                            span.or='|'
-                    &nbsp;
-                span.name=method.name
-                span.params
-                    span.paren &#40;
-                    each param, i in method.params
-                        - if (param.optional)
-                            span.opt [
-                        - if (i !== 0)
-                            span.sep=','
-                        each type, j in param.types
-                            a.paramType(href=type.link, type.longName)=type.name
-                            - if (j < param.types.length - 1)
+- if (cl.methods && Object.keys(cl.methods).length)
+    div.methods.section
+        h3.section-header(rel='/#/' + module + '#SMethods') Methods
+        each method in cl.methods
+            div.method.subsection(rel=method.link)
+                div.meta
+                    a(class='permalink', href=method.link, alt='Permalink to ' + method.longName, title='Permalink to ' + method.longName)
+                        i.icomoon-hash
+                    a(class='srclink', alt='View Source', title='View Source', href=config.repoview + method.meta.path + '/' + method.meta.filename + '#L' + method.meta.lineno)
+                        i.icomoon-code
+                h4.subsection-header
+                    span.returns
+                        each type, j in method.returns.types
+                            a.returnType(href=type.link, rel=type.longName)=type.name
+                            - if (j < method.returns.types.length - 1)
                                 span.or='|'
                         &nbsp;
-                        span.param=param.name
-                        - if (param.optional)
-                            span.opt ]
-                    span.paren &#41;
-            div.description!=method.description
+                    span.name=method.name
+                    span.params
+                        span.paren &#40;
+                        each param, i in method.params
+                            - if (param.optional)
+                                span.opt [
+                            - if (i !== 0)
+                                span.sep=','
+                            each type, j in param.types
+                                a.paramType(href=type.link, type.longName)=type.name
+                                - if (j < param.types.length - 1)
+                                    span.or='|'
+                            &nbsp;
+                            span.param=param.name
+                            - if (param.optional)
+                                span.opt ]
+                        span.paren &#41;
+                div.description!=method.description

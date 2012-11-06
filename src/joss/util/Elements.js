@@ -6,7 +6,7 @@ define(function(require) {
 	var $ = require('jquery');
 	var Point = require('joss/geometry/Point');
 	var isString = require('amd-utils/lang/isString');
-	var isArray = require('amd-utils/lang/isArray');
+	var isNumber = require('amd-utils/lang/isNumber');
 	var isElement = require('joss/util/lang/isElement');
 
 
@@ -22,10 +22,12 @@ define(function(require) {
 	 * Return a unique ID for a DOM Element, regardless of the presence of an
 	 * id attribute.
 	 *
-	 * @param {Element} el
+	 * @param {Element|jQuery|String} el
 	 * @return {Number}
 	 */
 	Elements.hash = function(el) {
+
+		el = Elements.fromAny(el);
 
 		var ex = $.expando;
 		if (el[ex]) {
@@ -36,6 +38,28 @@ define(function(require) {
 		$(el).data('joss-hash-gen', '');
 		return el[ex];
 	
+	};
+
+
+	/**
+	 * Declare an Element to be replacing an existing Element, and should be
+	 * considered identical to the Element it replaces.
+	 *
+	 * @param {Number|Element|jQuery|String} hash
+	 * @param {Element|jQuery|String} el
+	 */
+	Elements.transferHash = function(hash, el) {
+
+		el = Elements.fromAny(el);
+		
+		if (!isNumber(hash)) {
+			var from = Elements.fromAny(hash);
+			hash = Elements.hash(from);
+		}
+
+		var ex = $.expando;
+		el[ex] = hash;
+
 	};
 
 
@@ -400,7 +424,7 @@ define(function(require) {
 
 
 	$.fn.hash = function() {
-		return Elements.hash(this[0]);
+		return Elements.hash(this);
 	};
 
 

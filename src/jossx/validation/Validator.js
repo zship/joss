@@ -9,6 +9,7 @@ define(function(require) {
 	var Forms = require('joss/util/Forms');
 	var Elements = require('joss/util/Elements');
 	var Functions = require('joss/util/Functions');
+	var forEach = require('joss/util/collection/forEach');
 	var objectSize = require('amd-utils/object/size');
 	var objectKeys = require('amd-utils/object/keys');
 	require('jquery.event.input');
@@ -147,7 +148,23 @@ define(function(require) {
 
 			inputs = inputs.filter(':visible:enabled');
 
+			//very dynamic forms: if a user has removed elements that were
+			//marked as containing errors, remove those errors
 			var self = this;
+			forEach(this._validationErrors._errors, function(err, key) {
+				var match;
+				if (!el) {
+					match = self.$root.find(err.el());
+				}
+				else {
+					match = el.find(err.el());
+				}
+				//the element to which this error refers no longer exists
+				if (!match.length) {
+					delete self._validationErrors._errors[key];
+				}
+			});
+
 			inputs.each(function() {
 				//make all fields eligible for event-based validation
 				$(this).data('validation.firstChange', false);

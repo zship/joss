@@ -39,6 +39,15 @@ define(function(require) {
 
 		get: function(el, message, type) {
 
+			var ret = [];
+
+			if (arguments.length === 0) {
+				forEach(this._errors, function(err, key) {
+					ret.push(self._errors[key].clone());
+				});
+				return ret;
+			}
+
 			if (message) {
 				var err = new ValidationError(el, message, type);
 				var existing = this._errors[err.hash()];
@@ -47,7 +56,6 @@ define(function(require) {
 
 			//if we were only given an element, return all errors starting with that element's hash
 			var self = this;
-			var ret = [];
 			forEach(this._errors, function(err, key) {
 				if (key.search(new RegExp('^' + Elements.hash(el) + ':')) !== -1) {
 					ret.push(self._errors[key].clone());

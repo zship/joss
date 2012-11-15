@@ -311,6 +311,12 @@ define(function(require) {
 			bottom: Math.round(-1 * (curr.position.bottom + (next.offset.top - curr.offset.top)))
 		};
 
+		var offsetParent = el[0].offsetParent || document.body;
+		if (offsetParent !== document.body) {
+			adjusted.top += offsetParent.scrollTop;
+			adjusted.left += offsetParent.scrollLeft;
+		}
+
 		if (changed.top) {
 			if (curr.precedence.y === 'bottom') {
 				styles.bottom = Math.round(adjusted.bottom);

@@ -322,12 +322,14 @@ module.exports = function(grunt) {
 				graph[key.replace(/\./g, '/')] = graph[key];
 				delete graph[key];
 			}
+			return true;
 		});
 
 		var descriptions = _getDescriptions(graph);
 		//console.log(descriptions);
 
 		descriptions.forEach(function(path) {
+			//console.log(path);
 			var obj = getObject(path, false, graph);
 
 			if (!obj) {
@@ -337,7 +339,8 @@ module.exports = function(grunt) {
 			var desc = obj['description'];
 
 			_.each(typeMap, function(type) {
-				var sLongName = type.longName + '[#\\.]([a-zA-Z_]+)';
+				//first, class name + member name
+				var sLongName = '{' + type.longName + '[#\\.]([a-zA-Z_]+)}';
 				var rLongName = new RegExp(sLongName);
 				var rLongNameGlobal = new RegExp(sLongName, 'g');
 				if (desc.search(rLongNameGlobal) !== -1) {
@@ -349,11 +352,17 @@ module.exports = function(grunt) {
 						var submatches = match.match(rLongName);
 						var longName = submatches[0];
 						var name = submatches[1];
-						desc = desc.replace(new RegExp(longName, 'g'), '<a href="/#/' + longName + '" rel="' + longName + '">' + type.name + '.' + name + '</a>');
+						desc = desc.replace(rLongName, '<a href="/#/' + longName.replace(/\{/g, '').replace(/\}/g, '').replace(/\./g, '/') + '">' + type.name + '.' + name + '</a>');
 					});
-					obj['description'] = desc;
 				}
+
+				//then, just plain class names (no member name following)
+				var rClassName = new RegExp('{' + type.longName + '}', 'g');
+				//console.log(type.longName);
+				desc = desc.replace(rClassName, ' <a href="' + type.link + '">' + type.name + '</a>');
 			});
+
+			obj['description'] = desc;
 		});
 
 		//set '/' in property names back to '.'

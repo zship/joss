@@ -20,7 +20,8 @@ h2=module
         h3
             a(href='/#/' + module + '#SProperties') Properties
         ul
-            each prop in cl.properties
+            each key in Object.keys(cl.properties).sort()
+                - var prop = cl.properties[key]
                 li
                     a.name(href=prop.link, rel=prop.longName)=prop.name
                     span=' : '
@@ -35,7 +36,8 @@ div.methods
     h3
         a(href='/#/' + module + '#SMethods') Methods
     ul
-        each method in cl.methods
+        each key in Object.keys(cl.methods).sort()
+            - var method = cl.methods[key]
             li
                 a.name(href=method.link, rel=method.longName)=method.name
                 span=' : '

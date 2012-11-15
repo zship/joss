@@ -54,7 +54,8 @@
 - if (cl.properties && Object.keys(cl.properties).length)
     div.properties.section
         h3.section-header(rel='/#/' + module + '#SProperties') Properties
-        each prop in cl.properties
+        each key in Object.keys(cl.properties).sort()
+            - var prop = cl.properties[key]
             div.property.subsection(rel=prop.link)
                 div.meta
                     a(class='permalink', href=prop.link, alt='Permalink to ' + prop.longName, title='Permalink to ' + prop.longName)
@@ -74,7 +75,8 @@
 - if (cl.methods && Object.keys(cl.methods).length)
     div.methods.section
         h3.section-header(rel='/#/' + module + '#SMethods') Methods
-        each method in cl.methods
+        each key in Object.keys(cl.methods).sort()
+            - var method = cl.methods[key]
             div.method.subsection(rel=method.link)
                 div.meta
                     a(class='permalink', href=method.link, alt='Permalink to ' + method.longName, title='Permalink to ' + method.longName)

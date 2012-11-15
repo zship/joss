@@ -71,7 +71,7 @@ module.exports = function(grunt) {
 	//build the list in processJsDoc() below
 	var typeMap = {};
 
-	['Number', 'String', 'Object', 'Array', 'RegExp'].forEach(function(val) {
+	['Number', 'String', 'Object', 'Array', 'RegExp', 'Boolean'].forEach(function(val) {
 		typeMap[val] = {
 			longName: val,
 			name: val,

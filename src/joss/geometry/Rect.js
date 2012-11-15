@@ -12,7 +12,7 @@ define(function(require) {
 	var Rect = declare(null, /** @lends joss.geometry.Rect.prototype */ {
 
 		/**
-		 * @class Rect
+		 * @class
 		 * @param {Object} opts : the coordinates of the rectangle.
 		 * four of these properties are required: any four that
 		 * can logically be used to construct a rectangle.
@@ -69,6 +69,11 @@ define(function(require) {
 			return this;
 		},
 
+		/**
+		 * @param {Number} dx
+		 * @param {Number} dy
+		 * @return {joss.geometry.Rect}
+		 */
 		translate: function(dx, dy) {
 			this.left += dx;
 			this.top += dy;
@@ -78,40 +83,56 @@ define(function(require) {
 		},
 
 		/**
-		 * Moves the rectangle vertically, leaving the rectangle's bottom edge
-		 * at the given y coordinate. The rectangle's size is unchanged.
-		 * @param {Number|String} [y]
+		 * @param {Number} y
 		 * @return {joss.geometry.Rect}
 		 */
 		moveBottom: function(y) {
 			return this.moveTo(new Point(this.left, y - this.height()));
 		},
 
+		/**
+		 * @param {joss.geometry.Point} p
+		 * @return {joss.geometry.Rect}
+		 */
 		moveBottomLeft: function(p) {
 			return this.moveTo(new Point(p.x, p.y - this.height()));
 		},
 
+		/**
+		 * @param {joss.geometry.Point} p
+		 * @return {joss.geometry.Rect}
+		 */
 		moveBottomRight: function(p) {
 			return this.moveTo(new Point(p.x - this.width(), p.y - this.height()));
 		},
 
+		/**
+		 * @param {joss.geometry.Point} p
+		 * @return {joss.geometry.Rect}
+		 */
 		moveCenter: function(p) {
 			var offset_x = p.x - this.center().x;
 			var offset_y = p.y - this.center().y;
 			return this.translate(offset_x, offset_y);
 		},
 
+		/**
+		 * @param {Number} x
+		 * @return {joss.geometry.Rect}
+		 */
 		moveLeft: function(x) {
 			return this.moveTo(new Point(x, this.top));
 		},
 
+		/**
+		 * @param {Number} x
+		 * @return {joss.geometry.Rect}
+		 */
 		moveRight: function(x) {
 			return this.moveTo(new Point(x - this.width(), this.top));
 		},
 
 		/**
-		 * Moves the rectangle, leaving the top-left corner at the given
-		 * position (x, y). The rectangle's size is unchanged.
 		 * @param {joss.geometry.Point} p
 		 * @return {joss.geometry.Rect}
 		 */
@@ -122,22 +143,41 @@ define(function(require) {
 			);
 		},
 
+		/**
+		 * @param {Number} y
+		 * @return {joss.geometry.Rect}
+		 */
 		moveTop: function(y) {
 			return this.moveTo(new Point(this.left, y));
 		},
 
+		/**
+		 * @param {joss.geometry.Point} p
+		 * @return {joss.geometry.Rect}
+		 */
 		moveTopLeft: function(p) {
 			return this.moveTo(p);
 		},
 
+		/**
+		 * @param {joss.geometry.Point} p
+		 * @return {joss.geometry.Rect}
+		 */
 		moveTopRight: function(p) {
 			return this.moveTo(new Point(p.x - this.width(), p.y));
 		},
 
+		/**
+		 * @param {joss.geometry.Point} p
+		 * @return {joss.geometry.Rect}
+		 */
 		centerOn: function(p) {
 			return this.moveCenter(p);
 		},
 
+		/**
+		 * @return {joss.geometry.Point}
+		 */
 		center: function() {
 			var center = this.left + (this.right - this.left) / 2;
 			var middle = this.top + (this.bottom - this.top) / 2;
@@ -146,8 +186,8 @@ define(function(require) {
 
 		/**
 		 * Shorthand for relative positioning to another Rectangle
-		 * object; an alternative to the move\* and center\* methods above
-		 * using Position objects.
+		 * object; an alternative to the move\* and center\* methods
+		 * using joss.geometry.Position objects.
 		 *
 		 * @param {Object} opts
 		 * @return {joss.geometry.Rect}
@@ -237,6 +277,10 @@ define(function(require) {
 			return this;
 		},
 
+		/**
+		 * @param {Number} [val]
+		 * @return {Number|joss.geometry.Rect}
+		 */
 		width: function(val) {
 			if (val) {
 				this.right = this.left + val;
@@ -245,6 +289,10 @@ define(function(require) {
 			return this.right - this.left;
 		},
 
+		/**
+		 * @param {Number} [val]
+		 * @return {Number|joss.geometry.Rect}
+		 */
 		height: function(val) {
 			if (val) {
 				this.bottom = this.top + val;
@@ -253,11 +301,24 @@ define(function(require) {
 			return this.bottom - this.top;
 		},
 
-		contains: function(p) {
+		/**
+		 * @param {joss.geometry.Point|joss.geometry.Rect} target
+		 * @return {Boolean}
+		 */
+		contains: function(target) {
+			if (target.constructor === Point) {
+				return this._containsPoint(target);
+			}
+			else if (target.constructor === Rect) {
+				return this._containsRect(target);
+			}
+		},
+
+		_containsPoint: function(p) {
 			return (p.x >= this.left && p.x <= this.right && p.y >= this.top && p.y <= this.bottom);
 		},
 
-		containsRect: function(rect) {
+		_containsRect: function(rect) {
 			var self = this.normalized();
 			var other = rect.normalized();
 
@@ -272,31 +333,37 @@ define(function(require) {
 			return true;
 		},
 
-        /*
-		 *containsRect: function(rect) {
-		 *    return (this.top <= rect.top && this.left <= rect.left && this.right >= rect.right && this.bottom >= rect.bottom);
-		 *},
-         */
-
+		/**
+		 * @return {joss.geometry.Point}
+		 */
 		topLeft: function() {
 			return new Point(this.left, this.top);
 		},
 
+		/**
+		 * @return {joss.geometry.Point}
+		 */
 		topRight: function() {
 			return new Point(this.right, this.top);
 		},
 
+		/**
+		 * @return {joss.geometry.Point}
+		 */
 		bottomLeft: function() {
 			return new Point(this.left, this.bottom);
 		},
 
+		/**
+		 * @return {joss.geometry.Point}
+		 */
 		bottomRight: function() {
 			return new Point(this.right, this.bottom);
 		},
 
-		/*
-		 * Returns the bounding rectangle of this rectangle
-		 * and the given rectangle
+		/**
+		 * @param {joss.geometry.Rect} rect
+		 * @return {joss.geometry.Rect}
 		 */
 		united: function(rect) {
 			var self = this.normalized();
@@ -310,9 +377,9 @@ define(function(require) {
 			});
 		},
 
-		/*
-		 * Return the intersection of this rectangle
-		 * and the given rectangle
+		/**
+		 * @param {joss.geometry.Rect} rect
+		 * @return {joss.geometry.Rect}
 		 */
 		intersected: function(rect) {
 			if (!this.intersects(rect)) {
@@ -330,6 +397,10 @@ define(function(require) {
 			});
 		},
 
+		/**
+		 * @param {joss.geometry.Rect} rect
+		 * @return {Boolean}
+		 */
 		intersects: function(rect) {
 			var self = this.normalized();
 			var other = rect.normalized();
@@ -353,9 +424,8 @@ define(function(require) {
 		},
 
 
-		/*
-		 * Returns a new rectangle with a non-negative width/height.
-		 * If width < 0, swap left and right.  Ditto for height.
+		/**
+		 * @return {joss.geometry.Rect}
 		 */
 		normalized: function() {
 			if (this.width() < 0) {

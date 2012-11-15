@@ -13,7 +13,12 @@ define(function(require) {
 
 
 
-	var Position = declare(null, {
+	var Position = declare(null, /** @lends joss.geometry.Position.prototype */ {
+
+		/**
+		 * @class Position
+		 * @constructs
+		 */
 		constructor: function(opts) {
 
 			if (opts && opts.constructor === String) {

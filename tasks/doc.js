@@ -337,20 +337,20 @@ module.exports = function(grunt) {
 	};
 
 
-	//returns an Array of jsonpath-style strings pointing to jsdoc descriptions.
-	//Use getObject() to get the object reference, then access the description
+	//returns an Array of Arrays pointing to jsdoc descriptions.
+	//Use getProp() to get the object reference, then access the description
 	//property.
 	var _getDescriptions = function(obj, path) {
-		path = path || '';
+		path = path || null;
 		var ret = [];
 		if (!_.isObject(obj)) {
 			return ret;
 		}
 		_.every(obj, function(child, key) {
-			if (key === 'description') {
+			if (key === 'description' && obj.kind) {
 				ret.push(path);
 			}
-			ret = ret.concat(_getDescriptions(child, path ? path + '.' + key : key));
+			ret = ret.concat(_getDescriptions(child, path ? path.concat(key) : [key]));
 			return true;
 		});
 		return ret;
@@ -391,11 +391,10 @@ module.exports = function(grunt) {
 			_.each(mixinGraph, function(value, key) {
 				descriptions.forEach(function(path) {
 					//console.log(path);
-					var parts = path.split('.');
-					var desc_key = _.rest(parts).join('.');
+					var desc_key = _.rest(path).join('.');
 					//console.log(desc_key);
 					if (desc_key === key) {
-						var obj = getObject(path, false, clazz);
+						var obj = getProp(path, false, clazz);
 						obj.description = obj.description || '';
 						//console.log(JSON.stringify(description, false, 4));
 						obj.description += '\n\n' + value;
@@ -429,7 +428,7 @@ module.exports = function(grunt) {
 
 		descriptions.forEach(function(path) {
 			//console.log(path);
-			var obj = getObject(path, false, graph);
+			var obj = getProp(path, false, graph);
 
 			if (!obj) {
 				return true;
@@ -443,7 +442,7 @@ module.exports = function(grunt) {
 				}
 
 				//first, class name + member name
-				var sLongName = '{' + type.longName + '[#\\.]([a-zA-Z_]+)}';
+				var sLongName = '{' + type.longName + '[#~\\.]([a-zA-Z_]+)}';
 				var rLongName = new RegExp(sLongName);
 				var rLongNameGlobal = new RegExp(sLongName, 'g');
 				if (desc.search(rLongNameGlobal) !== -1) {
@@ -455,7 +454,7 @@ module.exports = function(grunt) {
 						var submatches = match.match(rLongName);
 						var longName = submatches[0];
 						var name = submatches[1];
-						desc = desc.replace(rLongName, '<a href="/#/' + longName.replace(/\{/g, '').replace(/\}/g, '').replace(/\./g, '/') + '">' + type.name + '.' + name + '</a>');
+						desc = desc.replace(rLongName, '<a href="/#/' + longName.replace(/\{/g, '').replace(/\}/g, '') + '">' + type.name + '.' + name + '</a>');
 					});
 				}
 

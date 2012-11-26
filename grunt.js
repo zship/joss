@@ -46,9 +46,39 @@ module.exports = function( grunt ) {
 
 		doc: {
 			repoview: 'https://github.com/zship/joss/blob/develop/',
-			include: 'src/joss/**'
-			//include: 'src/joss/geometry/Rect.js'
-			//include: 'src/joss/geometry/DomRect.js'
+			//include: 'src/joss/**',
+			include: 'src/joss/geometry/Rect.js',
+			//include: 'src/joss/geometry/DomRect.js',
+			types: (function() {
+				var types = [];
+
+				types.push({
+					name: 'jQuery',
+					link: 'http://api.jquery.com/jQuery/'
+				});
+
+				types.push({
+					name: 'jquery',
+					link: 'http://api.jquery.com/jQuery/'
+				});
+
+				types.push({
+					name: 'require',
+					link: 'http://requirejs.org/'
+				});
+
+				types.push({
+					regexp: /amd-utils\/.*/,
+					link: 'http://millermedeiros.github.com/amd-utils/'
+				});
+
+				types.push({
+					regexp: /dojo\/(.*)/,
+					link: 'http://dojotoolkit.org/reference-guide/1.8/dojo/$1.html'
+				});
+
+				return types;
+			})()
 		},
 
 		clean: [

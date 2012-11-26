@@ -1,3 +1,31 @@
+mixin methodDef(method)
+    - if (method.returns)
+        span.returns
+            each type, j in method.returns.types
+                a.returnType(href=type.link, rel=type.longName)=type.name
+                - if (j < method.returns.types.length - 1)
+                    span.or='|'
+            &nbsp;
+    span.name=method.name
+    - if (method.params)
+        span.params
+            span.paren &#40;
+            each param, i in method.params
+                - if (param.optional)
+                    span.opt [
+                - if (i !== 0)
+                    span.sep=','
+                each type, j in param.types
+                    a.paramType(href=type.link, type.longName)=type.name
+                    - if (j < param.types.length - 1)
+                        span.or='|'
+                &nbsp;
+                span.param=param.name
+                - if (param.optional)
+                    span.opt ]
+            span.paren &#41;
+
+
 - if (cl.module)
     div.module.section
         h3.section-header(rel='/#/' + module + '#SOverview') Overview
@@ -32,23 +60,7 @@
                 a(class='srclink', alt='View Source', title='View Source', href=config.repoview + cl.constructor.meta.path + '/' + cl.constructor.meta.filename + '#L' + cl.constructor.meta.lineno)
                     i.icomoon-code
             h4(rel=cl.constructor.link)
-                span.name=cl.constructor.name
-                span.params
-                    span.paren &#40;
-                    each param, i in cl.constructor.params
-                        - if (param.optional)
-                            span.opt [
-                        - if (i !== 0)
-                            span.sep=','
-                        each type, j in param.types
-                            a.paramType(href=type.link, rel=type.longName)=type.name
-                            - if (j < param.types.length - 1)
-                                span.or='|'
-                        &nbsp;
-                        span.param=param.name
-                        - if (param.optional)
-                            span.opt ]
-                    span.paren &#41;
+                mixin methodDef(cl.constructor)
             div.description!=cl.constructor.description
 
 - if (cl.properties && Object.keys(cl.properties).length)
@@ -83,35 +95,19 @@
                         i.icomoon-hash
                     a(class='srclink', alt='View Source', title='View Source', href=config.repoview + method.meta.path + '/' + method.meta.filename + '#L' + method.meta.lineno)
                         i.icomoon-code
-                h4.subsection-header
-                    span.returns
-                        each type, j in method.returns.types
-                            a.returnType(href=type.link, rel=type.longName)=type.name
-                            - if (j < method.returns.types.length - 1)
-                                span.or='|'
-                        &nbsp;
-                    span.name=method.name
-                    span.params
-                        span.paren &#40;
-                        each param, i in method.params
-                            - if (param.optional)
-                                span.opt [
-                            - if (i !== 0)
-                                span.sep=','
-                            each type, j in param.types
-                                a.paramType(href=type.link, type.longName)=type.name
-                                - if (j < param.types.length - 1)
-                                    span.or='|'
-                            &nbsp;
-                            span.param=param.name
-                            - if (param.optional)
-                                span.opt ]
-                        span.paren &#41;
+                - if (method.get && method.set)
+                    h4.subsection-header.getter
+                        mixin methodDef(method.get)
+                    h4.subsection-header.setter
+                        mixin methodDef(method.set)
+                - else
+                    h4.subsection-header
+                        mixin methodDef(method)
                 div.description!=method.description
 
 - if (cl.jquery && Object.keys(cl.jquery).length)
     div.jquery.section
-        h3.section-header(rel='/#/' + module + '#SjQuery') jQuery
+        h3.section-header(rel='/#/' + module + '#SjQuery') jQuery Plugins
         each key in Object.keys(cl.jquery).sort()
             - var method = cl.jquery[key]
             div.jquery.subsection(rel=method.link)
@@ -120,28 +116,12 @@
                         i.icomoon-hash
                     a(class='srclink', alt='View Source', title='View Source', href=config.repoview + method.meta.path + '/' + method.meta.filename + '#L' + method.meta.lineno)
                         i.icomoon-code
-                h4.subsection-header
-                    span.returns
-                        each type, j in method.returns.types
-                            a.returnType(href=type.link, rel=type.longName)=type.name
-                            - if (j < method.returns.types.length - 1)
-                                span.or='|'
-                        &nbsp;
-                    span.name=method.name
-                    span.params
-                        span.paren &#40;
-                        each param, i in method.params
-                            - if (param.optional)
-                                span.opt [
-                            - if (i !== 0)
-                                span.sep=','
-                            each type, j in param.types
-                                a.paramType(href=type.link, type.longName)=type.name
-                                - if (j < param.types.length - 1)
-                                    span.or='|'
-                            &nbsp;
-                            span.param=param.name
-                            - if (param.optional)
-                                span.opt ]
-                        span.paren &#41;
+                - if (method.get && method.set)
+                    h4.subsection-header.getter
+                        mixin methodDef(method.get)
+                    h4.subsection-header.setter
+                        mixin methodDef(method.set)
+                - else
+                    h4.subsection-header
+                        mixin methodDef(method)
                 div.description!=method.description

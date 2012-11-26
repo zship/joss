@@ -71,6 +71,12 @@ module.exports = function(grunt) {
 	//build the list in processJsDoc() below
 	var typeMap = {};
 
+	function populateTypeMap(types) {
+		_.each(types, function(type) {
+			typeMap[type.longName || type.name || type.regexp] = type;
+		});
+	}
+
 	['Number', 'String', 'Object', 'Array', 'RegExp', 'Boolean'].forEach(function(val) {
 		typeMap[val] = {
 			longName: val,
@@ -91,32 +97,51 @@ module.exports = function(grunt) {
 		link: 'https://developer.mozilla.org/en-US/docs/DOM/element'
 	};
 
-	typeMap['jQuery'] = {
-		longName: 'jQuery',
-		name: 'jQuery',
-		link: 'http://api.jquery.com/jQuery/'
-	};
-
-	typeMap['require'] = {
-		longName: 'require',
-		name: 'require',
-		link: 'http://requirejs.org/'
-	};
-
-	function getTypes(names) {
+	function getTypes(names, create) {
 		if (!names) {
 			return [typeMap['void']];
 		}
 
 		var types = [];
 		names.forEach(function(name) {
+			//first try the fast dictionary approach for perfect String matches
 			if (typeMap[name]) {
 				types.push(typeMap[name]);
 				return true;
 			}
 
+			var foundMatch = false;
+
+			//next try types specified as RegExp objects, matching
+			//against the provided name
+			_.every(typeMap, function(type) {
+				if (!type.regexp) {
+					return true;
+				}
+
+				if (name.search(type.regexp) !== -1) {
+					types.push({
+						name: name,
+						longName: name,
+						link: name.replace(type.regexp, type.link)
+					});
+					foundMatch = true;
+					return false;
+				}
+
+				return true;
+			});
+
+			if (foundMatch) {
+				return true;
+			}
+
+			if (create === false) {
+				return true;
+			}
+
 			//a class, not a method/member
-			if (name.search(/#/g) === -1) {
+			if (name.search(/[#~\.]/g) === -1) {
 				console.log('WARNING: The type ' + name + ' was not declared anywhere in the project. Documentation will not present a link.');
 			}
 
@@ -191,9 +216,9 @@ module.exports = function(grunt) {
 		//in final documentation)
 		_.each(meta, function(value) {
 			_.each(value.deps, function(dep) {
-				var type = typeMap[dep.path];
-				if (type) {
-					dep.link = type.link;
+				var type = getTypes([dep.path], false);
+				if (type && type.length) {
+					dep.link = type[0].link;
 				}
 			});
 		});
@@ -262,6 +287,41 @@ module.exports = function(grunt) {
 				else {
 					method.returns = {types: getTypes(null)};
 				}
+
+				//accessor (get/set) detection, for nicer display than, for example, Number|Rect width([Number w])
+				if (method.params.length === 1 && method.returns.types.length === 2 && method.returns.types.filter(function(type) {
+					return type.longName === method.params[0].types[0].longName;
+				}).length === 1) {
+					var getType = method.params[0].types[0];
+					var setReturnType;
+
+					method.returns.types.forEach(function(type) {
+						if (type.longName !== method.params[0].types[0].longName) {
+							setReturnType = type;
+						}
+					});
+
+					method.get = {
+						name: method.name,
+						params: [],
+						returns: {
+							types: [getType]
+						}
+					};
+
+					method.set = {
+						name: method.name,
+						params: [{
+							name: method.params[0].name,
+							optional: false,
+							types: [getType]
+						}],
+						returns: {
+							types: [setReturnType]
+						}
+					};
+				}
+
 			});
 
 			db({longname: {'like': '$.fn'}}, {module: module}).each(function(record) {
@@ -529,6 +589,8 @@ module.exports = function(grunt) {
 		});
 
 		config.include = _.difference(config.include, config.exclude);
+
+		populateTypeMap(config.types || []);
 
 		requirejs(['../dist/lib/parse'], function(parse) {
 

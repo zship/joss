@@ -100,8 +100,10 @@ mixin methodDef(method)
                         i.icomoon-code
                 - if (method.get && method.set)
                     h4.subsection-header.getter
+                        span.accessor get&nbsp;
                         mixin methodDef(method.get)
                     h4.subsection-header.setter
+                        span.accessor set&nbsp;
                         mixin methodDef(method.set)
                 - else
                     h4.subsection-header
@@ -121,8 +123,10 @@ mixin methodDef(method)
                         i.icomoon-code
                 - if (method.get && method.set)
                     h4.subsection-header.getter
+                        span.accessor get&nbsp;
                         mixin methodDef(method.get)
                     h4.subsection-header.setter
+                        span.accessor set&nbsp;
                         mixin methodDef(method.set)
                 - else
                     h4.subsection-header

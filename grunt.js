@@ -46,8 +46,8 @@ module.exports = function( grunt ) {
 
 		doc: {
 			repoview: 'https://github.com/zship/joss/blob/develop/',
-			include: 'src/joss/**',
-			//include: 'src/joss/geometry/Rect.js',
+			//include: 'src/joss/**',
+			include: 'src/joss/geometry/Rect.js',
 			//include: 'src/joss/util/Elements.js',
 			types: (function() {
 				var types = [];

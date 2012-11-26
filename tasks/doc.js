@@ -77,22 +77,19 @@ module.exports = function(grunt) {
 		});
 	}
 
-	['Number', 'String', 'Object', 'Array', 'RegExp', 'Boolean'].forEach(function(val) {
+	['Number', 'String', 'Object', 'Function', 'Array', 'RegExp', 'Boolean'].forEach(function(val) {
 		typeMap[val] = {
-			longName: val,
 			name: val,
 			link: 'https://developer.mozilla.org/en-US/docs/JavaScript/Reference/Global_Objects/' + val
 		};
 	});
 
 	typeMap['void'] = {
-		longName: 'void',
 		name: 'void',
 		link: 'https://developer.mozilla.org/en-US/docs/JavaScript/Reference/Global_Objects/undefined'
 	};
 
 	typeMap['Element'] = {
-		longName: 'Element',
 		name: 'Element',
 		link: 'https://developer.mozilla.org/en-US/docs/DOM/element'
 	};
@@ -169,7 +166,10 @@ module.exports = function(grunt) {
 	var processJsDoc = function(json, meta) {
 
 		var db = taffy(json);
+
+
 		db({undocumented: true}).remove();
+
 
 		db().each(function(record) {
 			record.lineno = record && record.meta && record.meta.lineno;
@@ -180,6 +180,7 @@ module.exports = function(grunt) {
 			}
 		});
 
+
 		db({longname: {'like': '<anonymous>'}}).each(function(record) {
 			if (record.module) {
 				record.longname = record.longname.replace('<anonymous>', record.module);
@@ -187,14 +188,6 @@ module.exports = function(grunt) {
 			}
 		});
 
-
-		//construct a new db to sort everything into:
-		//package
-		//--class
-		//---methods
-		//---properties
-		//var db = taffy(doclist);
-		//var db = doc;
 
 		db({kind: ['class', 'namespace']}).each(function(record) {
 			//collect a map of longnames to short aliases for classes, to be used when
@@ -212,6 +205,7 @@ module.exports = function(grunt) {
 			};
 		});
 
+
 		//see if items in the dependency array are in the type map (for linking
 		//in final documentation)
 		_.each(meta, function(value) {
@@ -225,10 +219,9 @@ module.exports = function(grunt) {
 
 
 		var graph = {};
-		db({kind: ['class']}).each(function(record) {
+		db({kind: ['class', 'namespace']}).each(function(record) {
 
 			var module = record.module;
-			var className = record.longname;
 
 			record.description = record.description || '';
 
@@ -239,23 +232,25 @@ module.exports = function(grunt) {
 			graph[module]['methods'] = {};
 			graph[module]['jquery'] = {};
 
-			var constructor = graph[module]['constructor'] = record;
-			constructor.longName = constructor.longname;
-			constructor.link = getTypes([constructor.longName])[0].link;
-			constructor.description = constructor.description || '';
+			if (record.kind === 'class') {
+				var constructor = graph[module]['constructor'] = record;
+				constructor.longName = constructor.longname;
+				constructor.link = getTypes([constructor.longName])[0].link;
+				constructor.description = constructor.description || '';
 
-			constructor.params = constructor.params || [];
-			constructor.params.every(function(param) {
-				if (!param.type || !param.type.names) {
-					param.type = getTypes(null);
-					return true; //continue
-				}
-				param.types = getTypes(param.type.names);
-				return true;
-			});
+				constructor.params = constructor.params || [];
+				constructor.params.every(function(param) {
+					if (!param.type || !param.type.names) {
+						param.type = getTypes(null);
+						return true; //continue
+					}
+					param.types = getTypes(param.type.names);
+					return true;
+				});
+			}
 
 
-			db({kind: 'member'}, {memberof: className}).each(function(record) {
+			db({kind: 'member'}, {module: module}).each(function(record) {
 				var member = graph[module]['properties'][record.name] = record;
 				member.longName = member.longname;
 				member.link = getTypes([member.longname])[0].link;
@@ -264,9 +259,18 @@ module.exports = function(grunt) {
 			});
 
 
-			db({kind: 'function'}, {memberof: className}).each(function(record) {
+			db({kind: 'function'}, {module: module}).each(function(record) {
 				//console.log(JSON.stringify(record, null, 4));
-				var method = graph[module]['methods'][record.name] = record;
+				var method;
+
+				if (record.longname.search(/\$\.fn/g) !== -1) {
+					method = graph[module]['jquery'][record.name] = record;
+					method.scope = ''; //avoid 'static' qualifier
+				}
+				else {
+					method = graph[module]['methods'][record.name] = record;
+				}
+
 				method.longName = method.longname;
 				method.link = getTypes([method.longname])[0].link;
 				method.description = method.description || '';
@@ -324,29 +328,6 @@ module.exports = function(grunt) {
 
 			});
 
-			db({longname: {'like': '$.fn'}}, {module: module}).each(function(record) {
-				var method = graph[module]['jquery'][record.name] = record;
-				method.link = getTypes([method.longname])[0].link;
-				method.types = method.type ? getTypes(method.type.names) : getTypes(null);
-				method.description = method.description || '';
-
-				method.params = method.params || [];
-				method.params.every(function(param) {
-					if (!param.type || !param.type.names) {
-						param.type = getTypes(null);
-						return true; //continue
-					}
-					param.types = getTypes(param.type.names);
-					return true;
-				});
-
-				if (method.returns) {
-					method.returns = {types: getTypes(method.returns[0].type.names)};
-				}
-				else {
-					method.returns = {types: getTypes(null)};
-				}
-			});
 		});
 
 		//console.log(JSON.stringify(graph, false, 4));
@@ -409,13 +390,15 @@ module.exports = function(grunt) {
 
 			_.each(mixinGraph, function(value, key) {
 				descriptions.forEach(function(path) {
+					//console.log(path);
 					var parts = path.split('.');
-					var desc_key = _.last(parts);
+					var desc_key = _.rest(parts).join('.');
 					//console.log(desc_key);
 					if (desc_key === key) {
 						var obj = getObject(path, false, clazz);
+						obj.description = obj.description || '';
 						//console.log(JSON.stringify(description, false, 4));
-						obj['description'] += '\n\n' + value;
+						obj.description += '\n\n' + value;
 						//desc.obj['description'] += '\n\n' + value;
 					}
 				});
@@ -455,6 +438,10 @@ module.exports = function(grunt) {
 			var desc = obj['description'];
 
 			_.each(typeMap, function(type) {
+				if (!type.longName) {
+					return true;
+				}
+
 				//first, class name + member name
 				var sLongName = '{' + type.longName + '[#\\.]([a-zA-Z_]+)}';
 				var rLongName = new RegExp(sLongName);

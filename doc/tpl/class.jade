@@ -1,9 +1,18 @@
 mixin methodDef(method)
+    - if (method.scope === 'static')
+        span.scope static&nbsp;
     - if (method.returns)
         span.returns
             each type, j in method.returns.types
-                a.returnType(href=type.link, rel=type.longName)=type.name
+                a.returnType(href=type.link, title=type.longName)=type.name
                 - if (j < method.returns.types.length - 1)
+                    span.or='|'
+            &nbsp;
+    - else if (method.types)
+        span.returns
+            each type, j in method.types
+                a.returnType(href=type.link, title=type.longName)=type.name
+                - if (j < method.types.length - 1)
                     span.or='|'
             &nbsp;
     span.name=method.name
@@ -16,7 +25,7 @@ mixin methodDef(method)
                 - if (i !== 0)
                     span.sep=','
                 each type, j in param.types
-                    a.paramType(href=type.link, type.longName)=type.name
+                    a.paramType(href=type.link, title=type.longName)=type.name
                     - if (j < param.types.length - 1)
                         span.or='|'
                 &nbsp;
@@ -75,13 +84,7 @@ mixin methodDef(method)
                     a(class='srclink', alt='View Source', title='View Source', href=config.repoview + prop.meta.path + '/' + prop.meta.filename + '#L' + prop.meta.lineno)
                         i.icomoon-code
                 h4.subsection-header
-                    span.returns
-                        each type, j in prop.types
-                            a.returnType(href=type.link, rel=type.longName)=type.name
-                            - if (j < prop.types.length - 1)
-                                span.or='|'
-                    &nbsp;
-                    span.name=prop.name
+                    mixin methodDef(prop)
                 div.description!=prop.description
 
 - if (cl.methods && Object.keys(cl.methods).length)

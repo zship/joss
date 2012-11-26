@@ -153,23 +153,23 @@ Returns the center point of the rectangle.
 %centerOn
 
 Moves the rectangle, leaving the center point at the given point *p*. The
-rectangle's size is unchanged. An alias for {joss.geometry.Rect#moveCenter}.
+rectangle's size is unchanged. An alias for {joss/geometry/Rect#moveCenter}.
 
 
 %position
 
-{joss.geometry.Rect#position} is modeled after jQuery UI's
+{joss/geometry/Rect#position} is modeled after jQuery UI's
 [position](http://api.jqueryui.com/position/) utility, with a few convenience
-changes in the {joss.geometry.Position} objects accepted as options. See
-{joss.geometry.Position} for a discussion on these differences.
+changes in the {joss/geometry/Position} objects accepted as options. See
+{joss/geometry/Position} for a discussion on these differences.
 
 *opts* may have the following properties:
 
-* `my`: {String} | {joss.geometry.Position} - which position **on the element
+* `my`: {String} | {joss/geometry/Position} - which position **on the element
   being positioned** to align with the target element
-* `at`: {String} | {joss.geometry.Position} - which position **on the target
+* `at`: {String} | {joss/geometry/Position} - which position **on the target
   element** to align the positioned element against
-* `of`: {joss.geometry.Rect} - the target Rect object to position against
+* `of`: {joss/geometry/Rect} - the target Rect object to position against
 * [`offset`: {Object}] - {{Number} x, {Number} y} amount to offset on each axis
 
 This seems somewhat cryptic, but users of jQuery UI may recognize that it is
@@ -239,7 +239,7 @@ Returns the position of the rectangle's bottom-right corner.
 
 %united
 
-Returns a new {joss.geometry.Rect} object representing the bounding rectangle
+Returns a new {joss/geometry/Rect} object representing the bounding rectangle
 encompassing this rectangle and the given rectangle.
 
 
@@ -247,14 +247,14 @@ encompassing this rectangle and the given rectangle.
 
 Return the intersection of this rectangle and the given rectangle. Whether or
 not this rectangle intersects the given rectangle can be determined using the
-{joss.geometry.Rect#intersects} function.
+{joss/geometry/Rect#intersects} function.
 
 
 %intersects
 
 Returns true if this rectangle intersects with the given rectangle (i.e. there
 is a non-empty area of overlap between them), otherwise returns false.  The
-intersection rectangle can be retrieved using the {joss.geometry.Rect#intersected} function.
+intersection rectangle can be retrieved using the {joss/geometry/Rect#intersected} function.
 
 
 %normalized

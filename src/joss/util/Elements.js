@@ -1,6 +1,3 @@
-/*
- * Static utility methods dealing with DOM Elements
- */
 define(function(require) {
 
 	var $ = require('jquery');
@@ -13,7 +10,7 @@ define(function(require) {
 
 	/**
 	 * @namespace
-	 * @alias joss.util.Elements
+	 * @alias joss/util/Elements
 	 */
 	var Elements = {};
 
@@ -300,6 +297,7 @@ define(function(require) {
 	 * Performant way to accurately get all dimensions of a DOM element.
 	 *
 	 * @param {Element} el
+	 * @return {Object}
 	 */
 	Elements.getDimensions = function(el) {
 
@@ -423,11 +421,19 @@ define(function(require) {
 	};
 
 
+	/**
+	 * Shortcut for {joss/util/Elements.hash}
+	 * @return {Number}
+	 */
 	$.fn.hash = function() {
 		return Elements.hash(this);
 	};
 
 
+	/**
+	 * Shortcut for {joss/util/Elements.getDimensions}
+	 * @return {Object}
+	 */
 	$.fn.dimensions = function() {
 		return Elements.getDimensions(this[0]);
 	};

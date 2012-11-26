@@ -9,7 +9,7 @@ define(function(require) {
 
 	//Describes a rectangle in two-dimensional Euclidian space and provides
 	//methods for manipulating it.
-	var Rect = declare(null, /** @lends joss.geometry.Rect.prototype */ {
+	var Rect = declare(null, /** @lends joss/geometry/Rect.prototype */ {
 
 		/**
 		 * @class
@@ -72,7 +72,7 @@ define(function(require) {
 		/**
 		 * @param {Number} dx
 		 * @param {Number} dy
-		 * @return {joss.geometry.Rect}
+		 * @return {joss/geometry/Rect}
 		 */
 		translate: function(dx, dy) {
 			this.left += dx;
@@ -84,31 +84,31 @@ define(function(require) {
 
 		/**
 		 * @param {Number} y
-		 * @return {joss.geometry.Rect}
+		 * @return {joss/geometry/Rect}
 		 */
 		moveBottom: function(y) {
 			return this.moveTo(new Point(this.left, y - this.height()));
 		},
 
 		/**
-		 * @param {joss.geometry.Point} p
-		 * @return {joss.geometry.Rect}
+		 * @param {joss/geometry/Point} p
+		 * @return {joss/geometry/Rect}
 		 */
 		moveBottomLeft: function(p) {
 			return this.moveTo(new Point(p.x, p.y - this.height()));
 		},
 
 		/**
-		 * @param {joss.geometry.Point} p
-		 * @return {joss.geometry.Rect}
+		 * @param {joss/geometry/Point} p
+		 * @return {joss/geometry/Rect}
 		 */
 		moveBottomRight: function(p) {
 			return this.moveTo(new Point(p.x - this.width(), p.y - this.height()));
 		},
 
 		/**
-		 * @param {joss.geometry.Point} p
-		 * @return {joss.geometry.Rect}
+		 * @param {joss/geometry/Point} p
+		 * @return {joss/geometry/Rect}
 		 */
 		moveCenter: function(p) {
 			var offset_x = p.x - this.center().x;
@@ -118,7 +118,7 @@ define(function(require) {
 
 		/**
 		 * @param {Number} x
-		 * @return {joss.geometry.Rect}
+		 * @return {joss/geometry/Rect}
 		 */
 		moveLeft: function(x) {
 			return this.moveTo(new Point(x, this.top));
@@ -126,15 +126,15 @@ define(function(require) {
 
 		/**
 		 * @param {Number} x
-		 * @return {joss.geometry.Rect}
+		 * @return {joss/geometry/Rect}
 		 */
 		moveRight: function(x) {
 			return this.moveTo(new Point(x - this.width(), this.top));
 		},
 
 		/**
-		 * @param {joss.geometry.Point} p
-		 * @return {joss.geometry.Rect}
+		 * @param {joss/geometry/Point} p
+		 * @return {joss/geometry/Rect}
 		 */
 		moveTo: function(p) {
 			return this.translate(
@@ -145,38 +145,38 @@ define(function(require) {
 
 		/**
 		 * @param {Number} y
-		 * @return {joss.geometry.Rect}
+		 * @return {joss/geometry/Rect}
 		 */
 		moveTop: function(y) {
 			return this.moveTo(new Point(this.left, y));
 		},
 
 		/**
-		 * @param {joss.geometry.Point} p
-		 * @return {joss.geometry.Rect}
+		 * @param {joss/geometry/Point} p
+		 * @return {joss/geometry/Rect}
 		 */
 		moveTopLeft: function(p) {
 			return this.moveTo(p);
 		},
 
 		/**
-		 * @param {joss.geometry.Point} p
-		 * @return {joss.geometry.Rect}
+		 * @param {joss/geometry/Point} p
+		 * @return {joss/geometry/Rect}
 		 */
 		moveTopRight: function(p) {
 			return this.moveTo(new Point(p.x - this.width(), p.y));
 		},
 
 		/**
-		 * @param {joss.geometry.Point} p
-		 * @return {joss.geometry.Rect}
+		 * @param {joss/geometry/Point} p
+		 * @return {joss/geometry/Rect}
 		 */
 		centerOn: function(p) {
 			return this.moveCenter(p);
 		},
 
 		/**
-		 * @return {joss.geometry.Point}
+		 * @return {joss/geometry/Point}
 		 */
 		center: function() {
 			var center = this.left + (this.right - this.left) / 2;
@@ -187,16 +187,16 @@ define(function(require) {
 		/**
 		 * Shorthand for relative positioning to another Rectangle
 		 * object; an alternative to the move\* and center\* methods
-		 * using joss.geometry.Position objects.
+		 * using joss/geometry/Position objects.
 		 *
 		 * @param {Object} opts
-		 * @return {joss.geometry.Rect}
+		 * @return {joss/geometry/Rect}
 		 */
 		position: function(opts) {
 			opts = lang.mixin({
 				my: null, //string or Position
 				at: null, //string or Position
-				of: null, //joss.geometry.Rect
+				of: null, //joss/geometry/Rect
 				offset: null //{x, y}
 			}, opts);
 
@@ -279,7 +279,7 @@ define(function(require) {
 
 		/**
 		 * @param {Number} [val]
-		 * @return {Number|joss.geometry.Rect}
+		 * @return {Number|joss/geometry/Rect}
 		 */
 		width: function(val) {
 			if (val) {
@@ -291,7 +291,7 @@ define(function(require) {
 
 		/**
 		 * @param {Number} [val]
-		 * @return {Number|joss.geometry.Rect}
+		 * @return {Number|joss/geometry/Rect}
 		 */
 		height: function(val) {
 			if (val) {
@@ -302,7 +302,7 @@ define(function(require) {
 		},
 
 		/**
-		 * @param {joss.geometry.Point|joss.geometry.Rect} target
+		 * @param {joss/geometry/Point|joss/geometry/Rect} target
 		 * @return {Boolean}
 		 */
 		contains: function(target) {
@@ -334,36 +334,36 @@ define(function(require) {
 		},
 
 		/**
-		 * @return {joss.geometry.Point}
+		 * @return {joss/geometry/Point}
 		 */
 		topLeft: function() {
 			return new Point(this.left, this.top);
 		},
 
 		/**
-		 * @return {joss.geometry.Point}
+		 * @return {joss/geometry/Point}
 		 */
 		topRight: function() {
 			return new Point(this.right, this.top);
 		},
 
 		/**
-		 * @return {joss.geometry.Point}
+		 * @return {joss/geometry/Point}
 		 */
 		bottomLeft: function() {
 			return new Point(this.left, this.bottom);
 		},
 
 		/**
-		 * @return {joss.geometry.Point}
+		 * @return {joss/geometry/Point}
 		 */
 		bottomRight: function() {
 			return new Point(this.right, this.bottom);
 		},
 
 		/**
-		 * @param {joss.geometry.Rect} rect
-		 * @return {joss.geometry.Rect}
+		 * @param {joss/geometry/Rect} rect
+		 * @return {joss/geometry/Rect}
 		 */
 		united: function(rect) {
 			var self = this.normalized();
@@ -378,8 +378,8 @@ define(function(require) {
 		},
 
 		/**
-		 * @param {joss.geometry.Rect} rect
-		 * @return {joss.geometry.Rect}
+		 * @param {joss/geometry/Rect} rect
+		 * @return {joss/geometry/Rect}
 		 */
 		intersected: function(rect) {
 			if (!this.intersects(rect)) {
@@ -398,7 +398,7 @@ define(function(require) {
 		},
 
 		/**
-		 * @param {joss.geometry.Rect} rect
+		 * @param {joss/geometry/Rect} rect
 		 * @return {Boolean}
 		 */
 		intersects: function(rect) {
@@ -425,7 +425,7 @@ define(function(require) {
 
 
 		/**
-		 * @return {joss.geometry.Rect}
+		 * @return {joss/geometry/Rect}
 		 */
 		normalized: function() {
 			if (this.width() < 0) {

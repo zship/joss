@@ -4,7 +4,7 @@ define(function(require) {
 
 
 
-	var Point = declare(null, /** @lends joss.geometry.Point.prototype */ {
+	var Point = declare(null, /** @lends joss/geometry/Point.prototype */ {
 
 		/** 
 		 * @param {Number} x
@@ -21,7 +21,7 @@ define(function(require) {
 		 * Move a point
 		 * @param {Number} dx Pixels to translate horizontally
 		 * @param {Number} dy Pixels to translate vertically
-		 * @return {joss.geometry.Point}
+		 * @return {joss/geometry/Point}
 		 */
 		translate: function(dx, dy) {
 			return new Point(
@@ -38,7 +38,7 @@ define(function(require) {
 
 
 /**
- * @name joss.geometry.Point 
+ * @name joss/geometry/Point 
  * @description
  * Point describes a point in a plane. It is used as a very basic building
  * block in most of the joss geometry classes.

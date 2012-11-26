@@ -27,7 +27,7 @@ define(function(require) {
 	var rEventData = /^(.*\s[a-z]*?)\s*_data/;
 
 
-	var Controller = declare(null, /** @lends joss.mvc.Controller.prototype */ {
+	var Controller = declare(null, /** @lends joss/mvc/Controller.prototype */ {
 
 		'-chains-': {
 			destroy: 'before',
@@ -66,7 +66,7 @@ define(function(require) {
 
 
 		/**
-		 * Call joss.mvc.Controller#stop and then remove the Controller's
+		 * Call joss/mvc/Controller#stop and then remove the Controller's
 		 * root element.
 		 */
 		destroy: function() {
@@ -78,7 +78,7 @@ define(function(require) {
 
 		/**
 		 * Lifecycle method. Calls are automatically chained in order from
-		 * superclass (joss.mvc.Controller) to subclass (your controller).
+		 * superclass (joss/mvc/Controller) to subclass (your controller).
 		 */
 		start: function() {
 			this._lifecycleRunning = true;
@@ -88,7 +88,7 @@ define(function(require) {
 
 		/**
 		 * Lifecycle method. Calls are automatically chained in order from
-		 * subclass (your controller) to superclass (joss.mvc.Controller).
+		 * subclass (your controller) to superclass (joss/mvc/Controller).
 		 */
 		stop: function() {
 			this.unbind();
@@ -121,7 +121,7 @@ define(function(require) {
 		/**
 		 * Replace the contents of `this.root` with **val**
 		 * @param {String} val
-		 * @return {joss.mvc.Controller} this
+		 * @return {joss/mvc/Controller} this
 		 */
 		contents: function(val) {
 			this.$root.empty().append(val);
@@ -131,9 +131,9 @@ define(function(require) {
 
 		/**
 		 * Handle methods matching particular patterns as events.  This allows
-		 * us to guarantee proper unbinding when joss.mvc.Controller#stop is
+		 * us to guarantee proper unbinding when joss/mvc/Controller#stop is
 		 * called.
-		 * @return {joss.mvc.Controller} this
+		 * @return {joss/mvc/Controller} this
 		 */
 		bind: function() {
 
@@ -280,8 +280,8 @@ define(function(require) {
 
 
 		/**
-		 * Unbind all events previously bound with joss.mvc.Controller#bind.
-		 * @return {joss.mvc.Controller} this
+		 * Unbind all events previously bound with joss/mvc/Controller#bind.
+		 * @return {joss/mvc/Controller} this
 		 */
 		unbind: function() {
 			forEach(this._bindings, function(binding) {
@@ -303,7 +303,7 @@ define(function(require) {
 		/**
 		 * Re-bind only those events which do not delegate to this Controller's
 		 * root element (as their delegation targets may have changed).
-		 * @return {joss.mvc.Controller} this
+		 * @return {joss/mvc/Controller} this
 		 */
 		rebind: function() {
 			//only unbind events that could possibly have become detached:

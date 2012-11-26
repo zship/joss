@@ -5,12 +5,11 @@ define(function(require) {
 
 
 
-	var Line = declare(null, /** @lends joss.geometry.Line.prototype */ {
+	var Line = declare(null, /** @lends joss/geometry/Line.prototype */ {
 		
 		/**
-		 * @class Line
-		 * @param {joss.geometry.Point} p1
-		 * @param {joss.geometry.Point} p2
+		 * @param {joss/geometry/Point} p1
+		 * @param {joss/geometry/Point} p2
 		 * @constructs
 		 */
 		constructor: function(p1, p2) {
@@ -36,7 +35,7 @@ define(function(require) {
 
 		/**
 		 * Return the slope of this line
-		 * @return {joss.geometry.Point}
+		 * @return {joss/geometry/Point}
 		 */
 		m: function() {
 			if (this._p1.x - this._p2.x === 0) {

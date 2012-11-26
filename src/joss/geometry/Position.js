@@ -13,7 +13,7 @@ define(function(require) {
 
 
 
-	var Position = declare(null, /** @lends joss.geometry.Position.prototype */ {
+	var Position = declare(null, /** @lends joss/geometry/Position.prototype */ {
 
 		/**
 		 * @class Position

@@ -16,8 +16,12 @@ define(function(require) {
 
 
 
-	var DomRect = declare(Rect, {
+	var DomRect = declare(Rect, /** @lends joss/geometry/DomRect.prototype */ {
 
+		/**
+		 * @class
+		 * @constructs
+		 */
 		constructor: function(opts) {
 			opts = lang.mixin({
 				element: null,
@@ -32,12 +36,12 @@ define(function(require) {
 			this.countsPadding = opts.countsPadding;
 			this.countsMargin = opts.countsMargin;
 			this.countsBorder = opts.countsBorder;
-
-
-
 		},
 
 
+		/**
+		 * @param {Element} el
+		 */
 		element: function(el) {
 			if (el === undefined) {
 				return this._element;
@@ -46,11 +50,17 @@ define(function(require) {
 		},
 
 
+		/**
+		 * @return {Object}
+		 */
 		dimensions: function() {
 			return this._dimensions;
 		},
 
 
+		/**
+		 * @return {joss/geometry/DomRect}
+		 */
 		apply: function() {
 			if (!this._element || this._element.length > 1) {
 				return this;
@@ -62,16 +72,13 @@ define(function(require) {
 	});
 
 
-	/*
-	 $.fn.rect
-
-	 Find the bounding rectangle of matched elements,
-	 by default including padding and border (border-box)
-
-	 Or, set the bounding rectangle of the first matched
-	 element
-
-	 @return {joss.Rect}
+	/**
+	 * Find the bounding rectangle of matched elements,
+	 * by default including padding and border (border-box)
+	 * Or, set the bounding rectangle of the first matched
+	 * element
+	 *
+	 * @return {joss/geometry/DomRect}
 	 */
 	$.fn.rect = function(opts) {
 

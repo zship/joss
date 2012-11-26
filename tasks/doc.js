@@ -123,7 +123,7 @@ module.exports = function(grunt) {
 			types.push({
 				name: name,
 				longName: name,
-				link: '/#/' + name.replace(/\./g, '/')
+				link: '/#/' + name
 			});
 		});
 
@@ -131,13 +131,37 @@ module.exports = function(grunt) {
 	}
 
 
+	function _fileToModuleName(filePath) {
+		var srcDirectory = path.resolve(process.cwd() + '/' + rjsconfig.baseUrl);
+		var absolutePath = path.resolve(process.cwd() + '/' + filePath);
+
+		filePath = filePath.replace(/\.js/, '');
+
+		return absolutePath.replace(srcDirectory + '/', '').replace('.js', '');
+	}
+
+
 	var processJsDoc = function(json, meta) {
 
-		var doc = taffy(json);
-		doc({undocumented: true}).remove();
-		doc().each(function(record) {
+		var db = taffy(json);
+		db({undocumented: true}).remove();
+
+		db().each(function(record) {
 			record.lineno = record && record.meta && record.meta.lineno;
+
+			if (record && record.meta && record.meta.path) {
+				var fileName = record.meta.path + '/' + record.meta.filename;
+				record.module = _fileToModuleName(fileName);
+			}
 		});
+
+		db({longname: {'like': '<anonymous>'}}).each(function(record) {
+			if (record.module) {
+				record.longname = record.longname.replace('<anonymous>', record.module);
+				record.name = record.longname.match(/.*~(.*)$/).pop();
+			}
+		});
+
 
 		//construct a new db to sort everything into:
 		//package
@@ -145,19 +169,21 @@ module.exports = function(grunt) {
 		//---methods
 		//---properties
 		//var db = taffy(doclist);
-		var db = doc;
-
+		//var db = doc;
 
 		db({kind: ['class', 'namespace']}).each(function(record) {
 			//collect a map of longnames to short aliases for classes, to be used when
 			//printing parameters and return types
+			if (record.name.search(/\//g) !== -1) {
+				record.name = record.longname.match(/.*\/(.*)$/).pop();
+			}
 			var className = record.name;
 			var classLongName = record.longname;
 			typeMap[classLongName] = {
 				userDefined: true,
 				longName: classLongName,
 				name: className,
-				link: '/#/' + classLongName.replace(/\./g, '/')
+				link: '/#/' + classLongName
 			};
 		});
 
@@ -165,7 +191,7 @@ module.exports = function(grunt) {
 		//in final documentation)
 		_.each(meta, function(value) {
 			_.each(value.deps, function(dep) {
-				var type = typeMap[dep.path.replace(/\//g, '.')];
+				var type = typeMap[dep.path];
 				if (type) {
 					dep.link = type.link;
 				}
@@ -176,19 +202,21 @@ module.exports = function(grunt) {
 		var graph = {};
 		db({kind: ['class']}).each(function(record) {
 
-			var classLongName = record.longname;
+			var module = record.module;
+			var className = record.longname;
 
 			record.description = record.description || '';
 
-			graph[classLongName] = {};
-			graph[classLongName]['meta'] = meta[classLongName];
-			graph[classLongName]['constructor'] = record;
-			graph[classLongName]['properties'] = {};
-			graph[classLongName]['methods'] = {};
+			graph[module] = {};
+			graph[module]['meta'] = meta[module];
+			graph[module]['constructor'] = {};
+			graph[module]['properties'] = {};
+			graph[module]['methods'] = {};
+			graph[module]['jquery'] = {};
 
-			var constructor = graph[classLongName]['constructor'];
+			var constructor = graph[module]['constructor'] = record;
 			constructor.longName = constructor.longname;
-			constructor.link = getTypes([constructor.longname])[0].link;
+			constructor.link = getTypes([constructor.longName])[0].link;
 			constructor.description = constructor.description || '';
 
 			constructor.params = constructor.params || [];
@@ -202,8 +230,8 @@ module.exports = function(grunt) {
 			});
 
 
-			db({kind: 'member'}, {memberof: classLongName}).each(function(record) {
-				var member = graph[classLongName]['properties'][record.name] = record;
+			db({kind: 'member'}, {memberof: className}).each(function(record) {
+				var member = graph[module]['properties'][record.name] = record;
 				member.longName = member.longname;
 				member.link = getTypes([member.longname])[0].link;
 				member.types = member.type ? getTypes(member.type.names) : getTypes(null);
@@ -211,9 +239,9 @@ module.exports = function(grunt) {
 			});
 
 
-			db({kind: 'function'}, {memberof: classLongName}).each(function(record) {
+			db({kind: 'function'}, {memberof: className}).each(function(record) {
 				//console.log(JSON.stringify(record, null, 4));
-				var method = graph[classLongName]['methods'][record.name] = record;
+				var method = graph[module]['methods'][record.name] = record;
 				method.longName = method.longname;
 				method.link = getTypes([method.longname])[0].link;
 				method.description = method.description || '';
@@ -235,7 +263,33 @@ module.exports = function(grunt) {
 					method.returns = {types: getTypes(null)};
 				}
 			});
+
+			db({longname: {'like': '$.fn'}}, {module: module}).each(function(record) {
+				var method = graph[module]['jquery'][record.name] = record;
+				method.link = getTypes([method.longname])[0].link;
+				method.types = method.type ? getTypes(method.type.names) : getTypes(null);
+				method.description = method.description || '';
+
+				method.params = method.params || [];
+				method.params.every(function(param) {
+					if (!param.type || !param.type.names) {
+						param.type = getTypes(null);
+						return true; //continue
+					}
+					param.types = getTypes(param.type.names);
+					return true;
+				});
+
+				if (method.returns) {
+					method.returns = {types: getTypes(method.returns[0].type.names)};
+				}
+				else {
+					method.returns = {types: getTypes(null)};
+				}
+			});
 		});
+
+		//console.log(JSON.stringify(graph, false, 4));
 
 		return graph;
 
@@ -268,8 +322,8 @@ module.exports = function(grunt) {
 			var mixin = grunt.file.read(path);
 
 			path = path.replace(docdir + '/mixin/', '').replace('.md', '');
-			var name = path.replace(/\//g, '.');
-			var clazz = graph[name];
+			//var name = path.replace(/\//g, '.');
+			var clazz = graph[path];
 
 			if (!clazz) {
 				return true;
@@ -317,13 +371,15 @@ module.exports = function(grunt) {
 	var transformLongNames = function(graph) {
 
 		//turn '.' in property names to '/' so we can use getObject to traverse
-		_.every(graph, function(child, key) {
-			if (key.search(/\./g) !== -1) {
-				graph[key.replace(/\./g, '/')] = graph[key];
-				delete graph[key];
-			}
-			return true;
-		});
+		/*
+		 *_.every(graph, function(child, key) {
+		 *    if (key.search(/\./g) !== -1) {
+		 *        graph[key.replace(/\./g, '/')] = graph[key];
+		 *        delete graph[key];
+		 *    }
+		 *    return true;
+		 *});
+		 */
 
 		var descriptions = _getDescriptions(graph);
 		//console.log(descriptions);
@@ -366,12 +422,14 @@ module.exports = function(grunt) {
 		});
 
 		//set '/' in property names back to '.'
-		_.every(graph, function(child, key) {
-			if (key.search(/\//g) !== -1) {
-				graph[key.replace(/\//g, '.')] = graph[key];
-				delete graph[key];
-			}
-		});
+		/*
+		 *_.every(graph, function(child, key) {
+		 *    if (key.search(/\//g) !== -1) {
+		 *        graph[key.replace(/\//g, '.')] = graph[key];
+		 *        delete graph[key];
+		 *    }
+		 *});
+		 */
 	};
 
 
@@ -397,7 +455,7 @@ module.exports = function(grunt) {
 
 	var classTpl;
 
-	var renderClass = function(graph, path, config, callback) {
+	var renderModule = function(graph, path, config, callback) {
 		classTpl = classTpl || grunt.file.read(docdir + '/tpl/class.jade', 'utf-8');
 		//console.log(JSON.stringify(graph, false, 4));
 		var data = jade.compile(classTpl)({cl: graph, module: path, config: config});
@@ -420,7 +478,8 @@ module.exports = function(grunt) {
 
 		//console.log(obj);
 		var html = '<ul>';
-		_.every(obj, function(child, key) {
+		_.every(Object.keys(obj).sort(), function(key) {
+			var child = obj[key];
 
 			if (_.isString(_.values(obj)[0])) {
 				var type = getTypes([child])[0];
@@ -457,7 +516,7 @@ module.exports = function(grunt) {
 	};
 
 
-	grunt.registerTask('doc', 'Runs requirejs optimizer', function() {
+	grunt.registerTask('doc', 'Runs jsdoc', function() {
 		var config = grunt.config.get(this.name);
 		var done = this.async();
 
@@ -479,6 +538,7 @@ module.exports = function(grunt) {
 				grunt.verbose.writeln('Running jsdoc on ' + path + '...');
 				var contents = grunt.file.read(path);
 				child.exec(libdir + '/jsdoc/jsdoc -X ' + path, {maxBuffer: 2000000}, function(error, stdout, stderr) {
+					//console.log(stdout);
 					grunt.verbose.ok('jsdoc on ' + path + ' DONE');
 					var deps;
 					try {
@@ -558,6 +618,8 @@ module.exports = function(grunt) {
 				mixinMarkdown(graph);
 				grunt.log.ok();
 
+				//console.log(JSON.stringify(graph, false, 4));
+
 				grunt.log.write('Transforming references to defined methods into links...');
 				transformLongNames(graph);
 				grunt.log.ok();
@@ -567,17 +629,17 @@ module.exports = function(grunt) {
 				grunt.log.ok();
 
 
-				grunt.log.write('Rendering class definition files into ' + docdir + '/out/classes...');
+				grunt.log.write('Rendering module definition files into ' + docdir + '/out/classes...');
 				_.each(graph, function(val, key) {
 					if (!key) {
 						return true; //continue
 					}
 
-					var path = key.replace(/\./g, '/');
+					//var path = key.replace(/\./g, '/');
 					grunt.verbose.write('Rendering class definition file ' + path + '...');
 					//console.log(path);
 					//console.log(val);
-					renderClass(val, path, config, function(graph, path, data) {
+					renderModule(val, key, config, function(graph, path, data) {
 						var filePath = docdir + '/out/classes/' + path + '.html';
 						grunt.file.write(filePath, data, 'utf-8');
 					});
@@ -592,11 +654,11 @@ module.exports = function(grunt) {
 						return true; //continue
 					}
 
-					var path = key.replace(/\./g, '/');
+					//var path = key.replace(/\./g, '/');
 					grunt.verbose.write('Rendering taglist file ' + path + '...');
 					//console.log(path);
 					//console.log(val);
-					renderTagList(val, path, function(graph, path, data) {
+					renderTagList(val, key, function(graph, path, data) {
 						var filePath = docdir + '/out/taglists/' + path + '.html';
 						grunt.file.write(filePath, data, 'utf-8');
 					});
@@ -606,14 +668,16 @@ module.exports = function(grunt) {
 
 
 				grunt.verbose.write('Rendering menu...');
-				var classList = Object.keys(graph);
+				var classList = _.clone(Object.keys(graph));
 				var classStructure = {};
 				_.each(classList, function(className) {
-					className = className.replace(/\//g,'.');
-					setObject(className, className, classStructure);
+					var path = className.replace(/\//g,'.');
+					setObject(path, className, classStructure);
 				});
 
+
 				var menu = renderMenu(classStructure, '');
+
 				grunt.file.write(docdir + '/out/menu.html', menu, 'utf-8');
 				grunt.verbose.ok();
 				grunt.log.ok();

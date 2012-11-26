@@ -32,18 +32,36 @@ h2=module
                                 span.or='|'
                     &nbsp;
 
-div.methods
-    h3
-        a(href='/#/' + module + '#SMethods') Methods
-    ul
-        each key in Object.keys(cl.methods).sort()
-            - var method = cl.methods[key]
-            li
-                a.name(href=method.link, rel=method.longName)=method.name
-                span=' : '
-                span.returns
-                    each type, j in method.returns.types
-                        span.returnType=type.name
-                        - if (j < method.returns.types.length - 1)
-                            span.or='|'
-                    &nbsp;
+- if (cl.methods && Object.keys(cl.methods).length)
+    div.methods
+        h3
+            a(href='/#/' + module + '#SMethods') Methods
+        ul
+            each key in Object.keys(cl.methods).sort()
+                - var method = cl.methods[key]
+                li
+                    a.name(href=method.link, rel=method.longName)=method.name
+                    span=' : '
+                    span.returns
+                        each type, j in method.returns.types
+                            span.returnType=type.name
+                            - if (j < method.returns.types.length - 1)
+                                span.or='|'
+                        &nbsp;
+
+- if (cl.jquery && Object.keys(cl.jquery).length)
+    div.jquery
+        h3
+            a(href='/#/' + module + '#SjQuery') jQuery
+        ul
+            each key in Object.keys(cl.jquery).sort()
+                - var method = cl.jquery[key]
+                li
+                    a.name(href=method.link, rel=method.longName)=method.name
+                    span=' : '
+                    span.returns
+                        each type, j in method.returns.types
+                            span.returnType=type.name
+                            - if (j < method.returns.types.length - 1)
+                                span.or='|'
+                        &nbsp;

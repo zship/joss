@@ -108,3 +108,40 @@
                                 span.opt ]
                         span.paren &#41;
                 div.description!=method.description
+
+- if (cl.jquery && Object.keys(cl.jquery).length)
+    div.jquery.section
+        h3.section-header(rel='/#/' + module + '#SjQuery') jQuery
+        each key in Object.keys(cl.jquery).sort()
+            - var method = cl.jquery[key]
+            div.jquery.subsection(rel=method.link)
+                div.meta
+                    a(class='permalink', href=method.link, alt='Permalink to ' + method.longName, title='Permalink to ' + method.longName)
+                        i.icomoon-hash
+                    a(class='srclink', alt='View Source', title='View Source', href=config.repoview + method.meta.path + '/' + method.meta.filename + '#L' + method.meta.lineno)
+                        i.icomoon-code
+                h4.subsection-header
+                    span.returns
+                        each type, j in method.returns.types
+                            a.returnType(href=type.link, rel=type.longName)=type.name
+                            - if (j < method.returns.types.length - 1)
+                                span.or='|'
+                        &nbsp;
+                    span.name=method.name
+                    span.params
+                        span.paren &#40;
+                        each param, i in method.params
+                            - if (param.optional)
+                                span.opt [
+                            - if (i !== 0)
+                                span.sep=','
+                            each type, j in param.types
+                                a.paramType(href=type.link, type.longName)=type.name
+                                - if (j < param.types.length - 1)
+                                    span.or='|'
+                            &nbsp;
+                            span.param=param.name
+                            - if (param.optional)
+                                span.opt ]
+                        span.paren &#41;
+                div.description!=method.description

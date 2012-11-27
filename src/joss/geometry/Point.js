@@ -7,6 +7,8 @@ define(function(require) {
 	var Point = declare(null, /** @lends joss/geometry/Point.prototype */ {
 
 		/** 
+		 * Point describes a point in a plane. It is used as a very basic building
+		 * block in most of the joss geometry classes.
 		 * @param {Number} x
 		 * @param {Number} y
 		 * @constructs
@@ -35,12 +37,3 @@ define(function(require) {
 	return Point;
 
 });
-
-
-/**
- * @name joss/geometry/Point 
- * @description
- * Point describes a point in a plane. It is used as a very basic building
- * block in most of the joss geometry classes.
- */
-

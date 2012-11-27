@@ -9,7 +9,7 @@ define(function(require) {
 	var Forms = require('joss/util/Forms');
 	var Elements = require('joss/util/Elements');
 	var Functions = require('joss/util/Functions');
-	var forEach = require('joss/util/collection/forEach');
+	var forEach = require('amd-utils/collection/forEach');
 	var objectSize = require('amd-utils/object/size');
 	var objectKeys = require('amd-utils/object/keys');
 	require('jquery.event.input');

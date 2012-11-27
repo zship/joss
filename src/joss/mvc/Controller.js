@@ -8,7 +8,7 @@ define(function(require) {
 	var Objects = {};
 	Objects.methods = require('joss/util/object/methods');
 	var Elements = require('joss/util/Elements');
-	var forEach = require('joss/util/collection/forEach');
+	var forEach = require('amd-utils/collection/forEach');
 	var every = require('amd-utils/array/every');
 	var bind = require('amd-utils/function/bind');
 

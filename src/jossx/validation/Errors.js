@@ -5,8 +5,8 @@ define(function(require) {
 	var lang = require('dojo/_base/lang');
 	var ValidationError = require('./ValidationError');
 	var Elements = require('joss/util/Elements');
-	var forEach = require('joss/util/collection/forEach');
-	var map = require('joss/util/collection/map');
+	var forEach = require('amd-utils/collection/forEach');
+	var map = require('amd-utils/collection/map');
 	var toArray = require('amd-utils/lang/toArray');
 	var isFunction = require('amd-utils/lang/isFunction');
 	var size = require('amd-utils/object/size');

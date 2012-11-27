@@ -10,7 +10,6 @@ module.exports = function(grunt) {
 	grunt.registerTask('dist', 'Runs requirejs optimizer', function() {
 		var config = grunt.config.get(this.name);
 		var done = this.async();
-		var files = [];
 		var baseUrl = rjsconfig.baseUrl;
 		var rStripBaseUrl = new RegExp('^' + baseUrl + '\\/');
 

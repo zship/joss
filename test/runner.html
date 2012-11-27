@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>joss test</title>
+    <link rel="stylesheet" href="/test/lib/qunit-1.10.0.css">
+    <script src="/test/lib/qunit-1.10.0.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.8.3/jquery.min.js"></script>
+    <script src="/test/lib/require.js"></script>
+    <script>
+      QUnit.config.autostart = false;
+      require(
+       {
+    "baseUrl": "",
+    "optimize": "none",
+    "packages": [
+        {
+            "name": "dojo",
+            "location": "../src/lib/dojo"
+        },
+        {
+            "name": "amd-utils",
+            "location": "../src/lib/amd-utils/src"
+        },
+        {
+            "name": "deferreds",
+            "location": "../src/lib/deferreds/src"
+        }
+    ],
+    "paths": {
+        "dojo/i18n": "../dist/lib/i18n-patched",
+        "jade": "../src/lib/jade/jade",
+        "jquery": "../src/lib/jquery",
+        "jquery.hashchange": "../src/lib/jquery.ba-hashchange",
+        "jquery.mousewheel": "../src/lib/jquery.mousewheel",
+        "jquery.event.drag": "../src/lib/jquery.event.drag-2.0",
+        "jquery.event.input": "../src/lib/jquery.event.input",
+        "jquery.jgestures": "../src/lib/jgestures",
+        "joss": "../src/joss",
+        "jossx": "../src/jossx"
+    },
+    "shim": {
+        "jade": {
+            "exports": "jade"
+        }
+    },
+    "keepBuildDir": true,
+    "locale": "en-us",
+    "useStrict": false,
+    "skipModuleInsertion": false,
+    "findNestedDependencies": false,
+    "removeCombined": false,
+    "preserveLicenseComments": false,
+    "logLevel": 0,
+    "urlArgs": "bust=1354066513943"
+}
+      );
+    </script>
+    <script>
+      require(
+       [
+    "spec/joss/util/object/methods",
+    "spec/joss/util/Functions",
+    "spec/joss/util/Classes",
+    "spec/joss/util/lang/isNode",
+    "spec/joss/util/lang/is",
+    "spec/joss/util/lang/isElement",
+    "spec/joss/util/Elements",
+    "spec/joss/util/Forms",
+    "spec/joss/mvc/HtmlView",
+    "spec/joss/mvc/View",
+    "spec/joss/mvc/Router",
+    "spec/joss/mvc/Service",
+    "spec/joss/mvc/Controller",
+    "spec/joss/geometry/Point",
+    "spec/joss/geometry/Rects",
+    "spec/joss/geometry/DomRect",
+    "spec/joss/geometry/Position",
+    "spec/joss/geometry/Rect",
+    "spec/joss/geometry/Line",
+    "spec/jossx/forms/FormToggle",
+    "spec/jossx/forms/FormGroup",
+    "spec/jossx/validation/Checks",
+    "spec/jossx/validation/ValidationModel",
+    "spec/jossx/validation/Errors",
+    "spec/jossx/validation/Validator",
+    "spec/jossx/validation/ValidationError",
+    "spec/jossx/mvc/JadeView",
+    "spec/jossx/Tooltip",
+    "spec/jossx/Interval",
+    "spec/jossx/GameLoop",
+    "spec/jossx/Scrollable",
+    "spec/jossx/Callout"
+],
+       function() {
+        QUnit.start();
+       }
+      );
+    </script>
+  </head>
+  <body>
+    <div id="qunit"></div>
+    <div id="qunit-fixture"></div>
+  </body>
+</html>

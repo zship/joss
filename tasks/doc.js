@@ -13,6 +13,7 @@ module.exports = function(grunt) {
 	var md = require('marked');
 	var hljs = require('highlight.js');
 	var async = require('async');
+	var util = require('./util.js');
 
 	var requirejs = require('../dist/lib/r.js');
 	var rjsconfig = require('./rjsconfig.js');
@@ -549,29 +550,12 @@ module.exports = function(grunt) {
 
 
 	//idea: put a search box above class list that filters the class list
-	
-	//------------------------------------------------------------
-	// Transform globbed config values into lists of files
-	//------------------------------------------------------------
-	var _expanded = function(arr) {
-		var files = [];
-		arr.forEach(function(val) {
-			files = files.concat(grunt.file.expandFiles(val));
-		});
-		return _.uniq(files);
-	};
-
-
 	grunt.registerTask('doc', 'Runs jsdoc', function() {
 		var config = grunt.config.get(this.name);
 		var done = this.async();
 
 		['include', 'exclude'].forEach(function(name) {
-			config[name] = config[name] || [];
-			if (_.isString(config[name])) {
-				config[name] = [config[name]];
-			}
-			config[name] = _expanded(config[name]);
+			config[name] = util.expand(config[name]);
 		});
 
 		config.include = _.difference(config.include, config.exclude);

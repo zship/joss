@@ -47,7 +47,8 @@ module.exports = function( grunt ) {
 		doc: {
 			repoview: 'https://github.com/zship/joss/blob/develop/',
 			//include: 'src/joss/**',
-			include: 'src/joss/geometry/Rect.js',
+			//include: 'src/joss/geometry/Rect.js',
+			include: 'src/joss/geometry/Point.js',
 			//include: 'src/joss/util/Elements.js',
 			types: (function() {
 				var types = [];
@@ -110,9 +111,23 @@ module.exports = function( grunt ) {
 			return readJshint('src/joss/.jshintrc') || {};
 		})(),
 
+		test: {
+			generateFailing: [
+				'src/joss/**/*.js',
+				'src/jossx/**/*.js'
+			],
+			run: false
+		},
+
+		server: {
+			port: 8000,
+			base: '.'
+		},
+
 		whatrequires: {
-			module: 'src/jossx/mvc/JadeView.js',
-			pool: 'src/**/*.js'
+			//module: 'src/jossx/mvc/JadeView.js',
+			module: 'src/joss/util/collection/forEach.js',
+			pool: 'src/jossx/**/*.js'
 		}
 
 	});

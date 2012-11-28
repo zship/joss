@@ -197,7 +197,7 @@ define(function(require) {
 				my: null, //string or Position
 				at: null, //string or Position
 				of: null, //joss/geometry/Rect
-				offset: null //{x, y}
+				offset: null //{x, y} || {by:Number, towards:Point|awayFrom:Point}
 			}, opts);
 
 			if (opts.my && opts.my.constructor === String) {
@@ -269,9 +269,26 @@ define(function(require) {
 				break;
 			}
 
+			if (!opts.offset) {
+				return this;
+			}
+
 			//finally, apply any requested offset
-			if (opts.offset) {
+			//absolute offset
+			if (opts.offset.x || opts.offset.y) {
 				this.translate(opts.offset.x || 0, opts.offset.y || 0);
+			}
+			//relative offset
+			else if (opts.offset.by) {
+				var p;
+				if (opts.offset.towards) {
+					p = this.center().moveBy(opts.offset.by, 'towards', opts.offset.towards);
+					this.moveCenter(p);
+				}
+				else if (opts.offset.awayFrom) {
+					p = this.center().moveBy(opts.offset.by, 'awayFrom', opts.offset.awayFrom);
+					this.moveCenter(p);
+				}
 			}
 
 			return this;
@@ -406,17 +423,17 @@ define(function(require) {
 			var other = rect.normalized();
 
 			//is outside of
-			if (self.left >= other.right || self.right <= other.left) {
+			if (self.left > other.right || self.right < other.left) {
 				return false;
 			}
 
 			//is outside of
-			if (self.top >= other.bottom || self.bottom <= other.top) {
+			if (self.top > other.bottom || self.bottom < other.top) {
 				return false;
 			}
 
 			//is fully contained by
-			if (other.containsRect(self)) {
+			if (self.contains(other)) {
 				return false;
 			}
 

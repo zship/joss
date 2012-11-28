@@ -6,7 +6,7 @@ define(function(require){
 
 	module('joss/geometry/Point');
 
-	test('', function() {
+	test('moveBy', function() {
 		ok(false);
 	});
 

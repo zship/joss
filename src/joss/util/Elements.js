@@ -98,7 +98,7 @@ define(function(require) {
 	/**
 	 * Create a jQuery element from **el**. Avoids calling jQuery if **el** is
 	 * already a jQuery object.
-	 * @param {Element|jQuery|String|Array} el
+	 * @param {Element|jQuery|String|Array.<Element>} el
 	 * @return {jQuery}
 	 */
 	Elements.toJquery = function(el) {
@@ -418,6 +418,47 @@ define(function(require) {
 
 		return dim;
 
+	};
+
+
+	/**
+	 * Blank dimensions object, suitable for a deep-mixin/extend operation
+	 * @type {Object}
+	 */
+	Elements.defaultDimensions = {
+		positioning: 'static',
+		precedence: {
+			x: 'left',
+			y: 'top'
+		},
+		offset: {
+			top: 0,
+			left: 0
+		},
+		position: {
+			top: 0,
+			bottom: 0,
+			left: 0,
+			right: 0
+		},
+		border: {
+			top: 0,
+			bottom: 0,
+			left: 0,
+			right: 0
+		},
+		margin: {
+			top: 0,
+			bottom: 0,
+			left: 0,
+			right: 0
+		},
+		padding: {
+			top: 0,
+			bottom: 0,
+			left: 0,
+			right: 0
+		}
 	};
 
 

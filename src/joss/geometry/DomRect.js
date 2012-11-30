@@ -1,24 +1,62 @@
-/**
- * DomRect
- *
- * Subclass of a basic Rect,
- * but tracks what dimensions of the DOM element
- * are described by this Rect (padding, margin, border),
- * or 'content-box' vs 'border-box'
- */
 define(function(require) {
 
 	var $ = require('jquery');
 	var Classes = require('joss/util/Classes');
 	var lang = require('dojo/_base/lang');
+	var merge = require('amd-utils/object/merge');
 	var Rect = require('./Rect');
 	var Elements = require('joss/util/Elements');
 
 
 
+	//tracks get/set operations on properties of rect.border, rect.padding and
+	//updates the width/height accordingly (DomRect is a 'border-box'
+	//representation, so border/padding affect width/height)
+	var Dimensions = Classes.create({
+		constructor: function(opts, rect) {
+			this._rect = rect;
+			this._top = opts.top || 0;
+			this._right = opts.right || 0;
+			this._bottom = opts.bottom || 0;
+			this._left = opts.left || 0;
+		},
+
+		destroy: function() {
+			this._rect.width -= this.left + this.right;
+			this._rect.height -= this.top + this.bottom;
+		},
+
+		'set top': function(val) {
+			this._rect.height -= this._top;
+			this._rect.height += val;
+			this._top = val;
+		},
+
+		'set right': function(val) {
+			this._rect.width -= this._right;
+			this._rect.width += val;
+			this._right = val;
+		},
+
+		'set bottom': function(val) {
+			this._rect.height -= this._bottom;
+			this._rect.height += val;
+			this._bottom = val;
+		},
+
+		'set left': function(val) {
+			this._rect.width -= this._left;
+			this._rect.width += val;
+			this._left = val;
+		}
+	});
+
+
 	//Rect subclass which can track border, padding, and margin on a DOM
 	//Element, as well as read/write its dimensions from/to an Element
 	var DomRect = Classes.create(Rect, /** @lends joss/geometry/DomRect.prototype */ {
+
+		'-accessors-': ['border', 'padding'],
 
 		/**
 		 * @class
@@ -27,298 +65,123 @@ define(function(require) {
 		constructor: function(opts) {
 
 			//if no positioning info was passed, calculate from the DOM (below)
-			var shouldCalculateDimensions = !(opts.top || opts.left || opts.right || opts.bottom);
-
-			var defaults = {
-				element: null
-			};
-
-			Classes.applyOptions(this, defaults, opts);
-
-			if (shouldCalculateDimensions) {
-				this._recalculate();
+			if (!(opts.top || opts.left || opts.right || opts.bottom)) {
+				var rect = DomRect.fromElement(opts.element);
+				this.top = rect.top;
+				this.right = rect.right;
+				this.bottom = rect.bottom;
+				this.left = rect.left;
+				opts = {
+					element: rect.element,
+					border: rect.border,
+					padding: rect.padding,
+					margin: rect.margin
+				};
 			}
+
+			this.element = opts.element;
+			this._border = merge({top: 0, right: 0, bottom: 0, left: 0}, opts.border);
+			this._padding = merge({top: 0, right: 0, bottom: 0, left: 0}, opts.padding);
+			this._margin = opts.margin;
 
 		},
 
 
-		/**
-		 * @param {Element} [el]
-		 * @return {joss/geometry/DomRect|Element}
-		 */
-		element: function() {},
+		_setElements: function(el) {
+			el = Elements.toJquery(el);
+			this._element = el[0];
+			this._$element = el;
+		},
+
+
+		/** @type {Element} */
+		element: null,
 
 
 		'set element': function(el) {
-			this._element = Elements.toJquery(el);
-			return this;
+			this._setElements(el);
 		},
 
 
-		/**
-		 * @param {Object} [val]
-		 * @return {joss/geometry/DomRect|Object}
-		 */
-		border: function() {},
+		/** @type {jQuery} */
+		$element: null,
 
 
-		'get border': function() {
-			return lang.clone(this._border);
+		'set $element': function(el) {
+			this._setElements(el);
 		},
 
 
-		'set border': function(val) {
-			this.borderTop(val.top);
-			this.borderRight(val.right);
-			this.borderBottom(val.bottom);
-			this.borderLeft(val.left);
-			return this;
+		/** @type {Object} */
+		border: null,
+
+
+		'set border.top': function(val, prev) {
+			this.height -= prev;
+			this.height += val;
+			this._border._top = val;
 		},
 
 
-		borderTop: function(val) {
-			if (val) {
-				this.height(this.height() - (this._border.top - val));
-				this._border.top = val;
-				return this;
-			}
-			return this._border.top;
+		'set border.right': function(val, prev) {
+			this.width -= prev;
+			this.width += val;
+			this._border._right = val;
 		},
 
 
-		borderRight: function(val) {
-			if (val) {
-				this.width(this.width() - (this._border.right - val));
-				this._border.right = val;
-				return this;
-			}
-			return this._border.right;
+		'set border.bottom': function(val, prev) {
+			this.height -= prev;
+			this.height += val;
+			this._border._bottom = val;
 		},
 
 
-		borderBottom: function(val) {
-			if (val) {
-				this.height(this.height() - (this._border.bottom - val));
-				this._border.bottom = val;
-				return this;
-			}
-			return this._border.bottom;
+		'set border.left': function(val, prev) {
+			this.width -= prev;
+			this.width += val;
+			this._border._left = val;
 		},
 
 
-		borderLeft: function(val) {
-			if (val) {
-				this.width(this.width() - (this._border.left - val));
-				this._border.left = val;
-				return this;
-			}
-			return this._border.left;
-		},
-
-
-		/**
-		 * @param {Object} [val]
-		 * @return {joss/geometry/DomRect|Object}
-		 */
-		margin: function() {},
-
-
-		'get margin': function() {
-			return lang.clone(this._margin);
-		},
+		/** @type {Object} */
+		margin: null,
 
 
 		'set margin': function(val) {
-			this.marginTop(val.top);
-			this.marginRight(val.right);
-			this.marginBottom(val.bottom);
-			this.marginLeft(val.left);
-			return this;
+			this._margin = lang.mixin(this._margin, val);
 		},
 
 
-		marginTop: function(val) {
-			if (val) {
-				this._margin.top = val;
-				return this;
-			}
-			return this._margin.top;
+		/** @type {Object} */
+		padding: null,
+
+
+		'set padding.top': function(val, prev) {
+			this.height -= prev;
+			this.height += val;
+			this._padding._top = val;
 		},
 
 
-		marginRight: function(val) {
-			if (val) {
-				this._margin.right = val;
-				return this;
-			}
-			return this._margin.right;
+		'set padding.right': function(val, prev) {
+			this.width -= prev;
+			this.width += val;
+			this._padding._right = val;
 		},
 
 
-		marginBottom: function(val) {
-			if (val) {
-				this._margin.bottom = val;
-				return this;
-			}
-			return this._margin.bottom;
+		'set padding.bottom': function(val, prev) {
+			this.height -= prev;
+			this.height += val;
+			this._padding._bottom = val;
 		},
 
 
-		marginLeft: function(val) {
-			if (val) {
-				this._margin.left = val;
-				return this;
-			}
-			return this._margin.left;
-		},
-
-
-		/**
-		 * @param {Object} [val]
-		 * @return {joss/geometry/DomRect|Object}
-		 */
-		padding: function() {},
-
-
-		'get padding': function() {
-			return lang.clone(this._padding);
-		},
-
-
-		'set padding': function(val) {
-			this.paddingTop(val.top);
-			this.paddingRight(val.right);
-			this.paddingBottom(val.bottom);
-			this.paddingLeft(val.left);
-			return this;
-		},
-
-
-		paddingTop: function(val) {
-			if (val) {
-				this.height(this.height() - (this._padding.top - val));
-				this._padding.top = val;
-				return this;
-			}
-			return this._padding.top;
-		},
-
-
-		paddingRight: function(val) {
-			if (val) {
-				this.width(this.width() - (this._padding.right - val));
-				this._padding.right = val;
-				return this;
-			}
-			return this._padding.right;
-		},
-
-
-		paddingBottom: function(val) {
-			if (val) {
-				this.height(this.height() - (this._padding.bottom - val));
-				this._padding.bottom = val;
-				return this;
-			}
-			return this._padding.bottom;
-		},
-
-
-		paddingLeft: function(val) {
-			if (val) {
-				this.width(this.width() - (this._padding.left - val));
-				this._padding.left = val;
-				return this;
-			}
-			return this._padding.left;
-		},
-
-
-		//inspect dimensions of this._element from the DOM
-		_recalculate: function() {
-			var dim = Elements.defaultDimensions();
-
-			//some special cases:
-			//entire document
-			if (this._element[0] === document) {
-				var docWidth = $(document).width();
-				var docHeight = $(document).height();
-
-				this.top = 0;
-				this.left = 0;
-				this.width(docWidth);
-				this.height(docHeight);
-
-				this.border = dim.border;
-				this.margin = dim.margin;
-				this.padding = dim.padding;
-
-				return this;
-			}
-
-			//viewport, with scrolling
-			if (this._element[0] === window) {
-				var winWidth = $(window).width();
-				var winHeight = $(window).height();
-				var st = parseInt($(window).scrollTop(), 10);
-				var sl = parseInt($(window).scrollLeft(), 10);
-
-				this.top = st;
-				this.left = sl;
-				this.width(winWidth);
-				this.height(winHeight);
-
-				this.border = dim.border;
-				this.margin = dim.margin;
-				this.padding = dim.padding;
-
-				return this;
-			}
-
-			var bounding;
-
-			//regular elements, where we can ditch jQuery for most CSS
-			//calculations (speed)
-			this._element.each(function(i, el) {
-
-				var dim = Elements.getDimensions(el);
-
-				//start with a content-box Rect; add padding, border, margin below
-				var rect = new DomRect({
-					element: el,
-					top: dim.offset.top,
-					left: dim.offset.left,
-					width: dim.width + dim.padding.left + dim.padding.right + dim.border.left + dim.border.right,
-					height: dim.height + dim.padding.top + dim.padding.bottom + dim.border.top + dim.border.bottom,
-					border: dim.border,
-					margin: dim.margin,
-					padding: dim.padding
-				});
-
-				//first iteration
-				if (!bounding) {
-					bounding = rect;
-					return true; //continue
-				}
-
-				bounding = bounding.united(rect);
-
-				return true;
-
-			}.bind(this));
-
-			this._initial = bounding._initial;
-
-			this.top = bounding.top;
-			this.right = bounding.right;
-			this.bottom = bounding.bottom;
-			this.left = bounding.left;
-
-			this.border = bounding.border;
-			this.margin = bounding.margin;
-			this.padding = bounding.padding;
-
-			return this;
+		'set padding.left': function(val, prev) {
+			this.width -= prev;
+			this.width += val;
+			this._padding._left = val;
 		},
 
 
@@ -331,7 +194,7 @@ define(function(require) {
 			var intersected = this.inherited(arguments);
 
 			return new DomRect({
-				element: this.element(),
+				element: this.element,
 				top: intersected.top,
 				right: intersected.right,
 				bottom: intersected.bottom,
@@ -352,7 +215,7 @@ define(function(require) {
 			var united = this.inherited(arguments);
 
 			return new DomRect({
-				element: this.element(),
+				element: this.element,
 				top: united.top,
 				right: united.right,
 				bottom: united.bottom,
@@ -368,41 +231,44 @@ define(function(require) {
 		 * @return {joss/geometry/DomRect}
 		 */
 		apply: function() {
-			if (!this._element || this._element.length > 1) {
+			if (!this.element || this.$element.length > 1) {
 				return this;
 			}
-			this.applyTo(this._element);
+			this.applyTo(this.element);
 			return this;
 		},
 
 
 		/**
-		 * @param {Element} el
+		 * @param {Element|String|jQuery} el
 		 * @return {joss/geometry/DomRect}
 		 */
 		applyTo: function(el) {
 
+			el = Elements.fromAny(el);
+
 			var dim = Elements.getDimensions(el);
 			var curr = {
-				top: dim.top,
-				left: dim.left,
+				top: dim.offset.top,
+				left: dim.offset.left,
 				width: dim.width,
 				height: dim.height,
+				precedence: dim.precedence,
 				position: dim.position
 			};
 
 			var next = {
 				top: this.top,
 				left: this.left,
-				width: this.width(),
-				height: this.height()
+				width: this.width,
+				height: this.height
 			};
 
 			//DomRect is a 'border-box'. Convert to 'content-box' for CSS.
-			next.width -= this._padding.left + this._padding.right;
-			next.height -= this._padding.top + this._padding.bottom;
-			next.width -= this._border.left + this._border.right;
-			next.height -= this._border.top + this._border.bottom;
+			next.width -= this.padding.left + this.padding.right;
+			next.height -= this.padding.top + this.padding.bottom;
+			next.width -= this.border.left + this.border.right;
+			next.height -= this.border.top + this.border.bottom;
 
 			//dimensions are all gathered. what changed?
 			var changed = {
@@ -430,7 +296,7 @@ define(function(require) {
 				bottom: Math.round(-1 * (curr.position.bottom + (next.top - curr.top)))
 			};
 
-			var offsetParent = el[0].offsetParent || document.body;
+			var offsetParent = el.offsetParent || document.body;
 			if (offsetParent !== document.body) {
 				adjusted.top += offsetParent.scrollTop;
 				adjusted.left += offsetParent.scrollLeft;
@@ -471,26 +337,102 @@ define(function(require) {
 				styles.position = 'absolute';
 			}
 
-			styles.borderTop = this.border.top;
-			styles.borderRight = this.border.right;
-			styles.borderBottom = this.border.bottom;
-			styles.borderLeft = this.border.left;
-			styles.marginTop = this.margin.top;
-			styles.marginRight = this.margin.right;
-			styles.marginBottom = this.margin.bottom;
-			styles.marginLeft = this.margin.left;
+			styles.borderTopWidth = this.border.top;
+			styles.borderRightWidth = this.border.right;
+			styles.borderBottomWidth = this.border.bottom;
+			styles.borderLeftWidth = this.border.left;
 			styles.paddingTop = this.padding.top;
 			styles.paddingRight = this.padding.right;
 			styles.paddingBottom = this.padding.bottom;
 			styles.paddingLeft = this.padding.left;
+			styles.marginTop = this.margin.top;
+			styles.marginRight = this.margin.right;
+			styles.marginBottom = this.margin.bottom;
+			styles.marginLeft = this.margin.left;
 
-			Elements.setStyles(el[0], styles);
+			Elements.setStyles(el, styles);
 
 			return this;
 
 		}
 
 	});
+
+
+	DomRect.fromElement = function(el) {
+
+		el = Elements.toJquery(el);
+		var dim = Elements.defaultDimensions();
+
+		//some special cases:
+		//entire document
+		if (el[0] === document) {
+			var docWidth = $(document).width();
+			var docHeight = $(document).height();
+
+			return new DomRect({
+				top: 0,
+				left: 0,
+				width: docWidth,
+				height: docHeight,
+				border: dim.border,
+				margin: dim.margin,
+				padding: dim.padding
+			});
+		}
+
+		//viewport, with scrolling
+		if (el[0] === window) {
+			var winWidth = $(window).width();
+			var winHeight = $(window).height();
+			var st = parseInt($(window).scrollTop(), 10);
+			var sl = parseInt($(window).scrollLeft(), 10);
+
+			return new DomRect({
+				top: st,
+				left: sl,
+				width: winWidth,
+				height: winHeight,
+				border: dim.border,
+				margin: dim.margin,
+				padding: dim.padding
+			});
+		}
+
+		var bounding;
+
+		//regular elements, where we can ditch jQuery for most CSS
+		//calculations (speed)
+		el.each(function(i, el) {
+
+			var dim = Elements.getDimensions(el);
+
+			var rect = new DomRect({
+				element: el,
+				top: dim.offset.top,
+				left: dim.offset.left,
+				width: dim.width + dim.border.left + dim.border.right + dim.padding.left + dim.padding.right,
+				height: dim.height + dim.border.top + dim.border.bottom + dim.padding.top + dim.padding.bottom,
+				border: dim.border,
+				margin: dim.margin,
+				padding: dim.padding
+			});
+
+			//first iteration
+			if (!bounding) {
+				bounding = rect;
+				return true; //continue
+			}
+
+			bounding = bounding.united(rect);
+
+			return true;
+
+		}.bind(this));
+
+		return bounding;
+
+	};
 
 
 	/**
@@ -504,8 +446,7 @@ define(function(require) {
 		opts = opts || {};
 
 		if (opts.constructor === DomRect) {
-			var rect = opts;
-			rect.applyTo(this.first());
+			opts.applyTo(this.first());
 			return this;
 		}
 

@@ -9,17 +9,63 @@ define(function(require){
 
 	test('Generated Accessors', function() {
 		var Class = Classes.create({
-			'-accessors-': ['a', 'b']
+			'-accessors-': ['a', 'b'],
+			constructor: function() {
+				this._a = 0;
+				this._b = 0;
+			}
 		});
 
-		var obj = new Class();
-		obj.a(1);
-		strictEqual(obj.a(), 1, 'Getter a = 1');
-		strictEqual(obj._a, 1, 'Setter a = 1');
+		var keys = Object.getOwnPropertyNames(Class.prototype);
+		ok(keys.indexOf('a') !== -1, 'a is a property');
+		ok(keys.indexOf('b') !== -1, 'b is a property');
 
-		obj.b(2);
-		strictEqual(obj.b(), 2, 'Getter b = 2');
-		strictEqual(obj._b, 2, 'Setter b = 2');
+		var obj = new Class();
+		strictEqual(obj.a, 0, 'getter a');
+		obj.a = 1;
+		strictEqual(obj.a, 1, 'setter a');
+
+		strictEqual(obj.b, 0, 'getter b');
+		obj.b = 2;
+		strictEqual(obj.b, 2, 'setter a');
+	});
+
+
+	test('Nested Accessors', function() {
+		var called = false;
+		var Class = Classes.create({
+			'-accessors-': ['a', 'a.b'],
+
+			constructor: function() {
+				this.a = {b: 'init'};
+			},
+
+			'set a.b': function(val) {
+				called = true;
+				this._a._b = val;
+			}
+		});
+
+
+		var obj = new Class();
+		strictEqual(obj.a.b, 'init', 'initial a.b');
+
+		obj.a.b = 'foo';
+		ok(called, 'a.b setter was called');
+		called = false;
+		strictEqual(obj.a.b, 'foo', 'change a.b, get a.b');
+
+		obj.a = {
+			b: 'bar'
+		};
+		ok(called, 'a.b setter was called');
+		called = false;
+		strictEqual(obj.a.b, 'bar', 'changed a, get a.b');
+
+		obj.a.b = 'baz';
+		ok(called, 'a.b setter was called');
+		called = false;
+		strictEqual(obj.a.b, 'baz', 'changed a, set a.b');
 	});
 
 

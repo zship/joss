@@ -19,16 +19,16 @@ define(function(require){
 
 	test('width & height | {t: 0, l: 0, w: 100, h: 100}', function() {
 		var rect = lang.clone(tpl);
-		strictEqual(rect.width(), 100, '(get) width is accurate');
-		strictEqual(rect.height(), 100, '(get) height is accurate');
+		strictEqual(rect.width, 100, '(get) width is accurate');
+		strictEqual(rect.height, 100, '(get) height is accurate');
 
-		strictEqual(rect.width(200), rect, '(set) width returns same Rect object (chaining)');
+		rect.width = 200;
 		strictEqual(rect.left, 0, '(set) width does not alter left');
-		strictEqual(rect.width(), 200, '(set) width sets the width');
+		strictEqual(rect.width, 200, '(set) width sets the width');
 
-		strictEqual(rect.height(200), rect, '(set) height returns same Rect object (chaining)');
+		rect.height = 200;
 		strictEqual(rect.top, 0, '(set) height does not alter top');
-		strictEqual(rect.height(), 200, '(set) height sets the height');
+		strictEqual(rect.height, 200, '(set) height sets the height');
 	});
 
 
@@ -43,13 +43,13 @@ define(function(require){
 			['topLeft', 0, 0],
 			['topRight', 100, 0]
 		].forEach(function(arr) {
-			var method = arr[0];
+			var name = arr[0];
 			var x = arr[1];
 			var y = arr[2];
 
-			strictEqual(rect[method]().constructor, Point, method + ' returns Point');
-			strictEqual(rect[method]().x, x, method + ': x is accurate');
-			strictEqual(rect[method]().y, y, method + ': y is accurate');
+			strictEqual(rect[name].constructor, Point, name + ' returns Point');
+			strictEqual(rect[name].x, x, name + ': x is accurate');
+			strictEqual(rect[name].y, y, name + ': y is accurate');
 		});
 	});
 
@@ -60,7 +60,6 @@ define(function(require){
 
 		[
 			//name, top, left
-			['centerOn', 150, 150],
 			['moveBottomLeft', 100, 200],
 			['moveBottomRight', 100, 100],
 			['moveCenter', 150, 150],
@@ -74,8 +73,8 @@ define(function(require){
 			strictEqual(rect[method](p), rect, method + ': returns same Rect object (chaining)');
 			strictEqual(rect[method](p).top, top, method + ': top is accurate');
 			strictEqual(rect[method](p).left, left, method + ': left is accurate');
-			strictEqual(rect[method](p).height(), 100, method + ': does not alter height');
-			strictEqual(rect[method](p).width(), 100, method + ': does not alter width');
+			strictEqual(rect[method](p).height, 100, method + ': does not alter height');
+			strictEqual(rect[method](p).width, 100, method + ': does not alter width');
 		});
 	});
 
@@ -96,8 +95,8 @@ define(function(require){
 			strictEqual(rect[method](y), rect, method + ': returns same Rect object (chaining)');
 			strictEqual(rect[method](y).top, top, method + ': top is accurate');
 			strictEqual(rect[method](y).left, 0, method + ': does not alter left');
-			strictEqual(rect[method](y).height(), 100, method + ': does not alter height');
-			strictEqual(rect[method](y).width(), 100, method + ': does not alter width');
+			strictEqual(rect[method](y).height, 100, method + ': does not alter height');
+			strictEqual(rect[method](y).width, 100, method + ': does not alter width');
 		});
 
 		[
@@ -112,8 +111,8 @@ define(function(require){
 			strictEqual(rect[method](x), rect, method + ': returns same Rect object (chaining)');
 			strictEqual(rect[method](x).left, left, method + ': left is accurate');
 			strictEqual(rect[method](x).top, 0, method + ': does not alter top');
-			strictEqual(rect[method](x).height(), 100, method + ': does not alter height');
-			strictEqual(rect[method](x).width(), 100, method + ': does not alter width');
+			strictEqual(rect[method](x).height, 100, method + ': does not alter height');
+			strictEqual(rect[method](x).width, 100, method + ': does not alter width');
 		});
 	});
 
@@ -134,7 +133,7 @@ define(function(require){
 				of: rect,
 				offset: {
 					by: 1,
-					awayFrom: rect.center()
+					awayFrom: rect.center
 				}
 			});
 
@@ -143,8 +142,8 @@ define(function(require){
 			other.right = Math.round(other.right);
 			other.bottom = Math.round(other.bottom);
 
-			strictEqual(rect.contains(other), false, 'contains: {t:0, l:0, w:100, h:100} does not contain {t:' + other.top + ', l:' + other.left + ', w:' + other.width() + ', h:' + other.height() + '} (lying outside the ' + pos.reverse().toString() + ')');
-			strictEqual(rect.intersects(other), false, 'intersects: {t:0, l:0, w:100, h:100} does not intersect {t:' + other.top + ', l:' + other.left + ', w:' + other.width() + ', h:' + other.height() + '} (lying outside the ' + pos.reverse().toString() + ')');
+			strictEqual(rect.contains(other), false, 'contains: {t:0, l:0, w:100, h:100} does not contain {t:' + other.top + ', l:' + other.left + ', w:' + other.width + ', h:' + other.height + '} (lying outside the ' + pos.reverse().toString() + ')');
+			strictEqual(rect.intersects(other), false, 'intersects: {t:0, l:0, w:100, h:100} does not intersect {t:' + other.top + ', l:' + other.left + ', w:' + other.width + ', h:' + other.height + '} (lying outside the ' + pos.reverse().toString() + ')');
 		});
 
 		//move all the way around rect lying on edges: should not contain but should intersect
@@ -162,8 +161,8 @@ define(function(require){
 			other.right = Math.round(other.right);
 			other.bottom = Math.round(other.bottom);
 
-			strictEqual(rect.contains(other), false, 'contains: {t:0, l:0, w:100, h:100} does not contain {t:' + other.top + ', l:' + other.left + ', w:' + other.width() + ', h:' + other.height() + '} (lying against the ' + pos.reverse().toString() + ')');
-			strictEqual(rect.intersects(other), true, 'intersects: {t:0, l:0, w:100, h:100} intersects {t:' + other.top + ', l:' + other.left + ', w:' + other.width() + ', h:' + other.height() + '} (lying against the ' + pos.reverse().toString() + ')');
+			strictEqual(rect.contains(other), false, 'contains: {t:0, l:0, w:100, h:100} does not contain {t:' + other.top + ', l:' + other.left + ', w:' + other.width + ', h:' + other.height + '} (lying against the ' + pos.reverse().toString() + ')');
+			strictEqual(rect.intersects(other), true, 'intersects: {t:0, l:0, w:100, h:100} intersects {t:' + other.top + ', l:' + other.left + ', w:' + other.width + ', h:' + other.height + '} (lying against the ' + pos.reverse().toString() + ')');
 		});
 
 		//move all the way around rect +1px towards center: should not contain but should intersect
@@ -176,7 +175,7 @@ define(function(require){
 				of: rect,
 				offset: {
 					by: 1,
-					towards: rect.center()
+					towards: rect.center
 				}
 			});
 
@@ -185,8 +184,8 @@ define(function(require){
 			other.right = Math.round(other.right);
 			other.bottom = Math.round(other.bottom);
 
-			strictEqual(rect.contains(other), false, 'contains: {t:0, l:0, w:100, h:100} does not contain {t:' + other.top + ', l:' + other.left + ', w:' + other.width() + ', h:' + other.height() + '} (lying against the ' + pos.reverse().toString() + ')');
-			strictEqual(rect.intersects(other), true, 'intersects: {t:0, l:0, w:100, h:100} intersects {t:' + other.top + ', l:' + other.left + ', w:' + other.width() + ', h:' + other.height() + '} (lying against the ' + pos.reverse().toString() + ')');
+			strictEqual(rect.contains(other), false, 'contains: {t:0, l:0, w:100, h:100} does not contain {t:' + other.top + ', l:' + other.left + ', w:' + other.width + ', h:' + other.height + '} (lying against the ' + pos.reverse().toString() + ')');
+			strictEqual(rect.intersects(other), true, 'intersects: {t:0, l:0, w:100, h:100} intersects {t:' + other.top + ', l:' + other.left + ', w:' + other.width + ', h:' + other.height + '} (lying against the ' + pos.reverse().toString() + ')');
 		});
 
 		other = new Rect({
@@ -208,14 +207,14 @@ define(function(require){
 		var intersected = rect.intersected(other);
 		strictEqual(intersected.top, 50, 'intersected: top is accurate');
 		strictEqual(intersected.left, 50, 'intersected: left is accurate');
-		strictEqual(intersected.width(), 50, 'intersected: width is accurate');
-		strictEqual(intersected.height(), 50, 'intersected: height is accurate');
+		strictEqual(intersected.width, 50, 'intersected: width is accurate');
+		strictEqual(intersected.height, 50, 'intersected: height is accurate');
 
 		var united = rect.united(other);
 		strictEqual(united.top, 0, 'united: top is accurate');
 		strictEqual(united.left, 0, 'united: left is accurate');
-		strictEqual(united.width(), 150, 'united: width is accurate');
-		strictEqual(united.height(), 150, 'united: height is accurate');
+		strictEqual(united.width, 150, 'united: width is accurate');
+		strictEqual(united.height, 150, 'united: height is accurate');
 	});
 
 
@@ -227,14 +226,14 @@ define(function(require){
 			bottom: -10
 		});
 
-		strictEqual(rect.width(), -10, 'before: width is negative');
-		strictEqual(rect.height(), -10, 'before: height is negative');
+		strictEqual(rect.width, -10, 'before: width is negative');
+		strictEqual(rect.height, -10, 'before: height is negative');
 
 		rect = rect.normalized();
 		strictEqual(rect.top, -10, 'after: top has changed');
-		strictEqual(rect.width(), 10, 'after: width is positive');
+		strictEqual(rect.width, 10, 'after: width is positive');
 		strictEqual(rect.left, -10, 'after: left has changed');
-		strictEqual(rect.height(), 10, 'after: height is positive');
+		strictEqual(rect.height, 10, 'after: height is positive');
 	});
 
 
@@ -275,8 +274,8 @@ define(function(require){
 
 			strictEqual(rect.top, top, position.toString() + ' against ' + reversed.toString() + ': top is accurate');
 			strictEqual(rect.left, left, position.toString() + ' against ' + reversed.toString() + ': left is accurate');
-			strictEqual(rect.width(), 50, 'width is unchanged');
-			strictEqual(rect.height(), 50, 'height is unchanged');
+			strictEqual(rect.width, 50, 'width is unchanged');
+			strictEqual(rect.height, 50, 'height is unchanged');
 
 			rect.position({
 				my: position,

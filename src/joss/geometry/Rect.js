@@ -69,6 +69,7 @@ define(function(require) {
 			return this;
 		},
 
+
 		/**
 		 * @param {Number} dx
 		 * @param {Number} dy
@@ -82,39 +83,44 @@ define(function(require) {
 			return this;
 		},
 
+
 		/**
 		 * @param {Number} y
 		 * @return {joss/geometry/Rect}
 		 */
 		moveBottom: function(y) {
-			return this.moveTo(new Point(this.left, y - this.height()));
+			return this.moveTo(new Point(this.left, y - this.height));
 		},
+
 
 		/**
 		 * @param {joss/geometry/Point} p
 		 * @return {joss/geometry/Rect}
 		 */
 		moveBottomLeft: function(p) {
-			return this.moveTo(new Point(p.x, p.y - this.height()));
+			return this.moveTo(new Point(p.x, p.y - this.height));
 		},
+
 
 		/**
 		 * @param {joss/geometry/Point} p
 		 * @return {joss/geometry/Rect}
 		 */
 		moveBottomRight: function(p) {
-			return this.moveTo(new Point(p.x - this.width(), p.y - this.height()));
+			return this.moveTo(new Point(p.x - this.width, p.y - this.height));
 		},
+
 
 		/**
 		 * @param {joss/geometry/Point} p
 		 * @return {joss/geometry/Rect}
 		 */
 		moveCenter: function(p) {
-			var offset_x = p.x - this.center().x;
-			var offset_y = p.y - this.center().y;
+			var offset_x = p.x - this.center.x;
+			var offset_y = p.y - this.center.y;
 			return this.translate(offset_x, offset_y);
 		},
+
 
 		/**
 		 * @param {Number} x
@@ -124,13 +130,15 @@ define(function(require) {
 			return this.moveTo(new Point(x, this.top));
 		},
 
+
 		/**
 		 * @param {Number} x
 		 * @return {joss/geometry/Rect}
 		 */
 		moveRight: function(x) {
-			return this.moveTo(new Point(x - this.width(), this.top));
+			return this.moveTo(new Point(x - this.width, this.top));
 		},
+
 
 		/**
 		 * @param {joss/geometry/Point} p
@@ -143,6 +151,7 @@ define(function(require) {
 			);
 		},
 
+
 		/**
 		 * @param {Number} y
 		 * @return {joss/geometry/Rect}
@@ -150,6 +159,7 @@ define(function(require) {
 		moveTop: function(y) {
 			return this.moveTo(new Point(this.left, y));
 		},
+
 
 		/**
 		 * @param {joss/geometry/Point} p
@@ -159,30 +169,15 @@ define(function(require) {
 			return this.moveTo(p);
 		},
 
+
 		/**
 		 * @param {joss/geometry/Point} p
 		 * @return {joss/geometry/Rect}
 		 */
 		moveTopRight: function(p) {
-			return this.moveTo(new Point(p.x - this.width(), p.y));
+			return this.moveTo(new Point(p.x - this.width, p.y));
 		},
 
-		/**
-		 * @param {joss/geometry/Point} p
-		 * @return {joss/geometry/Rect}
-		 */
-		centerOn: function(p) {
-			return this.moveCenter(p);
-		},
-
-		/**
-		 * @return {joss/geometry/Point}
-		 */
-		center: function() {
-			var center = this.left + (this.right - this.left) / 2;
-			var middle = this.top + (this.bottom - this.top) / 2;
-			return new Point(center, middle);
-		},
 
 		/**
 		 * Shorthand for relative positioning to another Rectangle
@@ -218,24 +213,24 @@ define(function(require) {
 			//moving this rectange
 			var dest = new Point(0, 0);
 			//console.log(opts.my, opts.at, opts.of, opts.offset);
-			switch(opts.at.x()) {
+			switch(opts.at.x) {
 			case 'left':
 				dest.x = opts.of.left;
 				break;
 			case 'center':
-				dest.x = opts.of.center().x;
+				dest.x = opts.of.center.x;
 				break;
 			case 'right':
 				dest.x = opts.of.right;
 				break;
 			}
 
-			switch(opts.at.y()) {
+			switch(opts.at.y) {
 			case 'top':
 				dest.y = opts.of.top;
 				break;
 			case 'center':
-				dest.y = opts.of.center().y;
+				dest.y = opts.of.center.y;
 				break;
 			case 'bottom':
 				dest.y = opts.of.bottom;
@@ -243,9 +238,9 @@ define(function(require) {
 			}
 
 			//move the rectangle.  start at the center as a baseline.
-			this.moveCenter(opts.of.center());
+			this.moveCenter(opts.of.center);
 
-			switch(opts.my.x()) {
+			switch(opts.my.x) {
 			case 'left':
 				this.moveLeft(dest.x);
 				break;
@@ -257,7 +252,7 @@ define(function(require) {
 				break;
 			}
 
-			switch(opts.my.y()) {
+			switch(opts.my.y) {
 			case 'top':
 				this.moveTop(dest.y);
 				break;
@@ -282,11 +277,11 @@ define(function(require) {
 			else if (opts.offset.by) {
 				var p;
 				if (opts.offset.towards) {
-					p = this.center().moveBy(opts.offset.by, 'towards', opts.offset.towards);
+					p = this.center.moveBy(opts.offset.by, 'towards', opts.offset.towards);
 					this.moveCenter(p);
 				}
 				else if (opts.offset.awayFrom) {
-					p = this.center().moveBy(opts.offset.by, 'awayFrom', opts.offset.awayFrom);
+					p = this.center.moveBy(opts.offset.by, 'awayFrom', opts.offset.awayFrom);
 					this.moveCenter(p);
 				}
 			}
@@ -294,29 +289,34 @@ define(function(require) {
 			return this;
 		},
 
-		/**
-		 * @param {Number} [val]
-		 * @return {Number|joss/geometry/Rect}
-		 */
-		width: function(val) {
-			if (val) {
-				this.right = this.left + val;
-				return this;
-			}
+
+		/** @type {Number} */
+		width: null,
+
+
+		'get width': function() {
 			return this.right - this.left;
 		},
 
-		/**
-		 * @param {Number} [val]
-		 * @return {Number|joss/geometry/Rect}
-		 */
-		height: function(val) {
-			if (val) {
-				this.bottom = this.top + val;
-				return this;
-			}
+
+		'set width': function(val) {
+			this.right = this.left + val;
+		},
+
+
+		/** @type {Number} */
+		height: null,
+
+
+		'get height': function() {
 			return this.bottom - this.top;
 		},
+
+
+		'set height': function(val) {
+			this.bottom = this.top + val;
+		},
+
 
 		/**
 		 * @param {joss/geometry/Point|joss/geometry/Rect} target
@@ -331,9 +331,11 @@ define(function(require) {
 			}
 		},
 
+
 		_containsPoint: function(p) {
 			return (p.x >= this.left && p.x <= this.right && p.y >= this.top && p.y <= this.bottom);
 		},
+
 
 		_containsRect: function(rect) {
 			var self = this.normalized();
@@ -350,69 +352,6 @@ define(function(require) {
 			return true;
 		},
 
-		/**
-		 * @return {joss/geometry/Point}
-		 */
-		topLeft: function() {
-			return new Point(this.left, this.top);
-		},
-
-		/**
-		 * @return {joss/geometry/Point}
-		 */
-		topRight: function() {
-			return new Point(this.right, this.top);
-		},
-
-		/**
-		 * @return {joss/geometry/Point}
-		 */
-		bottomLeft: function() {
-			return new Point(this.left, this.bottom);
-		},
-
-		/**
-		 * @return {joss/geometry/Point}
-		 */
-		bottomRight: function() {
-			return new Point(this.right, this.bottom);
-		},
-
-		/**
-		 * @param {joss/geometry/Rect} rect
-		 * @return {joss/geometry/Rect}
-		 */
-		united: function(rect) {
-			var self = this.normalized();
-			var other = rect.normalized();
-
-			return new Rect({
-				t: Math.min(self.top, other.top),
-				l: Math.min(self.left, other.left),
-				r: Math.max(self.right, other.right),
-				b: Math.max(self.bottom, other.bottom)
-			});
-		},
-
-		/**
-		 * @param {joss/geometry/Rect} rect
-		 * @return {joss/geometry/Rect}
-		 */
-		intersected: function(rect) {
-			if (!this.intersects(rect)) {
-				return null;
-			}
-
-			var self = this.normalized();
-			var other = rect.normalized();
-
-			return new Rect({
-				t: Math.max(self.top, other.top),
-				l: Math.max(self.left, other.left),
-				r: Math.min(self.right, other.right),
-				b: Math.min(self.bottom, other.bottom)
-			});
-		},
 
 		/**
 		 * @param {joss/geometry/Rect} rect
@@ -441,16 +380,130 @@ define(function(require) {
 		},
 
 
+		/** @type {joss/geometry/Point} */
+		center: null,
+
+
+		'get center': function() {
+			var center = this.left + (this.right - this.left) / 2;
+			var middle = this.top + (this.bottom - this.top) / 2;
+			return new Point(center, middle);
+		},
+
+
+		'set center': function(p) {
+			this.moveCenter(p);
+		},
+
+
+		/** @type {joss/geometry/Point} */
+		topLeft: null,
+
+
+		'get topLeft': function() {
+			return new Point(this.left, this.top);
+		},
+
+
+		'set topLeft': function(p) {
+			this.top = p.y;
+			this.left = p.x;
+		},
+
+
+		/** @type {joss/geometry/Point} */
+		topRight: null,
+
+
+		'get topRight': function() {
+			return new Point(this.right, this.top);
+		},
+
+
+		'set topRight': function(p) {
+			this.top = p.y;
+			this.right = p.x;
+		},
+
+
+		/** @type {joss/geometry/Point} */
+		bottomLeft: null,
+
+
+		'get bottomLeft': function() {
+			return new Point(this.left, this.bottom);
+		},
+
+
+		'set bottomLeft': function(p) {
+			this.bottom = p.y;
+			this.left = p.x;
+		},
+
+
+		/** @type {joss/geometry/Point} */
+		bottomRight: null,
+
+
+		'get bottomRight': function() {
+			return new Point(this.right, this.bottom);
+		},
+
+
+		'set bottomRight': function(p) {
+			this.bottom = p.y;
+			this.right = p.x;
+		},
+
+
+		/**
+		 * @param {joss/geometry/Rect} rect
+		 * @return {joss/geometry/Rect}
+		 */
+		united: function(rect) {
+			var self = this.normalized();
+			var other = rect.normalized();
+
+			return new Rect({
+				t: Math.min(self.top, other.top),
+				l: Math.min(self.left, other.left),
+				r: Math.max(self.right, other.right),
+				b: Math.max(self.bottom, other.bottom)
+			});
+		},
+
+
+		/**
+		 * @param {joss/geometry/Rect} rect
+		 * @return {joss/geometry/Rect}
+		 */
+		intersected: function(rect) {
+			if (!this.intersects(rect)) {
+				return null;
+			}
+
+			var self = this.normalized();
+			var other = rect.normalized();
+
+			return new Rect({
+				t: Math.max(self.top, other.top),
+				l: Math.max(self.left, other.left),
+				r: Math.min(self.right, other.right),
+				b: Math.min(self.bottom, other.bottom)
+			});
+		},
+
+
 		/**
 		 * @return {joss/geometry/Rect}
 		 */
 		normalized: function() {
-			if (this.width() < 0) {
+			if (this.width < 0) {
 				var left = this.left;
 				this.left = this.right;
 				this.right = left;
 			}
-			if (this.height() < 0) {
+			if (this.height < 0) {
 				var top = this.top;
 				this.top = this.bottom;
 				this.bottom = top;
@@ -458,14 +511,15 @@ define(function(require) {
 			return lang.clone(this);
 		},
 
+
 		toString: function() {
 			return 'Rect' + 
 				' t:' + this.top + 
 				' l:' + this.left + 
 				' r:' + this.right + 
 				' b:' + this.bottom +
-				' w:' + this.width() +
-				' h:' + this.height();
+				' w:' + this.width +
+				' h:' + this.height;
 		}
 		
 	});

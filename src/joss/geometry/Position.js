@@ -15,6 +15,9 @@ define(function(require) {
 
 	var Position = Classes.create(/** @lends joss/geometry/Position.prototype */ {
 
+		'-accessors-': ['x', 'y', 'precedence'],
+
+
 		/**
 		 * @class Position
 		 * @constructs
@@ -24,9 +27,9 @@ define(function(require) {
 			if (opts && opts.constructor === String) {
 				var base = Position.fromString(opts);
 				opts = {
-					x: base.x(),
-					y: base.y(),
-					precedence: base.precedence()
+					x: base.x,
+					y: base.y,
+					precedence: base.precedence
 				};
 			}
 
@@ -36,96 +39,49 @@ define(function(require) {
 				precedence: null
 			}, opts); 
 
-			this._x = opts.x;
-			this._y = opts.y;
-			this._precedence = opts.precedence;
+			/** @type {String} */
+			this.x = opts.x;
+			/** @type {String} */
+			this.y = opts.y;
+			/** @type {String} */
+			this.precedence = opts.precedence;
 		
 		},
 
-		_x: null,
-		_y: null,
-		_precedence: null, //which axis is declared first
-
-		x: function(val) {
-			if (val) {
-				return this._setX(val);
-			}
-			return this._getX();
-		},
-
-		_getX: function() {
-			return this._x;
-		},
-
-		_setX: function(val) {
-			this._x = val;
-			return this;
-		},
-
-		y: function(val) {
-			if (val) {
-				return this._setY(val);
-			}
-			return this._getY();
-		},
-
-		_getY: function() {
-			return this._y;
-		},
-
-		_setY: function(val) {
-			this._y = val;
-			return this;
-		},
-
-		precedence: function(val) {
-			if (val) {
-				return this._setPrecedence(val);
-			}
-			return this._getPrecedence();
-		},
-
-		_getPrecedence: function() {
-			return this._precedence;
-		},
-
-		_setPrecedence: function(val) {
-			this._precedence = val;
-			return this;
-		},
 
 		reverse: function() {
 			var pos = lang.clone(this);
 
-			if (pos._x === 'left') {
-				pos._x = 'right';
+			if (pos.x === 'left') {
+				pos.x = 'right';
 			}
-			else if (pos._x === 'right') {
-				pos._x = 'left';
+			else if (pos.x === 'right') {
+				pos.x = 'left';
 			}
 			else {
-				pos._x = 'center';
+				pos.x = 'center';
 			}
 
-			if (pos._y === 'top') {
-				pos._y = 'bottom';
+			if (pos.y === 'top') {
+				pos.y = 'bottom';
 			}
-			else if (pos._y === 'bottom') {
-				pos._y = 'top';
+			else if (pos.y === 'bottom') {
+				pos.y = 'top';
 			}
 			else {
-				pos._y = 'center';
+				pos.y = 'center';
 			}
 
 			return pos;
 		},
 
+
 		toString: function() {
 			if (this._precedence === 'x') {
-				return this._x + ' ' + this._y;
+				return this.x + ' ' + this.y;
 			}
 			else {
-				return this._y + ' ' + this._x;
+				return this.y + ' ' + this.x;
 			}
 		}
 	

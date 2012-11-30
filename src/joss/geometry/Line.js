@@ -6,69 +6,86 @@ define(function(require) {
 
 
 	var Line = Classes.create(/** @lends joss/geometry/Line.prototype */ {
+
+		'-accessors-': ['p1', 'p2', 'm', 'b'],
 		
+
 		/**
 		 * @param {joss/geometry/Point} p1
 		 * @param {joss/geometry/Point} p2
 		 * @constructs
 		 */
-		constructor: function(p1, p2) {
-			this._p1 = p1;
-			this._p2 = p2;
-		},
-
-		p1: function(val) {
-			if (val) {
-				this._p1 = val;
+		constructor: function(opts) {
+			if (opts.p1 && opts.p2) {
+				this.p1 = opts.p1;
+				this.p2 = opts.p2;
 				return this;
 			}
-			return this._p1;
-		},
 
-		p2: function(val) {
-			if (val) {
-				this._p2 = val;
+			if (opts.m && opts.b) {
+				var line = Line.fromSlopeIntercept(opts.m, opts.b);
+				this.p1 = line.p1;
+				this.p2 = line.p2;
 				return this;
 			}
-			return this._p2;
 		},
+
+
+		/** @type {joss/geometry/Point} */
+		p1: null,
+
+
+		/** @type {joss/geometry/Point} */
+		p2: null,
+
+
+		/** @type {joss/geometry/Point} */
+		m: null,
+
+
+		'get m': function() {
+			if (this.p1.x - this.p2.x === 0) {
+				return null;
+			}
+			return (this.p1.y - this.p2.y) / (this.p1.x - this.p2.x);
+		},
+
+
+		/** @type {Number} */
+		b: null,
+
+
+		'get b': function() {
+			if (this.m === null) {
+				return null;
+			}
+			return this.m * this.p1.x - this.p1.y;
+		},
+
 
 		/**
-		 * Return the slope of this line
+		 * @param {Number} dx
+		 * @param {Number} dy
 		 * @return {joss/geometry/Point}
 		 */
-		m: function() {
-			if (this._p1.x - this._p2.x === 0) {
-				return null;
-			}
-			return (this._p1.y - this._p2.y) / (this._p1.x - this._p2.x);
-		},
-
-		/**
-		 * Return the y-intercept of this line
-		 */
-		b: function() {
-			if (this.m() === null) {
-				return null;
-			}
-			return this.m() * this._p1.x - this._p1.y;
-		},
-
 		translate: function(dx, dy) {
 			return new Line(
-				this.p1().translate(dx, dy),
-				this.p2().translate(dx, dy)
+				this.p1.translate(dx, dy),
+				this.p2.translate(dx, dy)
 			);
 		},
 
-		//intersection between two infinite lines containing the points in this
-		//Line, not between line segments.
+
+		/**
+		 * @param {joss/geometry/Line} other
+		 * @return {joss/geometry/Point|void}
+		 */
 		intersection: function(other) {
 
-			var a1 = this._p1;
-			var a2 = this._p2;
-			var b1 = other._p1;
-			var b2 = other._p2;
+			var a1 = this.p1;
+			var a2 = this.p2;
+			var b1 = other.p1;
+			var b2 = other.p2;
 
 			var ua_t = (b2.x - b1.x) * (a1.y - b1.y) - (b2.y - b1.y) * (a1.x - b1.x);
 			//var ub_t = (a2.x - a1.x) * (a1.y - b1.y) - (a2.y - a1.y) * (a1.x - b1.x);
@@ -84,13 +101,19 @@ define(function(require) {
 				);
 			} 
 			else {
-				return null; //coincident or parallel
+				return undefined; //coincident or parallel
 			}
 			
 		}
 
 	});
 
+
+	/**
+	 * @param {Number} m
+	 * @param {Number} b
+	 * @return {joss/geometry/Line}
+	 */
 	Line.fromSlopeIntercept = function(m, b) {
 
 		var p1 = new Point(0, b);
@@ -98,6 +121,7 @@ define(function(require) {
 		return new Line(p1, p2);
 	
 	};
+
 
 	return Line;
 

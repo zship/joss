@@ -47,11 +47,9 @@ define(function(require) {
 			//useful for off-screen rendering
 			if (!opts.root) {
 				this.$root = $('<div></div>');
-				this.root = this.$root[0];
 			}
 			else {
-				this.root = Elements.fromAny(opts.root);
-				this.$root = $(this.root);
+				this.root = opts.root;
 			}
 
 			//store a reference to the controller in the root element
@@ -82,25 +80,39 @@ define(function(require) {
 		},
 
 
-		setRoot: function(el) {
-
+		_setRoot: function(el) {
 			el = Elements.fromAny(el);
 
-			if (el === this.root) {
+			if (el === this._root) {
 				return this;
 			}
 
 			this.unbind();
 
-			this.root = el;
-			this.$root = $(el);
+			this._root = el;
+			this._$root = $(el);
 
 			if (this.isRunning()) {
 				this.bind();
 			}
+		},
 
-			return this;
 
+		/** @type {Element} */
+		root: null,
+
+
+		'set root': function(el) {
+			this._setRoot(el);
+		},
+
+
+		/** @type {jQuery} */
+		$root: null,
+
+
+		'set $root': function(el) {
+			this._setRoot(el);
 		},
 
 

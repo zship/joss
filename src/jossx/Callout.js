@@ -8,11 +8,11 @@
 define(function(require) {
 
 	var $ = require('jquery');
+	var Classes = require('joss/util/Classes');
 	var lang = require('dojo/_base/lang');
 	var Position = require('joss/geometry/Position');
 	var Point = require('joss/geometry/Point');
 	var Line = require('joss/geometry/Line');
-	var Classes = require('joss/util/Classes');
 	var Elements = require('joss/util/Elements');
 	var objectKeys = require('amd-utils/object/keys');
 	require('joss/geometry/DomRect');
@@ -33,7 +33,9 @@ define(function(require) {
 	var getset = objectKeys(defaults);
 
 
-	var Callout = Classes.getset(getset, null, {
+	var Callout = Classes.create(/** @lends jossx/Callout.prototype */ {
+
+		'-accessors-': getset,
 
 		constructor: function(opts) {
 
@@ -56,14 +58,14 @@ define(function(require) {
 		},
 
 
-		_setElement: function(el) {
+		'set element': function(el) {
 			this._element = Elements.fromAny(el);
 			this.$element = $(this._element);
 			return this;
 		},
 
 
-		_setCanvas: function(el) {
+		'set canvas': function(el) {
 			this._canvas = Elements.fromAny(el);
 			this.$canvas = $(this._canvas);
 			return this;

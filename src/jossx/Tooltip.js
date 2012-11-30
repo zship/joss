@@ -1,12 +1,12 @@
 define(function(require) {
 
 	var $ = require('jquery');
+	var Classes = require('joss/util/Classes');
 	var lang = require('dojo/_base/lang');
 	var Callout = require('./Callout');
 	var Position = require('joss/geometry/Position');
 	var Point = require('joss/geometry/Point');
 	var Rect = require('joss/geometry/Rect');
-	var Classes = require('joss/util/Classes');
 	var Elements = require('joss/util/Elements');
 	var objectKeys = require('amd-utils/object/keys');
 	require('joss/geometry/DomRect');
@@ -31,7 +31,9 @@ define(function(require) {
 	var getset = objectKeys(defaults).concat(['tip', 'inner']);
 
 
-	var Tooltip = Classes.getset(getset, null, {
+	var Tooltip = Classes.create(/** @lends jossx/Tooltip.prototype */ {
+
+		'-accessors-': getset,
 
 		constructor: function(opts) {
 

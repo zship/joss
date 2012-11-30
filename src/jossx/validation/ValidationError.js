@@ -6,7 +6,9 @@ define(function(require) {
 
 
 	
-	var ValidationError = Classes.getset(['el', 'message', 'type'], null, {
+	var ValidationError = Classes.create({
+
+		'-accessors-': ['el', 'message', 'type'],
 
 		constructor: function(el, message, type) {
 

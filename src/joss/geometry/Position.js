@@ -8,12 +8,12 @@
 define(function(require) {
 
 	var $ = require('jquery');
-	var declare = require('dojo/_base/declare');
+	var Classes = require('joss/util/Classes');
 	var lang = require('dojo/_base/lang');
 
 
 
-	var Position = declare(null, /** @lends joss/geometry/Position.prototype */ {
+	var Position = Classes.create(/** @lends joss/geometry/Position.prototype */ {
 
 		/**
 		 * @class Position

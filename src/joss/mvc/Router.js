@@ -1,7 +1,7 @@
 define(function(require) {
 
 	var $ = require('jquery');
-	var declare = require('dojo/_base/declare');
+	var Classes = require('joss/util/Classes');
 	require('jquery.hashchange');
 
 
@@ -9,7 +9,7 @@ define(function(require) {
 	var routeMatcher = /^\/.*/;
 	var param = /\{([\w\d]+)\}/g;
 
-	return declare(null, {
+	var Router = Classes.create(/** @lends joss/mvc/Router.prototype */ {
 
 		constructor: function() {
 			
@@ -107,5 +107,7 @@ define(function(require) {
 		}
 	
 	});
+
+	return Router;
 
 });

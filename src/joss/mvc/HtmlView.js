@@ -1,13 +1,13 @@
 define(function(require) {
 
 	var $ = require('jquery');
-	var declare = require('dojo/_base/declare');
+	var Classes = require('joss/util/Classes');
 
 
 
 	var cache = [];
 
-	return declare(null, {
+	var HtmlView = Classes.create(/** @lends joss/mvc/HtmlView.prototype */ {
 
 		constructor: function() {
 		},
@@ -51,5 +51,7 @@ define(function(require) {
 		}
 	
 	});
+
+	return HtmlView;
 
 });

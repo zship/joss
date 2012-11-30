@@ -1,11 +1,11 @@
 define(function(require) {
 
-	var declare = require('dojo/_base/declare');
+	var Classes = require('joss/util/Classes');
 	var Point = require('./Point');
 
 
 
-	var Line = declare(null, /** @lends joss/geometry/Line.prototype */ {
+	var Line = Classes.create(/** @lends joss/geometry/Line.prototype */ {
 		
 		/**
 		 * @param {joss/geometry/Point} p1

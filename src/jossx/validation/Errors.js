@@ -1,14 +1,12 @@
 define(function(require) {
 
 	var $ = require('jquery');
-	var declare = require('dojo/_base/declare');
+	var Classes = require('joss/util/Classes');
 	var lang = require('dojo/_base/lang');
 	var ValidationError = require('./ValidationError');
 	var Elements = require('joss/util/Elements');
 	var forEach = require('amd-utils/collection/forEach');
-	var map = require('amd-utils/collection/map');
 	var toArray = require('amd-utils/lang/toArray');
-	var isFunction = require('amd-utils/lang/isFunction');
 	var size = require('amd-utils/object/size');
 	var Deferreds = {
 		anyToDeferred: require('deferreds/anyToDeferred'),
@@ -20,7 +18,7 @@ define(function(require) {
 
 
 
-	var Errors = declare(null, {
+	var Errors = Classes.create(/** @lends jossx/validation/Errors.prototype */ {
 
 		constructor: function(opts) {
 

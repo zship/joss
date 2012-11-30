@@ -5,7 +5,7 @@
 define(function(require) {
 
 	var $ = require('jquery');
-	var declare = require('dojo/_base/declare');
+	var Classes = require('joss/util/Classes');
 	var lang = require('dojo/_base/lang');
 
 
@@ -49,7 +49,7 @@ define(function(require) {
 		function() { return new Date().getTime(); };
 
 
-	return declare(null, {
+	var GameLoop = Classes.create(/** @lends jossx/GameLoop.prototype */ {
 
 		constructor: function(opts) {
 
@@ -145,7 +145,8 @@ define(function(require) {
 			return deferred;
 		}
 
-
 	});
+
+	return GameLoop;
 
 });

@@ -1,7 +1,7 @@
 define(function(require) {
 
 	var $ = require('jquery');
-	var declare = require('dojo/_base/declare');
+	var Classes = require('joss/util/Classes');
 	var lang = require('dojo/_base/lang');
 	var Controller = require('joss/mvc/Controller');
 	var Point = require('joss/geometry/Point');
@@ -12,7 +12,7 @@ define(function(require) {
 
 
 
-	return declare(Controller, {
+	var Scrollable = Classes.create(Controller, /** @lends jossx/Scrollable.prototype */ {
 
 		constructor: function() {
 
@@ -349,11 +349,8 @@ define(function(require) {
 		
 		}
 
-
-
-
-
-
 	});
+
+	return Scrollable;
 
 });

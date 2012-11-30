@@ -1,13 +1,12 @@
 define(function(require) {
 
-	var declare = require('dojo/_base/declare');
+	var Classes = require('joss/util/Classes');
 	var lang = require('dojo/_base/lang');
 	var Elements = require('joss/util/Elements');
-	var isNumber = require('amd-utils/lang/isNumber');
 
 
 
-	var ValidationModel = declare(null, {
+	var ValidationModel = Classes.create(/** @lends jossx/validation/ValidationModel.prototype */ {
 
 		constructor: function() {
 			this._model = {};

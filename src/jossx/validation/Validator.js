@@ -1,7 +1,7 @@
 define(function(require) {
 
 	var $ = require('jquery');
-	var declare = require('dojo/_base/declare');
+	var Classes = require('joss/util/Classes');
 	var lang = require('dojo/_base/lang');
 	var Controller = require('joss/mvc/Controller');
 	var Errors = require('./Errors');
@@ -16,7 +16,7 @@ define(function(require) {
 
 
 
-	var Validator = declare(Controller, {
+	var Validator = Classes.create(Controller, /** @lends jossx/validation/Validator.prototype */ {
 
 		constructor: function(opts) {
 

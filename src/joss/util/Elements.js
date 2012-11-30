@@ -1,6 +1,7 @@
 define(function(require) {
 
 	var $ = require('jquery');
+	var lang = require('dojo/_base/lang');
 	var Point = require('joss/geometry/Point');
 	var isString = require('amd-utils/lang/isString');
 	var isNumber = require('amd-utils/lang/isNumber');
@@ -425,40 +426,42 @@ define(function(require) {
 	 * Blank dimensions object, suitable for a deep-mixin/extend operation
 	 * @type {Object}
 	 */
-	Elements.defaultDimensions = {
-		positioning: 'static',
-		precedence: {
-			x: 'left',
-			y: 'top'
-		},
-		offset: {
-			top: 0,
-			left: 0
-		},
-		position: {
-			top: 0,
-			bottom: 0,
-			left: 0,
-			right: 0
-		},
-		border: {
-			top: 0,
-			bottom: 0,
-			left: 0,
-			right: 0
-		},
-		margin: {
-			top: 0,
-			bottom: 0,
-			left: 0,
-			right: 0
-		},
-		padding: {
-			top: 0,
-			bottom: 0,
-			left: 0,
-			right: 0
-		}
+	Elements.defaultDimensions = function() {
+		return lang.clone({
+			positioning: 'static',
+			precedence: {
+				x: 'left',
+				y: 'top'
+			},
+			offset: {
+				top: 0,
+				left: 0
+			},
+			position: {
+				top: 0,
+				bottom: 0,
+				left: 0,
+				right: 0
+			},
+			border: {
+				top: 0,
+				bottom: 0,
+				left: 0,
+				right: 0
+			},
+			margin: {
+				top: 0,
+				bottom: 0,
+				left: 0,
+				right: 0
+			},
+			padding: {
+				top: 0,
+				bottom: 0,
+				left: 0,
+				right: 0
+			}
+		});
 	};
 
 

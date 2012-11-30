@@ -1,13 +1,13 @@
 define(function(require) {
 
 	var $ = require('jquery');
-	var declare = require('dojo/_base/declare');
+	var Classes = require('joss/util/Classes');
 	var lang = require('dojo/_base/lang');
 	var hub = require('dojo/topic');
 
 
 
-	return declare(null, {
+	var Service = Classes.create(/** @lends joss/mvc/Service.prototype */ {
 
 		constructor: function() {
 		},
@@ -116,5 +116,7 @@ define(function(require) {
 		}
 	
 	});
+
+	return Service;
 
 });

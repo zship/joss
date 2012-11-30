@@ -1,16 +1,15 @@
 define(function(require) {
 
 	var $ = require('jquery');
-	var declare = require('dojo/_base/declare');
+	var Classes = require('joss/util/Classes');
+	var Lifecycle = require('joss/Lifecycle');
 	var lang = require('dojo/_base/lang');
 	var hub = require('dojo/topic');
-	var waterfall = require('deferreds/waterfall');
 	var Objects = {};
 	Objects.methods = require('joss/util/object/methods');
 	var Elements = require('joss/util/Elements');
 	var forEach = require('amd-utils/collection/forEach');
 	var every = require('amd-utils/array/every');
-	var bind = require('amd-utils/function/bind');
 
 
 
@@ -27,11 +26,10 @@ define(function(require) {
 	var rEventData = /^(.*\s[a-z]*?)\s*_data/;
 
 
-	var Controller = declare(null, /** @lends joss/mvc/Controller.prototype */ {
+	var Controller = Classes.create(Lifecycle, /** @lends joss/mvc/Controller.prototype */ {
 
 		'-chains-': {
-			destroy: 'before',
-			render: 'before'
+			destroy: 'deferredBefore'
 		},
 
 
@@ -59,8 +57,6 @@ define(function(require) {
 			//store a reference to the controller in the root element
 			this.$root.data('controller', this);
 			this._bindings = {};
-			this._chainLifecycleMethods();
-			this._lifecycleRunning = false;
 
 		},
 
@@ -76,23 +72,13 @@ define(function(require) {
 		},
 
 
-		/**
-		 * Lifecycle method. Calls are automatically chained in order from
-		 * superclass (joss/mvc/Controller) to subclass (your controller).
-		 */
 		start: function() {
-			this._lifecycleRunning = true;
 			this.bind();
 		},
 
 
-		/**
-		 * Lifecycle method. Calls are automatically chained in order from
-		 * subclass (your controller) to superclass (joss/mvc/Controller).
-		 */
 		stop: function() {
 			this.unbind();
-			this._lifecycleRunning = false;
 		},
 
 
@@ -109,7 +95,7 @@ define(function(require) {
 			this.root = el;
 			this.$root = $(el);
 
-			if (this._lifecycleRunning) {
+			if (this.isRunning()) {
 				this.bind();
 			}
 
@@ -323,49 +309,8 @@ define(function(require) {
 				delete this._bindings[key];
 			});
 			this.bind();
-		},
-
-
-		//perform special chaining which can wait for Deferred objects in the
-		//chain to complete
-		_chainLifecycleMethods: function() {
-			var chains = {
-				'start': 'after',
-				'stop': 'before'
-			};
-
-			var bases = this.constructor._meta.bases;
-
-			forEach(chains, bind(function(val, key) {
-				var i = 0;
-				var step = 1;
-				var methodList = [];
-
-				if (val === 'after'){
-					i = bases.length - 1;
-					step = -1;
-				}
-
-				for (; !!bases[i]; i+=step) {
-					var base = bases[i];
-					var method = (base._meta ? base._meta.hidden : base.prototype)[key];
-					if (method) {
-						methodList.push(bind(method, this));
-					}
-				}
-
-				this[key] = function() {
-					var args = Array.prototype.slice.apply(arguments);
-					var list = methodList;
-					if (args.length) {
-						list.unshift(args);
-					}
-					return waterfall(list);
-				};
-
-			}, this));
 		}
-	
+
 	});
 
 

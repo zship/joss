@@ -12,12 +12,12 @@
 define(function(require) {
 
 	var $ = require('jquery');
-	var declare = require('dojo/_base/declare');
+	var Classes = require('joss/util/Classes');
 	require('./FormToggle');
 
 
 
-	var FormGroup = declare(null, {
+	var FormGroup = Classes.create(/** @lends jossx/forms/FormGroup.prototype */ {
 
 		constructor: function(selector, opts) {
 			this.selector = selector;

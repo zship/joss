@@ -1,6 +1,6 @@
 define(function(require) {
 
-	var declare = require('dojo/_base/declare');
+	var Classes = require('joss/util/Classes');
 	var lang = require('dojo/_base/lang');
 	var Point = require('./Point');
 	var Position = require('./Position');
@@ -9,7 +9,7 @@ define(function(require) {
 
 	//Describes a rectangle in two-dimensional Euclidian space and provides
 	//methods for manipulating it.
-	var Rect = declare(null, /** @lends joss/geometry/Rect.prototype */ {
+	var Rect = Classes.create(/** @lends joss/geometry/Rect.prototype */ {
 
 		/**
 		 * @class

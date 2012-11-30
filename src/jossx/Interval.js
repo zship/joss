@@ -1,13 +1,12 @@
 define(function(require) {
 
-	var declare = require('dojo/_base/declare');
+	var Classes = require('joss/util/Classes');
 	var lang = require('dojo/_base/lang');
 	var date = require('dojo/date');
 
 
 
-	var Interval = declare(null, {
-
+	var Interval = Classes.create(/** @lends jossx/Interval.prototype */ {
 
 		constructor: function(opts) {
 
@@ -42,7 +41,6 @@ define(function(require) {
 			}
 			return this._end;
 		}
-
 	
 	});
 

@@ -1,10 +1,10 @@
 define(function(require) {
 
-	var declare = require('dojo/_base/declare');
+	var Classes = require('joss/util/Classes');
 
 
 
-	var Point = declare(null, /** @lends joss/geometry/Point.prototype */ {
+	var Point = Classes.create(/** @lends joss/geometry/Point.prototype */ {
 
 		/** 
 		 * Point describes a point in a plane. It is used as a very basic building

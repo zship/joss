@@ -9,7 +9,6 @@ define(function(require) {
 	Objects.methods = require('joss/util/object/methods');
 	var Elements = require('joss/util/Elements');
 	var forEach = require('amd-utils/collection/forEach');
-	var every = require('amd-utils/array/every');
 
 
 
@@ -29,7 +28,7 @@ define(function(require) {
 	var Controller = Classes.create(Lifecycle, /** @lends joss/mvc/Controller.prototype */ {
 
 		'-chains-': {
-			destroy: 'deferredBefore'
+			destroy: 'before'
 		},
 
 
@@ -64,9 +63,9 @@ define(function(require) {
 		 * root element.
 		 */
 		destroy: function() {
-			this.stop().then(lang.hitch(this, function() {
+			this.stop().then(function() {
 				this.$root.empty();
-			}));
+			}.bind(this));
 		},
 
 
@@ -129,7 +128,7 @@ define(function(require) {
 
 		/**
 		 * Handle methods matching particular patterns as events.  This allows
-		 * us to guarantee proper unbinding when joss/mvc/Controller#stop is
+		 * us to guarantee proper unbinding when {joss/mvc/Controller#stop} is
 		 * called.
 		 * @return {joss/mvc/Controller} this
 		 */
@@ -141,7 +140,7 @@ define(function(require) {
 			//method name) before binding events, and include that data in the
 			//bindings if present
 			var eventData = {};
-			every(methods, lang.hitch(this, function(key) {
+			methods.forEach(function(key) {
 
 				var method = this[key];
 				var match = rEventData.exec(key);
@@ -151,11 +150,11 @@ define(function(require) {
 				eventData[lang.trim(match[1])] = method;
 				return true;
 			
-			}));
+			}.bind(this));
 
 			//loop through this controller's methods, looking for keys that
 			//match the patterns defined at the top of this file
-			every(methods, lang.hitch(this, function(key) {
+			methods.forEach(function(key) {
 
 				var method = this[key];
 
@@ -267,10 +266,8 @@ define(function(require) {
 					eventName: eventName,
 					handler: handler
 				};
-
-				return true;
 			
-			}));
+			}.bind(this));
 
 			return this;
 		
@@ -278,7 +275,7 @@ define(function(require) {
 
 
 		/**
-		 * Unbind all events previously bound with joss/mvc/Controller#bind.
+		 * Unbind all events previously bound with {joss/mvc/Controller#bind}.
 		 * @return {joss/mvc/Controller} this
 		 */
 		unbind: function() {

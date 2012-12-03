@@ -42,10 +42,10 @@ define(function(require) {
 		var success = false;
 
 		//try both 'date' and 'date and time' parsing, in that order
-		$.each(['date', 'datetime'], function(i, selector) {
+		['date', 'datetime'].forEach(function(selector) {
 
 			//try different format lengths, in order of most likely to least likely
-			$.each(['short', 'medium', 'long', 'full'], function(i, formatLength) {
+			['short', 'medium', 'long', 'full'].forEach(function(formatLength) {
 				if (date.parse(value, {formatLength: formatLength, selector: selector})) {
 					success = true;
 					return false; //break
@@ -88,7 +88,7 @@ define(function(require) {
 		var checksum = 0;
 
 		//sum the odd digits
-		$.each(digits, function(i, digit) {
+		digits.forEach(function(digit, i) {
 			i++; //0-based indexes
 			if (i % 2 !== 0) {
 				checksum += digit;
@@ -96,7 +96,7 @@ define(function(require) {
 		});
 
 		//double the even digits, split into individual digits, and sum
-		$.each(digits, function(i, digit) {
+		digits.forEach(function(digit, i) {
 			i++; //0-based indexes
 			if (i % 2 === 0) {
 				digit *= 2;

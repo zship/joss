@@ -5,10 +5,11 @@ define(function(require) {
 
 
 
+	//Describes a line in two-dimensional space
 	var Line = Classes.create(/** @lends joss/geometry/Line.prototype */ {
 
 		'-accessors-': ['p1', 'p2', 'm', 'b'],
-		
+
 
 		/**
 		 * @param {joss/geometry/Point} p1
@@ -19,14 +20,12 @@ define(function(require) {
 			if (opts.p1 && opts.p2) {
 				this.p1 = opts.p1;
 				this.p2 = opts.p2;
-				return this;
 			}
 
 			if (opts.m && opts.b) {
 				var line = Line.fromSlopeIntercept(opts.m, opts.b);
 				this.p1 = line.p1;
 				this.p2 = line.p2;
-				return this;
 			}
 		},
 

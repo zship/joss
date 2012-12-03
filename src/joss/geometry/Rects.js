@@ -1,6 +1,5 @@
 define(function(require) {
 
-	var $ = require('jquery');
 	var Rect = require('./Rect');
 	var DomRect = require('./DomRect');
 	var Point = require('./Point');
@@ -12,7 +11,7 @@ define(function(require) {
 		min: function(list, axis) {
 			var min = null;
 
-			$.each(list, function(i, r) {
+			list.forEach(function(r) {
 				var rect = r.normalized();
 
 				switch(axis) {
@@ -34,7 +33,7 @@ define(function(require) {
 		max: function(list, axis) {
 			var max = null;
 
-			$.each(list, function(i, r) {
+			list.forEach(function(r) {
 				var rect = r.normalized();
 
 				switch(axis) {
@@ -68,7 +67,7 @@ define(function(require) {
 				break;
 			}
 
-			$.each(list, function(i, rect) {
+			list.forEach(function(rect) {
 				switch(pos.x) {
 				case 'left':
 					rect.moveLeft(min);
@@ -78,7 +77,7 @@ define(function(require) {
 					break;
 				case 'center':
 				case 'middle':
-					rect.moveCenter(new Point(min + (max - min) / 2, rect.center().y));
+					rect.moveCenter(new Point(min + (max - min) / 2, rect.center.y));
 					break;
 				}
 
@@ -91,7 +90,7 @@ define(function(require) {
 					break;
 				case 'center':
 				case 'middle':
-					rect.moveCenter(new Point(rect.center().x, min + (max - min) / 2));
+					rect.moveCenter(new Point(rect.center.x, min + (max - min) / 2));
 					break;
 				}
 			});
@@ -105,7 +104,7 @@ define(function(require) {
 			var max = Rects.max(list, axis);
 			var cumulativeSize = 0;
 
-			$.each(list, function(i, rect) {
+			list.forEach(function(rect) {
 				switch(axis) {
 				case 'x':
 					cumulativeSize += rect.width();
@@ -118,7 +117,7 @@ define(function(require) {
 
 			var spacing = Math.abs((max - min - cumulativeSize) / (list.length - 1));
 
-			$.each(list, function(i, rect) {
+			list.forEach(function(rect, i) {
 				var last = (i > 0) ? list[i - 1] : new Rect({l: min, r: min - spacing, t: min, b: min - spacing});
 				switch(axis) {
 				case 'x':
@@ -136,7 +135,7 @@ define(function(require) {
 
 
 		apply: function(list) {
-			$.each(list, function(i, rect) {
+			list.forEach(function(rect) {
 				if (rect.constructor === DomRect) {
 					rect.apply();
 				}

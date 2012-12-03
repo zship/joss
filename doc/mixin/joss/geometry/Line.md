@@ -17,41 +17,17 @@ For example:
 
 ```js
 var line = new Line({
-	top: 0,
-	left: 25,
-	right: 50,
-	bottom: 100
+	p1: new Point(0, 0),
+	p2: new Point(1, 1)
 });
 
-console.log(rect.top); //> 0
-console.log(rect.left); //> 25
-console.log(rect.width()); //> 25
-console.log(rect.height()); //> 100
+console.log(line.m); //> 1
+console.log(line.b); //> 0
 
-var rect2 = new Rect({
-	top: 0,
-	left: 0,
-	width: 50,
-	height: 100
-});
+line.translate(1, 0);
 
-console.log(rect2.top); //> 0
-console.log(rect2.left); //> 0
-console.log(rect2.width()); //> 50
-console.log(rect2.height()); //> 100
-
-var rect3 = new Rect({
-	top: 0,
-	right: 100,
-	width: 25,
-	height: 100
-});
-
-console.log(rect3.top); //> 0
-console.log(rect3.left); //> 75
-console.log(rect3.right); //> 100
-console.log(rect3.width()); //> 25
-console.log(rect3.height()); //> 100
+console.log(line.m); //> 1
+console.log(line.b); //> 1
 ```
 
 

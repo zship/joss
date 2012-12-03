@@ -120,7 +120,7 @@ define(function(require) {
 		//perform all redraws here to avoid repaints in the loop above
 		//more here: http://calendar.perfplanet.com/2009/rendering-repaint-reflow-relayout-restyle/
 		this.hide(); //take the container out of the flow before appending placeholders (*the biggest* speedup here)
-		$.each(queue, function(i, item) {
+		queue.forEach(function(item) {
 			item.placeholder.insertAfter(item.el);
 			item.el.hide();
 		});

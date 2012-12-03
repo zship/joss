@@ -7,16 +7,14 @@
  */
 define(function(require) {
 
-	var $ = require('jquery');
 	var Classes = require('joss/util/Classes');
 	var lang = require('dojo/_base/lang');
 
 
 
+	//Abstraction of relative positioning information, modeled after jQuery UI
+	//(more predictable) and jquery.qTip (more precise)
 	var Position = Classes.create(/** @lends joss/geometry/Position.prototype */ {
-
-		'-accessors-': ['x', 'y', 'precedence'],
-
 
 		/**
 		 * @class Position
@@ -37,7 +35,7 @@ define(function(require) {
 				x: null,
 				y: null,
 				precedence: null
-			}, opts); 
+			}, opts);
 
 			/** @type {String} */
 			this.x = opts.x;
@@ -49,6 +47,9 @@ define(function(require) {
 		},
 
 
+		/**
+		 * @return {joss/geometry/Position}
+		 */
 		reverse: function() {
 			var pos = lang.clone(this);
 
@@ -76,8 +77,11 @@ define(function(require) {
 		},
 
 
+		/**
+		 * @return {String}
+		 */
 		toString: function() {
-			if (this._precedence === 'x') {
+			if (this.precedence === 'x') {
 				return this.x + ' ' + this.y;
 			}
 			else {
@@ -88,13 +92,21 @@ define(function(require) {
 	}); //Position
 
 
-	//translate something like 'left top' into a joss.Position object
-	//order doesn't matter.
+	/**
+	 * translate something like 'left top' into a joss.Position object. order
+	 * doesn't matter.
+	 * @param {String} str
+	 * @return {joss/geometry/Position}
+	 */
 	Position.fromString = function(str) {
 		var parts = str.split(' ');
 		var axes = [];
 
-		$.each(parts, function(i, part) {
+		if (parts.length === 1) {
+			parts[1] = 'center';
+		}
+
+		parts.forEach(function(part, i) {
 			switch (part) {
 				case 'left':
 				case 'right':
@@ -116,15 +128,15 @@ define(function(require) {
 		axes[1] = axes[1] || ((axes[0] === 'x') ? 'y' : 'x');
 
 		var pos = new Position();
-		pos._precedence = axes[0];
+		pos.precedence = axes[0];
 
-		$.each(axes, function(i, axis) {
+		axes.forEach(function(axis, i) {
 			switch(axis) {
 				case 'x':
-					pos._x = parts[i];
+					pos.x = parts[i];
 					break;
 				case 'y':
-					pos._y = parts[i];
+					pos.y = parts[i];
 					break;
 			}
 		});

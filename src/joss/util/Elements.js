@@ -3,6 +3,7 @@ define(function(require) {
 	var $ = require('jquery');
 	var lang = require('dojo/_base/lang');
 	var Point = require('joss/geometry/Point');
+	var forOwn = require('amd-utils/object/forOwn');
 	var isString = require('amd-utils/lang/isString');
 	var isNumber = require('amd-utils/lang/isNumber');
 	var isElement = require('joss/util/lang/isElement');
@@ -277,7 +278,7 @@ define(function(require) {
 	 */
 	Elements.setStyles = function(el, styles) {
 
-		$.each(styles, function(name, val) {
+		forOwn(styles, function(val, name) {
 			var type = typeof val;
 
 			if ( val === null || type === "number" && isNaN(val) ) {

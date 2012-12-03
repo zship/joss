@@ -9,49 +9,6 @@ define(function(require) {
 
 
 
-	//tracks get/set operations on properties of rect.border, rect.padding and
-	//updates the width/height accordingly (DomRect is a 'border-box'
-	//representation, so border/padding affect width/height)
-	var Dimensions = Classes.create({
-		constructor: function(opts, rect) {
-			this._rect = rect;
-			this._top = opts.top || 0;
-			this._right = opts.right || 0;
-			this._bottom = opts.bottom || 0;
-			this._left = opts.left || 0;
-		},
-
-		destroy: function() {
-			this._rect.width -= this.left + this.right;
-			this._rect.height -= this.top + this.bottom;
-		},
-
-		'set top': function(val) {
-			this._rect.height -= this._top;
-			this._rect.height += val;
-			this._top = val;
-		},
-
-		'set right': function(val) {
-			this._rect.width -= this._right;
-			this._rect.width += val;
-			this._right = val;
-		},
-
-		'set bottom': function(val) {
-			this._rect.height -= this._bottom;
-			this._rect.height += val;
-			this._bottom = val;
-		},
-
-		'set left': function(val) {
-			this._rect.width -= this._left;
-			this._rect.width += val;
-			this._left = val;
-		}
-	});
-
-
 	//Rect subclass which can track border, padding, and margin on a DOM
 	//Element, as well as read/write its dimensions from/to an Element
 	var DomRect = Classes.create(Rect, /** @lends joss/geometry/DomRect.prototype */ {

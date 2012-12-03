@@ -14,47 +14,66 @@ define(function(require) {
 	var Point = require('joss/geometry/Point');
 	var Line = require('joss/geometry/Line');
 	var Elements = require('joss/util/Elements');
-	var objectKeys = require('amd-utils/object/keys');
 	require('joss/geometry/DomRect');
 
 
 
-	var defaults = {
-		element: null,
-		canvas: null,
-		width: 0,
-		height: 0,
-		borderWidth: 1,
-		borderColor: 'rgb(0, 0, 0)',
-		fillColor: 'rgb(255, 255, 255)',
-		direction: new Position('right center')
-	};
-
-	var getset = objectKeys(defaults);
-
-
 	var Callout = Classes.create(/** @lends jossx/Callout.prototype */ {
 
-		'-accessors-': getset,
+		'-accessors-': [
+			'element',
+			'canvas',
+			'width',
+			'height',
+			'borderWidth',
+			'borderColor',
+			'fillColor',
+			'direction'
+		],
+
 
 		constructor: function(opts) {
 
-			opts = lang.mixin(defaults, opts);
+			opts = lang.mixin({
+				element: null,
+				canvas: null,
+				width: 0,
+				height: 0,
+				borderWidth: 1,
+				borderColor: 'rgb(0, 0, 0)',
+				fillColor: 'rgb(255, 255, 255)',
+				direction: new Position('right center')
+			}, opts);
+
 			opts.element = opts.element || $('<div class="callout"></div>').appendTo('body');
+
+			this.element = opts.element;
+			this.canvas = opts.canvas;
+			this.width = opts.width;
+			this.height = opts.height;
+			this.borderWidth = opts.borderWidth;
+			this.borderColor = opts.borderColor;
+			this.fillColor = opts.fillColor;
+			this.direction = opts.direction;
 
 			if (opts.width !== 0 && opts.height !== 0) {
 				//var rect = opts.element.rect();
-				opts.element.css('width', opts.width);
-				opts.element.css('height', opts.height);
+				this.$element.css('width', opts.width);
+				this.$element.css('height', opts.height);
 			}
-
-			Classes.applyOptions(this, opts);
 
 		},
 
 
 		destroy: function() {
 			this.$element.remove();
+		},
+
+
+		_setElements: function(el) {
+			this._element = Elements.fromAny(el);
+			this.$element = $(this._element);
+			return this;
 		},
 
 
@@ -76,27 +95,27 @@ define(function(require) {
 
 			var point = new Point();
 
-			switch (pos.x()) {
+			switch (pos.x) {
 				case 'left':
 					point.x = 0;
 					break;
 				case 'right':
-					point.x = this._width;
+					point.x = this.width;
 					break;
 				default:
-					point.x = this._width / 2;
+					point.x = this.width / 2;
 					break;
 			}
 
-			switch (pos.y()) {
+			switch (pos.y) {
 				case 'top':
 					point.y = 0;
 					break;
 				case 'bottom':
-					point.y = this._height;
+					point.y = this.height;
 					break;
 				default:
-					point.y = this._height / 2;
+					point.y = this.height / 2;
 					break;
 			}
 
@@ -105,32 +124,32 @@ define(function(require) {
 		},
 
 
-		coords: function() {
+		_coords: function() {
 
-			var pos = this._direction;
+			var pos = this.direction;
 			var tip = this.pointAt(pos);
 
 			var tipEdge;
-			if (pos.precedence() === 'x') {
-				tipEdge = pos.x();
+			if (pos.precedence === 'x') {
+				tipEdge = pos.x;
 			}
 			else {
-				tipEdge = pos.y();
+				tipEdge = pos.y;
 			}
 
 			//move the tip away from its edge to account for miter
 			switch (tipEdge) {
 				case 'top':
-					tip.y += this._borderWidth / 2;
+					tip.y += this.borderWidth / 2;
 					break;
 				case 'bottom':
-					tip.y -= this._borderWidth / 2;
+					tip.y -= this.borderWidth / 2;
 					break;
 				case 'left':
-					tip.x += this._borderWidth / 2;
+					tip.x += this.borderWidth / 2;
 					break;
 				case 'right':
-					tip.x -= this._borderWidth / 2;
+					tip.x -= this.borderWidth / 2;
 					break;
 			}
 
@@ -172,13 +191,13 @@ define(function(require) {
 			var self = this;
 			$.each(lines, function(i, line) {
 				//vertical line, which is a simple translation
-				if (line.m() === null) {
+				if (line.m === null) {
 
-					if (oppPos[i].x() === 'left' || oppPos[i].y === 'top') {
-						lines[i] = line.translate(self._borderWidth / 2, 0);
+					if (oppPos[i].x === 'left' || oppPos[i].y === 'top') {
+						lines[i] = line.translate(self.borderWidth / 2, 0);
 					}
 					else {
-						lines[i] = line.translate(-1 * self._borderWidth / 2, 0);
+						lines[i] = line.translate(-1 * self.borderWidth / 2, 0);
 					}
 				
 				}
@@ -198,7 +217,7 @@ define(function(require) {
 				//direction exactly 90 degrees from its current angle.
 				else {
 
-					var d = self._borderWidth / 2;
+					var d = self.borderWidth / 2;
 
 					//console.log(oppPos[i]);
 
@@ -208,30 +227,30 @@ define(function(require) {
 					// for b2, then we have a parallel line exactly borderWidth / 2px
 					// from the the original line.
 					if (
-						(oppPos[i].precedence() === 'x' && oppPos[i].y() === 'top') 
+						(oppPos[i].precedence === 'x' && oppPos[i].y === 'top') 
 						||
-						(oppPos[i].precedence() === 'y' && oppPos[i].y() === 'bottom') 
+						(oppPos[i].precedence === 'y' && oppPos[i].y === 'bottom') 
 					) {
 						//-1 for canvas' inverted y coordinate system (remember?)
-						b2 = -1 * line.b() + Math.sqrt( Math.pow(d, 2) * Math.pow(line.m(), 2) + Math.pow(d, 2) );
+						b2 = -1 * line.b + Math.sqrt( Math.pow(d, 2) * Math.pow(line.m, 2) + Math.pow(d, 2) );
 					}
 					else {
-						b2 = -1 * line.b() - Math.sqrt( Math.pow(d, 2) * Math.pow(line.m(), 2) + Math.pow(d, 2) );
+						b2 = -1 * line.b - Math.sqrt( Math.pow(d, 2) * Math.pow(line.m, 2) + Math.pow(d, 2) );
 					}
 
 					//console.log(b2);
-					lines[i] = Line.fromSlopeIntercept(line.m(), b2);
-					
+					lines[i] = Line.fromSlopeIntercept(line.m, b2);
+
 				}
 
 			});
 
 			var oppEdge;
 			if (pos.precedence() === 'x') {
-				oppEdge = pos.reverse().x();
+				oppEdge = pos.reverse().x;
 			}
 			else {
-				oppEdge = pos.reverse().y();
+				oppEdge = pos.reverse().y;
 			}
 
 			//move the edge line a fair distance away from the real canvas
@@ -239,8 +258,8 @@ define(function(require) {
 			var edges = {
 				'top': new Line(new Point(0, -100), new Point(1, -100)),
 				'left': new Line(new Point(-100, 0), new Point(-100, 1)),
-				'right': new Line(new Point(this._width + 100, 0), new Point(this._width + 100, 1)),
-				'bottom': new Line(new Point(0, this._height + 100), new Point(1, this._height + 100))
+				'right': new Line(new Point(this.width + 100, 0), new Point(this.width + 100, 1)),
+				'bottom': new Line(new Point(0, this.height + 100), new Point(1, this.height + 100))
 			};
 
 			var coords = [];
@@ -258,49 +277,49 @@ define(function(require) {
 		render: function() {
 
 			var rect = this.$element.rect();
-			this._width = rect.width();
-			this._height = rect.height();
+			this.width = rect.width();
+			this.height = rect.height();
 
 			if (!this.canvas()) {
 				//define dimensions before initializing excanvas
-				this.canvas($('<canvas width="' + this.width() + '" height="' + this.height() + '" />').appendTo(this.$element));
+				this.canvas = $('<canvas width="' + this.width + '" height="' + this.height + '" />').appendTo(this.$element);
 				this.$canvas.css('display', 'block');
 				//excanvas for ie < 9
 				if (window.G_vmlCanvasManager) {
-					window.G_vmlCanvasManager.initElement(this.canvas());
+					window.G_vmlCanvasManager.initElement(this.canvas);
 				}
 				//our first restore will cause errors with excanvas and also
 				//FF2 unless we save() the context immediately
-				this.canvas().getContext('2d').save();
+				this.canvas.getContext('2d').save();
 			}
 			else {
 				this.$canvas.css({
-					width: this.width(),
-					height: this.height()
+					width: this.width,
+					height: this.height
 				});
 			}
 
 			// Grab canvas context and clear/save it
-			var context = this.canvas().getContext('2d');
-			context.restore(); 
+			var context = this.canvas.getContext('2d');
+			context.restore();
 			context.save();
-			context.clearRect(0,0,this.width(),this.height());
+			context.clearRect(0, 0, this.width, this.height);
 
 			// Draw the tip
-			var coords = this.coords();
+			var coords = this._coords();
 			//console.log(coords);
 			context.beginPath();
 			context.moveTo(coords[0].x, coords[0].y);
 			context.lineTo(coords[1].x, coords[1].y);
 			context.lineTo(coords[2].x, coords[2].y);
 			context.closePath();
-			context.fillStyle = this._fillColor;
-			context.strokeStyle = this._borderColor;
+			context.fillStyle = this.fillColor;
+			context.strokeStyle = this.borderColor;
 			//console.log('borderWidth: ', this._borderWidth);
-			context.lineWidth = this._borderWidth + 2;
+			context.lineWidth = this.borderWidth + 2;
 			context.lineJoin = 'miter';
 			context.miterLimit = 100;
-			if(this._borderWidth) {
+			if(this.borderWidth) {
 				context.stroke();
 			}
 			context.fill();

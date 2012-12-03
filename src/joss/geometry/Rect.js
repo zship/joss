@@ -7,8 +7,7 @@ define(function(require) {
 
 
 
-	//Describes a rectangle in two-dimensional Euclidian space and provides
-	//methods for manipulating it.
+	//Describes a rectangle in two-dimensional space
 	var Rect = Classes.create(/** @lends joss/geometry/Rect.prototype */ {
 
 		/**

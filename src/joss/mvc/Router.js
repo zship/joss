@@ -2,6 +2,7 @@ define(function(require) {
 
 	var $ = require('jquery');
 	var Classes = require('joss/util/Classes');
+	var forOwn = require('amd-utils/object/forOwn');
 	require('jquery.hashchange');
 
 
@@ -16,11 +17,10 @@ define(function(require) {
 			this.bindRoutes();
 			//console.log('bindings', this._routes);
 			
-			var self = this;
 			$(window).bind('hashchange', function() {
 				var fragment = window.location.hash.replace(/^#/, '');
-				self.route(fragment);
-			});
+				this.route(fragment);
+			}.bind(this));
 
 			/*
 			 * On a full page load, check if there's a
@@ -28,8 +28,8 @@ define(function(require) {
 			 */
 			$(document).ready(function() {
 				var fragment = window.location.hash.replace(/^#/, '');
-				self.route(fragment);
-			});
+				this.route(fragment);
+			}.bind(this));
 
 		},
 
@@ -43,7 +43,7 @@ define(function(require) {
 
 			var self = this;
 
-			$.each(this, function(key, method) {
+			forOwn(this, function(key, method) {
 				if (key === '*') {
 					return; //continue;
 				}
@@ -79,7 +79,7 @@ define(function(require) {
 				return;
 			}
 
-			$.each(this._routes, function(i, binding) {
+			this._routes.forEach(function(binding) {
 				//console.log('testing', binding.route.toString(), fragment);
 				if (binding.route.test(fragment)) {
 					//because of the history api being used, errors may

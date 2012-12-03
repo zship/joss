@@ -4,6 +4,7 @@ define(function(require) {
 
 
 
+	//Describes a point in two-dimensional space
 	var Point = Classes.create(/** @lends joss/geometry/Point.prototype */ {
 
 		/** 
@@ -19,6 +20,7 @@ define(function(require) {
 			return this;
 		},
 
+
 		/**
 		 * Move a point
 		 * @param {Number} dx Pixels to translate horizontally
@@ -30,6 +32,7 @@ define(function(require) {
 			this.y += dy;
 			return this;
 		},
+
 
 		/**
 		 * Move a point towards or away from another point

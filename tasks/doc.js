@@ -338,22 +338,21 @@ module.exports = function(grunt) {
 	};
 
 
-	//returns an Array of Arrays pointing to jsdoc descriptions.
-	//Use getProp() to get the object reference, then access the description
-	//property.
-	var _getDescriptions = function(obj, path) {
-		path = path || null;
+	//returns an Array of Objects inside `obj` which contain a 'description' key
+	var _getDescriptions = function(obj) {
 		var ret = [];
+
 		if (!_.isObject(obj)) {
 			return ret;
 		}
-		_.every(obj, function(child, key) {
+
+		_.each(obj, function(child, key) {
 			if (key === 'description' && obj.kind) {
-				ret.push(path);
+				ret.push(obj);
 			}
-			ret = ret.concat(_getDescriptions(child, path ? path.concat(key) : [key]));
-			return true;
+			ret = ret.concat(_getDescriptions(child));
 		});
+
 		return ret;
 	};
 
@@ -363,21 +362,29 @@ module.exports = function(grunt) {
 		mixins.every(function(path) {
 			var mixin = grunt.file.read(path);
 
-			path = path.replace(docdir + '/mixin/', '').replace('.md', '');
+			var moduleName = path.replace(docdir + '/mixin/', '').replace('.md', '');
 			//var name = path.replace(/\//g, '.');
-			var clazz = graph[path];
+			var clazz = graph[moduleName];
 
 			if (!clazz) {
 				return true;
 			}
+
+			//console.log(JSON.stringify(clazz, false, 4));
 
 			//mixin = mixin.replace(/^`*js$/gm, '```');
 			//console.log(mixin);
 
 			//parse markdown "mixin" file for a special string "%[memberName]"
 			var mixinParts = mixin.split(/^(%\S*)$/gm);
-			clazz['module'] = {};
-			clazz['module']['description'] = mixinParts[0];
+
+			//first description in the file is the module description, if no
+			//"%[memberName]" declaration exists before it
+			if (mixinParts.length && mixinParts[0].search(/^%\S*$/) === -1) {
+				clazz['module'] = {};
+				clazz['module']['description'] = mixinParts[0];
+			}
+
 			var mixinGraph = {};
 			for (var i = 0, l = mixinParts.length; i < l; i++) {
 				var part = mixinParts[i];
@@ -385,20 +392,28 @@ module.exports = function(grunt) {
 					mixinGraph[part.replace('%', '')] = mixinParts[i+1];
 				}
 			}
+			//console.log(JSON.stringify(mixinGraph, false, 4));
 
 			var descriptions = _getDescriptions(clazz);
-			//console.log(JSON.stringify(descriptions, false, 4));
+			//console.log(JSON.stringify(Object.keys(descriptions), false, 4));
 
 			_.each(mixinGraph, function(value, key) {
-				descriptions.forEach(function(path) {
+				_.each(descriptions, function(obj) {
+					var shortName;
+					if (obj.longName === moduleName) {
+						shortName = 'constructor';
+					}
+					else {
+						shortName = obj.name;
+					}
 					//console.log(path);
-					var desc_key = _.rest(path).join('.');
 					//console.log(desc_key);
-					if (desc_key === key) {
-						var obj = getProp(path, false, clazz);
-						obj.description = obj.description || '';
+					if (shortName === key) {
+						obj.description = value;
+						//var obj = getProp(path, false, clazz);
+						//obj.description = obj.description || '';
 						//console.log(JSON.stringify(description, false, 4));
-						obj.description += '\n\n' + value;
+						//obj.description = value;
 						//desc.obj['description'] += '\n\n' + value;
 					}
 				});
@@ -413,29 +428,12 @@ module.exports = function(grunt) {
 	//example: joss.mvc.Controller#bind -> [Controller.bind](link to joss.mvc.Controller#bind)
 	var transformLongNames = function(graph) {
 
-		//turn '.' in property names to '/' so we can use getObject to traverse
-		/*
-		 *_.every(graph, function(child, key) {
-		 *    if (key.search(/\./g) !== -1) {
-		 *        graph[key.replace(/\./g, '/')] = graph[key];
-		 *        delete graph[key];
-		 *    }
-		 *    return true;
-		 *});
-		 */
-
 		var descriptions = _getDescriptions(graph);
 		//console.log(descriptions);
 
-		descriptions.forEach(function(path) {
-			//console.log(path);
-			var obj = getProp(path, false, graph);
+		_.each(descriptions, function(obj) {
 
-			if (!obj) {
-				return true;
-			}
-
-			var desc = obj['description'];
+			var description = obj.description;
 
 			_.each(typeMap, function(type) {
 				if (!type.longName) {
@@ -446,37 +444,28 @@ module.exports = function(grunt) {
 				var sLongName = '{' + type.longName + '[#~\\.]([a-zA-Z_]+)}';
 				var rLongName = new RegExp(sLongName);
 				var rLongNameGlobal = new RegExp(sLongName, 'g');
-				if (desc.search(rLongNameGlobal) !== -1) {
+				if (description.search(rLongNameGlobal) !== -1) {
 					//global matching will disregard capturing groups, so
 					//capture the full matches and then iterate over all of
 					//them, matching again.
-					var matches = desc.match(rLongNameGlobal);
+					var matches = description.match(rLongNameGlobal);
 					matches.forEach(function(match) {
 						var submatches = match.match(rLongName);
 						var longName = submatches[0];
 						var name = submatches[1];
-						desc = desc.replace(rLongName, '<a href="/#/' + longName.replace(/\{/g, '').replace(/\}/g, '') + '">' + type.name + '.' + name + '</a>');
+						description = description.replace(rLongName, '<a href="/#/' + longName.replace(/\{/g, '').replace(/\}/g, '') + '">' + type.name + '.' + name + '</a>');
 					});
 				}
 
 				//then, just plain class names (no member name following)
 				var rClassName = new RegExp('{' + type.longName + '}', 'g');
 				//console.log(type.longName);
-				desc = desc.replace(rClassName, ' <a href="' + type.link + '">' + type.name + '</a>');
+				description = description.replace(rClassName, ' <a href="' + type.link + '">' + type.name + '</a>');
 			});
 
-			obj['description'] = desc;
+			obj.description = description;
 		});
 
-		//set '/' in property names back to '.'
-		/*
-		 *_.every(graph, function(child, key) {
-		 *    if (key.search(/\//g) !== -1) {
-		 *        graph[key.replace(/\//g, '.')] = graph[key];
-		 *        delete graph[key];
-		 *    }
-		 *});
-		 */
 	};
 
 

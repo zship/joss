@@ -22,7 +22,8 @@ h2=module
         ul
             each key in Object.keys(cl.properties).sort()
                 - var prop = cl.properties[key]
-                li
+                - var clazz = (prop.inherited || prop.overridden) ? 'inherited property' : 'property'
+                li(class=clazz)
                     a.name(href=prop.link, rel=prop.longName)=prop.name
                     span=' : '
                     span.returns
@@ -39,7 +40,8 @@ h2=module
         ul
             each key in Object.keys(cl.methods).sort()
                 - var method = cl.methods[key]
-                li
+                - var clazz = (method.inherited || method.overridden) ? 'inherited method' : 'method'
+                li(class=clazz)
                     a.name(href=method.link, rel=method.longName)=method.name
                     span=' : '
                     span.returns
@@ -56,7 +58,8 @@ h2=module
         ul
             each key in Object.keys(cl.jquery).sort()
                 - var method = cl.jquery[key]
-                li
+                - var clazz = (method.inherited || method.overridden) ? 'inherited jquery' : 'jquery'
+                li(class=clazz)
                     a.name(href=method.link, rel=method.longName)=method.name
                     span=' : '
                     span.returns

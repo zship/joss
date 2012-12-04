@@ -145,11 +145,6 @@ Moves the rectangle, leaving the top-right corner at the given point *p*. The
 rectangle's size is unchanged.
 
 
-%center
-
-Returns the center point of the rectangle.
-
-
 %centerOn
 
 Moves the rectangle, leaving the center point at the given point *p*. The
@@ -203,12 +198,12 @@ console.log(rect.right); //> 100
 
 %width
 
-Get or set the width of this rectangle, in pixels
+The width of this rectangle.
 
 
 %height
 
-Get or set the height of this rectangle, in pixels
+The height of this rectangle.
 
 
 %contains
@@ -219,22 +214,32 @@ otherwise returns false.
 
 %topLeft
 
-Returns the position of the rectangle's top-left corner.
+The point lying at this rectangle's top-left corner. Changing this value sets
+the rectangle's top and left edges simultaneously.
 
 
 %topRight
 
-Returns the position of the rectangle's top-right corner.
+The point lying at this rectangle's top-right corner. Changing this value sets
+the rectangle's top and right edges simultaneously.
 
 
 %bottomLeft
 
-Returns the position of the rectangle's bottom-left corner.
+The point lying at this rectangle's bottom-left corner. Changing this value
+sets the rectangle's bottom and left edges simultaneously.
 
 
 %bottomRight
 
-Returns the position of the rectangle's bottom-right corner.
+The point lying at this rectangle's bottom-right corner. Changing this value
+sets the rectangle's bottom and right edges simultaneously.
+
+
+%center
+
+The point lying at this rectangle's center. Changing this value moves the
+rectangle's center without altering width or height.
 
 
 %united

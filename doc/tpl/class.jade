@@ -77,14 +77,19 @@ mixin methodDef(method)
         h3.section-header(rel='/#/' + module + '#SProperties') Properties
         each key in Object.keys(cl.properties).sort()
             - var prop = cl.properties[key]
-            div.property.subsection(rel=prop.link)
-                div.meta
-                    a(class='permalink', href=prop.link, alt='Permalink to ' + prop.longName, title='Permalink to ' + prop.longName)
-                        i.icomoon-hash
-                    a(class='srclink', alt='View Source', title='View Source', href=config.repoview + prop.meta.path + '/' + prop.meta.filename + '#L' + prop.meta.lineno)
-                        i.icomoon-code
+            - var clazz = prop.inherited ? 'inherited property subsection' : 'property subsection'
+            div(class=clazz, rel=prop.link)
                 h4.subsection-header
                     mixin methodDef(prop)
+                    div.meta
+                        a(class='permalink', href=prop.link, alt='Permalink to ' + prop.longName, title='Permalink to ' + prop.longName)
+                            i.icomoon-hash
+                        a(class='srclink', alt='View Source', title='View Source', href=config.repoview + prop.meta.path + '/' + prop.meta.filename + '#L' + prop.meta.lineno)
+                            i.icomoon-code
+                - if (prop.inherited)
+                    div.inherit-info
+                        span inherited from&nbsp;
+                        a(title=prop.inherited.longName, href=prop.inherited.link)=prop.inherited.name
                 div.description!=prop.description
 
 - if (cl.methods && Object.keys(cl.methods).length)
@@ -92,22 +97,19 @@ mixin methodDef(method)
         h3.section-header(rel='/#/' + module + '#SMethods') Methods
         each key in Object.keys(cl.methods).sort()
             - var method = cl.methods[key]
-            div.method.subsection(rel=method.link)
-                div.meta
-                    a(class='permalink', href=method.link, alt='Permalink to ' + method.longName, title='Permalink to ' + method.longName)
-                        i.icomoon-hash
-                    a(class='srclink', alt='View Source', title='View Source', href=config.repoview + method.meta.path + '/' + method.meta.filename + '#L' + method.meta.lineno)
-                        i.icomoon-code
-                - if (method.get && method.set)
-                    h4.subsection-header.getter
-                        span.accessor get&nbsp;
-                        mixin methodDef(method.get)
-                    h4.subsection-header.setter
-                        span.accessor set&nbsp;
-                        mixin methodDef(method.set)
-                - else
-                    h4.subsection-header
-                        mixin methodDef(method)
+            - var clazz = method.inherited ? 'inherited method subsection' : 'method subsection'
+            div(class=clazz, rel=method.link)
+                h4.subsection-header
+                    mixin methodDef(method)
+                    div.meta
+                        a(class='permalink', href=method.link, alt='Permalink to ' + method.longName, title='Permalink to ' + method.longName)
+                            i.icomoon-hash
+                        a(class='srclink', alt='View Source', title='View Source', href=config.repoview + method.meta.path + '/' + method.meta.filename + '#L' + method.meta.lineno)
+                            i.icomoon-code
+                - if (method.inherited)
+                    div.inherit-info
+                        span inherited from&nbsp;
+                        a(title=method.inherited.longName, href=method.inherited.link)=method.inherited.name
                 div.description!=method.description
 
 - if (cl.jquery && Object.keys(cl.jquery).length)
@@ -115,20 +117,17 @@ mixin methodDef(method)
         h3.section-header(rel='/#/' + module + '#SjQuery') jQuery Plugins
         each key in Object.keys(cl.jquery).sort()
             - var method = cl.jquery[key]
-            div.jquery.subsection(rel=method.link)
-                div.meta
-                    a(class='permalink', href=method.link, alt='Permalink to ' + method.longName, title='Permalink to ' + method.longName)
-                        i.icomoon-hash
-                    a(class='srclink', alt='View Source', title='View Source', href=config.repoview + method.meta.path + '/' + method.meta.filename + '#L' + method.meta.lineno)
-                        i.icomoon-code
-                - if (method.get && method.set)
-                    h4.subsection-header.getter
-                        span.accessor get&nbsp;
-                        mixin methodDef(method.get)
-                    h4.subsection-header.setter
-                        span.accessor set&nbsp;
-                        mixin methodDef(method.set)
-                - else
-                    h4.subsection-header
-                        mixin methodDef(method)
+            - var clazz = method.inherited ? 'inherited jquery subsection' : 'jquery subsection'
+            div(class=clazz, rel=method.link)
+                h4.subsection-header
+                    mixin methodDef(method)
+                    div.meta
+                        a(class='permalink', href=method.link, alt='Permalink to ' + method.longName, title='Permalink to ' + method.longName)
+                            i.icomoon-hash
+                        a(class='srclink', alt='View Source', title='View Source', href=config.repoview + method.meta.path + '/' + method.meta.filename + '#L' + method.meta.lineno)
+                            i.icomoon-code
+                - if (method.inherited)
+                    div.inherit-info
+                        span inherited from&nbsp;
+                        a(title=method.inherited.longName, href=method.inherited.link)=method.inherited.name
                 div.description!=method.description

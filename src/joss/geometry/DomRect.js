@@ -17,6 +17,7 @@ define(function(require) {
 
 		/**
 		 * @class
+		 * @extends {joss/geometry/Rect}
 		 * @constructs
 		 */
 		constructor: function(opts) {

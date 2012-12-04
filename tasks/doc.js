@@ -76,6 +76,12 @@ module.exports = function(grunt) {
 		_.each(types, function(type) {
 			typeMap[type.longName || type.name || type.regexp] = type;
 		});
+
+		_.each(typeMap, function(type) {
+			if (!type.longName) {
+				type.longName = type.name;
+			}
+		});
 	}
 
 	['Number', 'String', 'Object', 'Function', 'Array', 'RegExp', 'Boolean'].forEach(function(val) {
@@ -100,6 +106,10 @@ module.exports = function(grunt) {
 			return [typeMap['void']];
 		}
 
+		if (!_.isArray(names)) {
+			names = [names];
+		}
+
 		var types = [];
 		names.forEach(function(name) {
 			//first try the fast dictionary approach for perfect String matches
@@ -119,7 +129,7 @@ module.exports = function(grunt) {
 
 				if (name.search(type.regexp) !== -1) {
 					types.push({
-						name: name,
+						name: name.replace(type.regexp, '$1'),
 						longName: name,
 						link: name.replace(type.regexp, type.link)
 					});
@@ -182,6 +192,7 @@ module.exports = function(grunt) {
 		});
 
 
+		//reassign 'anonymous'-scoped variables to their module's scope (from the file name)
 		db({longname: {'like': '<anonymous>'}}).each(function(record) {
 			if (record.module) {
 				record.longname = record.longname.replace('<anonymous>', record.module);
@@ -190,9 +201,9 @@ module.exports = function(grunt) {
 		});
 
 
+		//collect a map of longnames to short aliases for classes, to be used
+		//when printing parameters and return types
 		db({kind: ['class', 'namespace']}).each(function(record) {
-			//collect a map of longnames to short aliases for classes, to be used when
-			//printing parameters and return types
 			if (record.name.search(/\//g) !== -1) {
 				record.name = record.longname.match(/.*\/(.*)$/).pop();
 			}
@@ -331,6 +342,7 @@ module.exports = function(grunt) {
 
 		});
 
+
 		//console.log(JSON.stringify(graph, false, 4));
 
 		return graph;
@@ -466,6 +478,56 @@ module.exports = function(grunt) {
 			obj.description = description;
 		});
 
+	};
+
+
+	var mixinInherited = function(graph) {
+		var _getInheritanceChain = function(name) {
+			var ret = [];
+			if (graph[name].constructor.augments) {
+				var superclass = graph[name].constructor.augments[0];
+				ret.push(superclass);
+				ret = ret.concat(_getInheritanceChain(superclass));
+			}
+			return ret;
+		};
+
+
+		_.each(graph, function(clazz, className) {
+			clazz.extends = clazz.extends || [];
+
+			_getInheritanceChain(className).reverse().forEach(function(superclassName) {
+				clazz.extends.push(className);
+				var superclass = graph[superclassName];
+				_.each(superclass.methods, function(method, key) {
+					if (!clazz.methods[key]) {
+						clazz.methods[key] = _.clone(method);
+						clazz.methods[key].inherited = getTypes(superclassName)[0];
+					}
+					else {
+						clazz.methods[key].overridden = getTypes(superclassName)[0];
+					}
+				});
+				_.each(superclass.properties, function(prop, key) {
+					if (!clazz.properties[key]) {
+						clazz.properties[key] = _.clone(prop);
+						clazz.properties[key].inherited = getTypes(superclassName)[0];
+					}
+					else {
+						clazz.properties[key].overridden = getTypes(superclassName)[0];
+					}
+				});
+				_.each(superclass.jquery, function(method, key) {
+					if (!clazz.jquery[key]) {
+						clazz.jquery[key] = _.clone(method);
+						clazz.jquery[key].inherited = getTypes(superclassName)[0];
+					}
+					else {
+						clazz.jquery[key].overridden = getTypes(superclassName)[0];
+					}
+				});
+			});
+		});
 	};
 
 
@@ -649,6 +711,9 @@ module.exports = function(grunt) {
 				parseMarkdown(graph);
 				grunt.log.ok();
 
+				grunt.log.write('Mixing inherited methods into class definitions...');
+				mixinInherited(graph);
+				grunt.log.ok();
 
 				grunt.log.write('Rendering module definition files into ' + docdir + '/out/classes...');
 				_.each(graph, function(val, key) {

@@ -204,6 +204,8 @@ module.exports = function(grunt) {
 		//collect a map of longnames to short aliases for classes, to be used
 		//when printing parameters and return types
 		db({kind: ['class', 'namespace']}).each(function(record) {
+			//collect a map of longnames to short aliases for classes, to be used when
+			//printing parameters and return types
 			if (record.name.search(/\//g) !== -1) {
 				record.name = record.longname.match(/.*\/(.*)$/).pop();
 			}

@@ -444,6 +444,8 @@ define(function(require) {
 				bottom: 0,
 				left: 0
 			},
+			width: 0,
+			height: 0,
 			border: {
 				top: 0,
 				right: 0,

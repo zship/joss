@@ -1,7 +1,7 @@
 Describes an infinite line in two-dimensional Euclidean space.
 
 
-%constructor
+## constructor
 
 *opts* may have the following properties:
 
@@ -31,38 +31,38 @@ console.log(line.b); //> 1
 ```
 
 
-%p1
+## p1
 
 A {joss/geometry/Point} on the line
 
 
-%p2
+## p2
 
 Another {joss/geometry/Point} on the line
 
 
-%m
+## m
 
 The slope of the line
 
 
-%b
+## b
 
 The y-intercept of the line
 
 
-%translate
+## translate
 
 Moves the line `dx` along the x-axis and `dy` along the y-axis, relative to
 the current position. Positive values move the line to the right and downwards.
 
 
-%intersection
+## intersection
 
 Calculates the {joss/geometry/Point} of intersection between this line and
 `other`. Returns `undefined` if the lines are parallel.
 
 
-%fromSlopeIntercept
+## fromSlopeIntercept
 
 Returns a line with the given `m` slope and `b` y-intercept.

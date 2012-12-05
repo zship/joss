@@ -1,8 +1,8 @@
 Controller
 
-%constructor
+## constructor
 
-%rebind
+## rebind
 
 This is never called by joss internally and is solely for your use when you're
 sure you need it. Care has been taken to ensure that only events which might

@@ -126,19 +126,11 @@ mixin methodDef(method)
         each key in Object.keys(cl.jquery).sort()
             - var method = cl.jquery[key]
             div.jquery.subsection(rel=method.link)
-                div.meta
-                    a(class='permalink', href=method.link, alt='Permalink to ' + method.longName, title='Permalink to ' + method.longName)
-                        i.icomoon-hash
-                    a(class='srclink', alt='View Source', title='View Source', href=config.repoview + method.meta.path + '/' + method.meta.filename + '#L' + method.meta.lineno)
-                        i.icomoon-code
-                - if (method.get && method.set)
-                    h4.subsection-header.getter
-                        span.accessor get&nbsp;
-                        mixin methodDef(method.get)
-                    h4.subsection-header.setter
-                        span.accessor set&nbsp;
-                        mixin methodDef(method.set)
-                - else
-                    h4.subsection-header
-                        mixin methodDef(method)
+                h4.subsection-header
+                    mixin methodDef(method)
+                    div.meta
+                        a(class='permalink', href=method.link, alt='Permalink to ' + method.longName, title='Permalink to ' + method.longName)
+                            i.icomoon-hash
+                        a(class='srclink', alt='View Source', title='View Source', href=config.repoview + method.meta.path + '/' + method.meta.filename + '#L' + method.meta.lineno)
+                            i.icomoon-code
                 div.description!=method.description

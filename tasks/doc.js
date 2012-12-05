@@ -18,6 +18,14 @@ module.exports = function(grunt) {
 	var requirejs = require('../dist/lib/r.js');
 	var rjsconfig = require('./rjsconfig.js');
 
+
+	//track names which *should* be documented (assigned in _processJsdoc) and
+	//compare against what was actually documented (_checkMissingDocumentation)
+	var documentedNames = {};
+	var undocumentedNames = [];
+
+
+
 	requirejs.config({
 		baseUrl: __dirname,
 		nodeRequire: require
@@ -101,6 +109,8 @@ module.exports = function(grunt) {
 		link: 'https://developer.mozilla.org/en-US/docs/DOM/element'
 	};
 
+	var missingNames = {};
+
 	function getTypes(names, create) {
 		if (!names) {
 			return [typeMap['void']];
@@ -149,8 +159,9 @@ module.exports = function(grunt) {
 			}
 
 			//a class, not a method/member
-			if (name.search(/[#~\.]/g) === -1) {
-				console.log('WARNING: The type ' + name + ' was not declared anywhere in the project. Documentation will not present a link.');
+			if (name.search(/[#~\.]/g) === -1 && !missingNames[name]) {
+				missingNames[name] = true;
+				grunt.log.subhead('WARNING: The type ' + name + ' was not declared anywhere in the project. Documentation will not present a link.');
 			}
 
 			types.push({
@@ -179,6 +190,17 @@ module.exports = function(grunt) {
 		var db = taffy(json);
 
 
+		db({kind: ['class', 'namespace']}).each(function(record) {
+			var className = record.longname;
+			db({undocumented: true, memberof: className}).each(function(record) {
+				undocumentedNames.push({
+					name: record.longname,
+					file: record.meta.path + '/' + record.meta.filename + ':' + record.meta.lineno
+				});
+			});
+		});
+
+
 		db({undocumented: true}).remove();
 
 
@@ -195,6 +217,14 @@ module.exports = function(grunt) {
 		//reassign 'anonymous'-scoped variables to their module's scope (from the file name)
 		db({longname: {'like': '<anonymous>'}}).each(function(record) {
 			if (record.module) {
+				//convention: 'anonymous' variables under the same name as the
+				//module/class's short name are static members of that class
+				var moduleShortName = record.module.match(/.*\/(.*)$/).pop();
+				if (record.longname.search(new RegExp('<anonymous>~' + moduleShortName)) !== -1) {
+					record.longname = record.longname.replace('<anonymous>~' + moduleShortName, record.module);
+					return; //continue
+				}
+
 				record.longname = record.longname.replace('<anonymous>', record.module);
 				record.name = record.longname.match(/.*~(.*)$/).pop();
 			}
@@ -204,8 +234,6 @@ module.exports = function(grunt) {
 		//collect a map of longnames to short aliases for classes, to be used
 		//when printing parameters and return types
 		db({kind: ['class', 'namespace']}).each(function(record) {
-			//collect a map of longnames to short aliases for classes, to be used when
-			//printing parameters and return types
 			if (record.name.search(/\//g) !== -1) {
 				record.name = record.longname.match(/.*\/(.*)$/).pop();
 			}
@@ -229,6 +257,15 @@ module.exports = function(grunt) {
 					dep.link = type[0].link;
 				}
 			});
+		});
+
+
+		db().each(function(record) {
+			if (!record.longname) {
+				return true;
+			}
+
+			documentedNames[record.longname] = true;
 		});
 
 
@@ -307,38 +344,40 @@ module.exports = function(grunt) {
 				}
 
 				//accessor (get/set) detection, for nicer display than, for example, Number|Rect width([Number w])
-				if (method.params.length === 1 && method.returns.types.length === 2 && method.returns.types.filter(function(type) {
-					return type.longName === method.params[0].types[0].longName;
-				}).length === 1) {
-					var getType = method.params[0].types[0];
-					var setReturnType;
-
-					method.returns.types.forEach(function(type) {
-						if (type.longName !== method.params[0].types[0].longName) {
-							setReturnType = type;
-						}
-					});
-
-					method.get = {
-						name: method.name,
-						params: [],
-						returns: {
-							types: [getType]
-						}
-					};
-
-					method.set = {
-						name: method.name,
-						params: [{
-							name: method.params[0].name,
-							optional: false,
-							types: [getType]
-						}],
-						returns: {
-							types: [setReturnType]
-						}
-					};
-				}
+/*
+ *                if (method.params.length === 1 && method.returns.types.length === 2 && method.returns.types.filter(function(type) {
+ *                    return type.longName === method.params[0].types[0].longName;
+ *                }).length === 1) {
+ *                    var getType = method.params[0].types[0];
+ *                    var setReturnType;
+ *
+ *                    method.returns.types.forEach(function(type) {
+ *                        if (type.longName !== method.params[0].types[0].longName) {
+ *                            setReturnType = type;
+ *                        }
+ *                    });
+ *
+ *                    method.get = {
+ *                        name: method.name,
+ *                        params: [],
+ *                        returns: {
+ *                            types: [getType]
+ *                        }
+ *                    };
+ *
+ *                    method.set = {
+ *                        name: method.name,
+ *                        params: [{
+ *                            name: method.params[0].name,
+ *                            optional: false,
+ *                            types: [getType]
+ *                        }],
+ *                        returns: {
+ *                            types: [setReturnType]
+ *                        }
+ *                    };
+ *                }
+ */
 
 			});
 
@@ -371,8 +410,11 @@ module.exports = function(grunt) {
 	};
 
 
+	var markdownDocumentedNames = [];
+
 	var mixinMarkdown = function(graph) {
 		var mixins = grunt.file.expandFiles(docdir + '/mixin/**');
+
 		mixins.every(function(path) {
 			var mixin = grunt.file.read(path);
 
@@ -389,12 +431,12 @@ module.exports = function(grunt) {
 			//mixin = mixin.replace(/^`*js$/gm, '```');
 			//console.log(mixin);
 
-			//parse markdown "mixin" file for a special string "%[memberName]"
-			var mixinParts = mixin.split(/^(%\S*)$/gm);
+			//parse markdown "mixin" file for h2's "## [memberName]"
+			var mixinParts = mixin.split(/^(##\s*\S*)$/gm);
 
 			//first description in the file is the module description, if no
 			//"%[memberName]" declaration exists before it
-			if (mixinParts.length && mixinParts[0].search(/^%\S*$/) === -1) {
+			if (mixinParts.length && mixinParts[0].search(/^##\s*\S*$/) === -1) {
 				clazz['module'] = {};
 				clazz['module']['description'] = mixinParts[0];
 			}
@@ -402,8 +444,8 @@ module.exports = function(grunt) {
 			var mixinGraph = {};
 			for (var i = 0, l = mixinParts.length; i < l; i++) {
 				var part = mixinParts[i];
-				if (part.search(/^%\S*$/) !== -1 && mixinParts[i+1]) {
-					mixinGraph[part.replace('%', '')] = mixinParts[i+1];
+				if (part.search(/^##\s*\S*$/) !== -1 && mixinParts[i+1]) {
+					mixinGraph[part.replace(/##\s*/, '')] = mixinParts[i+1];
 				}
 			}
 			//console.log(JSON.stringify(mixinGraph, false, 4));
@@ -420,21 +462,17 @@ module.exports = function(grunt) {
 					else {
 						shortName = obj.name;
 					}
-					//console.log(path);
-					//console.log(desc_key);
+
 					if (shortName === key) {
 						obj.description = value;
-						//var obj = getProp(path, false, clazz);
-						//obj.description = obj.description || '';
-						//console.log(JSON.stringify(description, false, 4));
-						//obj.description = value;
-						//desc.obj['description'] += '\n\n' + value;
+						markdownDocumentedNames.push(obj.longName);
 					}
 				});
 			});
 
 			return true;
 		});
+
 	};
 
 
@@ -483,59 +521,264 @@ module.exports = function(grunt) {
 	};
 
 
+	//only single inheritance for now. Since dojo/_base/declare supports multiple inheritance:
+	//TODO: use dojo's C3 MRO code to build a list of base classes
 	var mixinInherited = function(graph) {
-		var _getInheritanceChain = function(name) {
-			var ret = [];
-			if (graph[name].constructor.augments) {
-				var superclass = graph[name].constructor.augments[0];
-				ret.push(superclass);
-				ret = ret.concat(_getInheritanceChain(superclass));
+
+		// C3 Method Resolution Order
+		// lifted from dojo/_base/declare and altered for our limited case
+		var _c3mro = function(bases, className){
+			var result = [], roots = [{cls: 0, refs: []}], nameMap = {}, clsCount = 1,
+				l = bases.length, i = 0, j, lin, base, top, rec, name, refs;
+
+			//console.log('C3: ' + className);
+
+			// build a list of bases naming them if needed
+			for(; i < l; ++i){
+				base = bases[i];
+				//console.log('base: ' + base.name);
+				lin = base._meta ? base._meta.bases : [base];
+				//lin = base.bases;
+				/*
+				 *lin.forEach(function(val) {
+				 *    console.log('lin: ' + val.name);
+				 *});
+				 */
+				top = 0;
+				// add bases to the name map
+				for(j = lin.length - 1; j >= 0; --j){
+					name = lin[j].name;
+					//console.log('get here 2: ' + name);
+					//console.log('got here: ' + name);
+					if(!nameMap.hasOwnProperty(name)){
+						nameMap[name] = {count: 0, refs: [], cls: lin[j]};
+						++clsCount;
+					}
+					rec = nameMap[name];
+					if(top && top !== rec){
+						rec.refs.push(top);
+						++top.count;
+					}
+					top = rec;
+					//console.log(JSON.stringify(top, false, 4));
+				}
+				++top.count;
+				roots[0].refs.push(top);
 			}
-			return ret;
+
+			//console.log(JSON.stringify(nameMap, false, 4));
+
+			// remove classes without external references recursively
+			while(roots.length){
+				top = roots.pop();
+				result.push(top.cls);
+				--clsCount;
+				// optimization: follow a single-linked chain
+				while(refs = top.refs, refs.length == 1){
+					top = refs[0];
+					if(!top || --top.count){
+						// branch or end of chain => do not end to roots
+						top = 0;
+						break;
+					}
+					result.push(top.cls);
+					--clsCount;
+				}
+				if(top){
+					// branch
+					for(i = 0, l = refs.length; i < l; ++i){
+						top = refs[i];
+						if(!--top.count){
+							roots.push(top);
+						}
+					}
+				}
+			}
+			if(clsCount){
+				console.error("can't build consistent linearization", className);
+			}
+
+			// calculate the superclass offset
+			base = bases[0];
+			/*
+			 *result[0] = base ?
+			 *    base._meta && base === result[result.length - base._meta.bases.length] ?
+			 *        base._meta.bases.length : 1 : 0;
+			 */
+			if (!base) {
+				result[0] = 0;
+			}
+			else if (base.bases && base === result[result.length - base.bases.length]) {
+				result[0] = base.bases.length;
+			}
+			else {
+				result[0] = 1;
+			}
+
+			if (result.length === 1) {
+				return [];
+			}
+			else {
+				return result.slice(1);
+			}
+
 		};
 
 
-		_.each(graph, function(clazz, className) {
-			clazz.extends = clazz.extends || [];
+		//a simplied class graph containing only inheritance info
+		var inheritanceGraph = (function() {
+			var result = {};
+			//start by just defining placeholders for each class
+			_.each(graph, function(obj, className) {
+				result[className] = {
+					name: className,
+					_meta: {},
+					bases: []
+				};
+			});
 
-			_getInheritanceChain(className).reverse().forEach(function(superclassName) {
-				clazz.extends.push(className);
+			var requiresMissing = false;
+
+			//add inheritance info
+			_.each(graph, function(obj, className) {
+				if (obj.constructor.augments) {
+					obj.constructor.augments.forEach(function(superclassName) {
+						if (!graph[superclassName]) {
+							grunt.log.subhead('WARNING: ' + superclassName + ' declared as a superclass of ' + className + ', but does not exist or was not included in grunt option doc.include. Inheritance info will not be written out.');
+							requiresMissing = true;
+						}
+						result[className].bases.push(result[superclassName]);
+					});
+				}
+			});
+
+			//we cannot determine all inheritance info with a missing
+			//superclass. skip the rest.
+			if (requiresMissing) {
+				return {};
+			}
+
+			var _depth = function(base, depth) {
+				depth = depth || 0;
+
+				if (!base || !base.bases || !base.bases.length) {
+					return depth;
+				}
+
+				depth++;
+
+				var childDepth = [];
+				base.bases.forEach(function(child, i) {
+					childDepth[i] = _depth(child, depth);
+				});
+				return _.max(childDepth);
+			};
+
+			//sort by number of superclasses
+			var sorted = _.chain(result).values().sortBy(function(obj) {
+				return _depth(obj);
+			}).map(function(obj) {
+				return obj.name;
+			}).value();
+
+			//console.log(JSON.stringify(sorted, false, 4));
+
+			//expand bases out to full hierarchy/linearize
+			_.each(sorted, function(className) {
+				if (!result[className].bases.length) {
+					result[className]._meta.bases = [result[className]];
+					result[className].isTop = true;
+				}
+				else {
+					result[className]._meta.bases = _c3mro(result[className].bases, className);
+					result[className]._meta.bases.unshift(result[className]);
+				}
+			});
+
+			//console.log(JSON.stringify(result, false, 4));
+
+			var ret = {};
+			_.each(result, function(obj, className) {
+				ret[className] = {
+					name: className,
+					bases: []
+				};
+				obj._meta.bases.forEach(function(base) {
+					ret[className].bases.push(base.name);
+				});
+				/*
+				 *console.log('--' + className);
+				 *obj._meta.bases.forEach(function(base) {
+				 *    if (base.name) {
+				 *        console.log(base.name);
+				 *    }
+				 *    else {
+				 *        console.log(base);
+				 *    }
+				 *});
+				 */
+			});
+
+			return ret;
+		})();
+
+		//console.log(JSON.stringify(inheritanceGraph, false, 4));
+
+		//sort inheritanceGraph by number of superclasses, and override subclasses
+		//methods in-order
+		_.chain(inheritanceGraph).values().sortBy(function(obj) {
+			return -1 * obj.bases.length;
+		}).value().forEach(function(obj) {
+			var clazz = graph[obj.name];
+			var className = obj.name;
+
+			//order from highest ancestor -> self
+			obj.bases = obj.bases.reverse();
+			//last entry is the class itself. remove.
+			obj.bases.pop();
+
+			clazz.extends = clazz.constructor.augments;
+
+			var ownProps = {};
+			['methods', 'properties'].forEach(function(type) {
+				_.each(clazz[type], function(val, key) {
+					ownProps[key] = true;
+				});
+			});
+
+			obj.bases.forEach(function(superclassName) {
 				var superclass = graph[superclassName];
-				_.each(superclass.methods, function(method, key) {
-					if (!clazz.methods[key]) {
-						clazz.methods[key] = _.clone(method);
-						clazz.methods[key].inherited = getTypes(superclassName)[0];
-						clazz.methods[key].link = method.link.replace(superclassName, className);
-						clazz.methods[key].longName = method.longName.replace(superclassName, className);
-					}
-					else {
-						clazz.methods[key].overridden = getTypes(superclassName)[0];
-					}
-				});
-				_.each(superclass.properties, function(prop, key) {
-					if (!clazz.properties[key]) {
-						clazz.properties[key] = _.clone(prop);
-						clazz.properties[key].inherited = getTypes(superclassName)[0];
-						clazz.properties[key].link = prop.link.replace(superclassName, className);
-						clazz.properties[key].longName = prop.longName.replace(superclassName, className);
-					}
-					else {
-						clazz.properties[key].overridden = getTypes(superclassName)[0];
-					}
-				});
-				_.each(superclass.jquery, function(method, key) {
-					if (!clazz.jquery[key]) {
-						clazz.jquery[key] = _.clone(method);
-						clazz.jquery[key].inherited = getTypes(superclassName)[0];
-						clazz.jquery[key].link = method.link.replace(superclassName, className);
-						clazz.jquery[key].longName = method.longName.replace(superclassName, className);
-					}
-					else {
-						clazz.jquery[key].overridden = getTypes(superclassName)[0];
-					}
+				['methods', 'properties'].forEach(function(type) {
+					_.each(superclass[type], function(prop, key) {
+						//inherited (not defined on clazz)
+						if (!ownProps[key]) {
+							var oldDescription = (clazz[type][key] && clazz[type][key].description);
+							clazz[type][key] = _.clone(prop);
+							if (oldDescription) {
+								clazz[type][key].description = oldDescription;
+							}
+							clazz[type][key].inherited = {
+								name: getTypes(superclassName)[0].name,
+								longName: getTypes(prop.longName)[0].longName,
+								link: getTypes(prop.longName)[0].link
+							};
+							clazz[type][key].link = prop.link.replace(superclassName, className);
+							clazz[type][key].longName = prop.longName.replace(superclassName, className);
+						}
+						//overridden
+						else {
+							clazz[type][key].overridden = {
+								name: getTypes(superclassName)[0].name,
+								longName: getTypes(prop.longName)[0].longName,
+								link: getTypes(prop.longName)[0].link
+							};
+							clazz[type][key].description = clazz[type][key].description || prop.description;
+						}
+					});
 				});
 			});
 		});
+
 	};
 
 
@@ -775,6 +1018,67 @@ module.exports = function(grunt) {
 				grunt.file.write(docdir + '/out/menu.html', menu, 'utf-8');
 				grunt.verbose.ok();
 				grunt.log.ok();
+
+
+				grunt.log.subhead('Documentation Coverage');
+				grunt.log.writeln('Use --verbose to see the names of all undocumented variables');
+				grunt.log.writeln('============================================================');
+
+				//calculate documentation coverage
+				var docFileMap = {};
+				var docTotal = _getDescriptions(graph).map(function(obj) {
+					if (!obj.inherited) {
+						docFileMap[obj.longName] = obj.meta.path + '/' + obj.meta.filename + ':' + obj.meta.lineno;
+						return obj.longName;
+					}
+					return '';
+				});
+
+				docTotal = _.chain(docTotal).compact().uniq().value();
+
+				var mdownMissing = _.difference(docTotal, markdownDocumentedNames);
+				grunt.log.subhead('Markdown description coverage: ' + markdownDocumentedNames.length + ' of ' + docTotal.length + ' (' + ((markdownDocumentedNames.length / docTotal.length) * 100).toFixed(1) + '%)');
+				grunt.verbose.writeln('The following variables have no markdown documentation:');
+				grunt.verbose.writeln('');
+				mdownMissing.sort().forEach(function(name) {
+					grunt.verbose.writeln(name + ' (' + docFileMap[name] + ')');
+				});
+
+				var docPresent = _getDescriptions(graph).map(function(obj) {
+					if (obj.description && obj.description.trim() && !obj.inherited) {
+						return obj.longName;
+					}
+					return '';
+				});
+
+				docPresent = _.chain(docPresent).compact().uniq().value();
+
+				var docMissing = _.difference(docTotal, docPresent);
+				grunt.log.subhead('All description coverage: ' + docPresent.length + ' of ' + docTotal.length + ' (' + ((docPresent.length / docTotal.length) * 100).toFixed(1) + '%)');
+				grunt.verbose.writeln('The following variables have no descriptions (inherited or otherwise):');
+				grunt.verbose.writeln('');
+				docMissing.sort().forEach(function(name) {
+					grunt.verbose.writeln(name + ' (' + docFileMap[name] + ')');
+				});
+
+				undocumentedNames = undocumentedNames.filter(function(obj) {
+					//remove private-ish names and proven-documented names (jsdoc will count all usages of a property as separate undocumented cases)
+					return (obj.name.search(/.*[#.][_'"]/) === -1)
+						&& (!documentedNames[obj.name])
+						&& (obj.name.search(/~/g) === -1);
+				}).map(function(obj) {
+					return obj.name + ' (' + obj.file + ')';
+				});
+
+				undocumentedNames = _.chain(undocumentedNames).compact().value();
+
+				grunt.log.subhead('Undocumented direct members of classes: ' + undocumentedNames.length);
+				grunt.verbose.writeln('That is, direct members of classes with no jsdoc annotations at all. _name, \'name\', "name" not included.');
+				grunt.verbose.writeln('');
+
+				undocumentedNames.sort().forEach(function(name) {
+					grunt.verbose.writeln(name);
+				});
 
 				done();
 			});

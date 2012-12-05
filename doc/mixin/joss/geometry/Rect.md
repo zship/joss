@@ -2,7 +2,7 @@ Inspired by the Qt library's
 [QRect](http://doc.qt.digia.com/4.7-snapshot/qrect.html) class.
 
 
-%constructor
+## constructor
 
 *opts* may have the following properties:
 
@@ -62,96 +62,96 @@ console.log(rect3.height()); //> 100
 ```
 
 
-%translate
+## translate
 
 Moves the rectangle dx along the x-axis and dy along the y-axis, relative to
 the current position. Positive values move the rectangle to the right and
 downwards.
 
 
-%left
+## left
 The x coordinate of the left edge of this rectangle
 
 
-%top
+## top
 The y coordinate of the top edge of this rectangle
 
 
-%right
+## right
 The x coordinate of the right edge of this rectangle
 
 
-%bottom
+## bottom
 The y coordinate of the bottom edge of this rectangle
 
 
-%moveBottom
+## moveBottom
 
 Moves the rectangle vertically, leaving the rectangle's bottom edge at the
 given *y* coordinate. The rectangle's size is unchanged.
 
 
-%moveBottomLeft
+## moveBottomLeft
 
 Moves the rectangle, leaving the bottom-left corner at the given point *p*. The
 rectangle's size is unchanged.
 
 
-%moveBottomRight
+## moveBottomRight
 
 Moves the rectangle, leaving the bottom-right corner at the given point *p*.
 The rectangle's size is unchanged.
 
 
-%moveCenter
+## moveCenter
 
 Moves the rectangle, leaving the center point at the given point *p*. The
 rectangle's size is unchanged.
 
 
-%moveLeft
+## moveLeft
 
 Moves the rectangle horizontally, leaving the rectangle's left edge at the
 given *x* coordinate. The rectangle's size is unchanged.
 
 
-%moveRight
+## moveRight
 
 Moves the rectangle horizontally, leaving the rectangle's right edge at the
 given *x* coordinate. The rectangle's size is unchanged.
 
 
-%moveTo
+## moveTo
 
 Moves the rectangle, leaving the top-left corner at the given point *p*. The
 rectangle's size is unchanged.
 
 
-%moveTop
+## moveTop
 
 Moves the rectangle vertically, leaving the rectangle's top edge at the given
 *y* coordinate. The rectangle's size is unchanged.
 
 
-%moveTopLeft
+## moveTopLeft
 
 Moves the rectangle, leaving the top-left corner at the given point *p*. The
 rectangle's size is unchanged.
 
 
-%moveTopRight
+## moveTopRight
 
 Moves the rectangle, leaving the top-right corner at the given point *p*. The
 rectangle's size is unchanged.
 
 
-%centerOn
+## centerOn
 
 Moves the rectangle, leaving the center point at the given point *p*. The
 rectangle's size is unchanged. An alias for {joss/geometry/Rect#moveCenter}.
 
 
-%position
+## position
 
 {joss/geometry/Rect#position} is modeled after jQuery UI's
 [position](http://api.jqueryui.com/position/) utility, with a few convenience
@@ -196,73 +196,73 @@ console.log(rect.right); //> 100
 ```
 
 
-%width
+## width
 
 The width of this rectangle.
 
 
-%height
+## height
 
 The height of this rectangle.
 
 
-%contains
+## contains
 
 Returns true if the given *target* is inside or on the edge of the rectangle;
 otherwise returns false.
 
 
-%topLeft
+## topLeft
 
 The point lying at this rectangle's top-left corner. Changing this value sets
 the rectangle's top and left edges simultaneously.
 
 
-%topRight
+## topRight
 
 The point lying at this rectangle's top-right corner. Changing this value sets
 the rectangle's top and right edges simultaneously.
 
 
-%bottomLeft
+## bottomLeft
 
 The point lying at this rectangle's bottom-left corner. Changing this value
 sets the rectangle's bottom and left edges simultaneously.
 
 
-%bottomRight
+## bottomRight
 
 The point lying at this rectangle's bottom-right corner. Changing this value
 sets the rectangle's bottom and right edges simultaneously.
 
 
-%center
+## center
 
 The point lying at this rectangle's center. Changing this value moves the
 rectangle's center without altering width or height.
 
 
-%united
+## united
 
-Returns a new {joss/geometry/Rect} object representing the bounding rectangle
-encompassing this rectangle and the given rectangle.
+Returns a new rectangle representing the bounding box surrounding both this
+rectangle and the given rectangle.
 
 
-%intersected
+## intersected
 
 Return the intersection of this rectangle and the given rectangle. Whether or
 not this rectangle intersects the given rectangle can be determined using the
 {joss/geometry/Rect#intersects} function.
 
 
-%intersects
+## intersects
 
 Returns true if this rectangle intersects with the given rectangle (i.e. there
 is a non-empty area of overlap between them), otherwise returns false.  The
 intersection rectangle can be retrieved using the {joss/geometry/Rect#intersected} function.
 
 
-%normalized
+## normalized
 
 Returns a new rectangle with a non-negative width/height.  If width < 0, swap
 left and right.  Ditto for height.

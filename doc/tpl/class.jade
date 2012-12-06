@@ -35,19 +35,20 @@ mixin methodDef(method)
     span.name=method.name
 
     - if (method.params)
+        span.paren &#40;
         span.params
-            span.paren &#40;
             each param, i in method.params
-                - if (param.optional)
-                    span.opt [
-                - if (i !== 0)
-                    span.sep=','
-                mixin typeDef(param.types)
-                &nbsp;
-                span.param=param.name
-                - if (param.optional)
-                    span.opt ]
-            span.paren &#41;
+                span.param
+                    - if (param.optional)
+                        span.opt [
+                    - if (i !== 0)
+                        span.sep=','
+                    mixin typeDef(param.types)
+                    &nbsp;
+                    span.name=param.name
+                    - if (param.optional)
+                        span.opt ]
+        span.paren &#41;
 
 
 - if (cl.module)

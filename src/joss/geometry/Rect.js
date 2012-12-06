@@ -181,7 +181,7 @@ define(function(require) {
 		/**
 		 * Shorthand for relative positioning to another Rectangle
 		 * object; an alternative to the move\* and center\* methods
-		 * using joss/geometry/Position objects.
+		 * using {joss/geometry/Position} objects.
 		 *
 		 * @param {Object} opts
 		 * @return {joss/geometry/Rect}

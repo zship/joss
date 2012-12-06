@@ -125,7 +125,12 @@ module.exports = function(grunt) {
 		var matches;
 		if ((matches = name.match(/(.*?)<(.*)>/))) {
 			var container = matches[1];
-			var containerType = getType(container);
+			var containerType = getType(container, debugContext);
+
+			if (!containerType) {
+				return;
+			}
+
 			var argString = matches[2];
 
 			var args = [];
@@ -565,7 +570,7 @@ module.exports = function(grunt) {
 		var rNamePath = new RegExp(sNamePath);
 		var rNamePathGlobal = new RegExp(sNamePath, 'g');
 
-		var sClassName = '{(\\S*?)}';
+		var sClassName = '{([^{]\\S*?)}';
 		var rClassName = new RegExp(sClassName);
 		var rClassNameGlobal = new RegExp(sClassName, 'g');
 
@@ -617,11 +622,13 @@ module.exports = function(grunt) {
 					title = '';
 				}
 
+				var rName = new RegExp('{' + typeName + '}', 'g');
+
 				if (type.link) {
-					description = description.replace(rClassNameGlobal, ' <a href="' + type.link + '" title="' + title + '">' + type.name + '</a>');
+					description = description.replace(rName, '<a href="' + type.link + '" title="' + title + '">' + type.name + '</a>');
 				}
 				else {
-					description = description.replace(rClassNameGlobal, typeName);
+					description = description.replace(rName, typeName);
 				}
 			});
 
@@ -869,8 +876,8 @@ module.exports = function(grunt) {
 							}
 							clazz[type][key].inherited = {
 								name: getType(superclassName).name,
-								longName: getType(prop.longName).longName,
-								link: getType(prop.longName).link
+								longName: prop.longName,
+								link: '/#/' + prop.longName
 							};
 							clazz[type][key].link = prop.link.replace(superclassName, className);
 							clazz[type][key].longName = prop.longName.replace(superclassName, className);
@@ -879,8 +886,8 @@ module.exports = function(grunt) {
 						else {
 							clazz[type][key].overridden = {
 								name: getType(superclassName).name,
-								longName: getType(prop.longName).longName,
-								link: getType(prop.longName).link
+								longName: prop.longName,
+								link: '/#/' + prop.longName
 							};
 							clazz[type][key].description = clazz[type][key].description || prop.description;
 						}
@@ -1235,7 +1242,7 @@ module.exports = function(grunt) {
 				grunt.verbose.writeln('-----------------------------------------------------------');
 				grunt.verbose.writeln('The following variables have no descriptions (inherited or otherwise):');
 				grunt.verbose.writeln('');
-				if (docMissing.lengt) {
+				if (docMissing.length) {
 					docMissing.sort().forEach(function(name) {
 						grunt.verbose.writeln(name + ' (' + docFileMap[name] + ')');
 					});

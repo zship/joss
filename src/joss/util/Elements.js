@@ -100,7 +100,7 @@ define(function(require) {
 	/**
 	 * Create a jQuery element from **el**. Avoids calling jQuery if **el** is
 	 * already a jQuery object.
-	 * @param {Element|jQuery|String|Array.<Element>} el
+	 * @param {Element|jQuery|String|Array<Element>} el
 	 * @return {jQuery}
 	 */
 	Elements.toJquery = function(el) {

@@ -23,6 +23,7 @@ module.exports = function(grunt) {
 	//compare against what was actually documented (_checkMissingDocumentation)
 	var documentedNames = {};
 	var undocumentedNames = [];
+	var undeclaredTypes = [];
 
 
 
@@ -109,70 +110,115 @@ module.exports = function(grunt) {
 		link: 'https://developer.mozilla.org/en-US/docs/DOM/element'
 	};
 
-	var missingNames = {};
 
-	function getTypes(names, create) {
-		if (!names) {
-			return [typeMap['void']];
+	function getType(name, debugContext) {
+		if (!name) {
+			return typeMap['void'];
 		}
 
-		if (!_.isArray(names)) {
-			names = [names];
+		//first try the fast dictionary approach for perfect String matches
+		if (typeMap[name]) {
+			return typeMap[name];
 		}
 
-		var types = [];
-		names.forEach(function(name) {
-			//first try the fast dictionary approach for perfect String matches
-			if (typeMap[name]) {
-				types.push(typeMap[name]);
-				return true;
-			}
+		//next try generics (e.g. Array<String>)
+		var matches;
+		if ((matches = name.match(/(.*?)<(.*)>/))) {
+			var container = matches[1];
+			var containerType = getType(container);
+			var argString = matches[2];
 
-			var foundMatch = false;
-
-			//next try types specified as RegExp objects, matching
-			//against the provided name
-			_.every(typeMap, function(type) {
-				if (!type.regexp) {
-					return true;
-				}
-
-				if (name.search(type.regexp) !== -1) {
-					types.push({
-						name: name.replace(type.regexp, '$1'),
-						longName: name,
-						link: name.replace(type.regexp, type.link)
-					});
-					foundMatch = true;
-					return false;
-				}
-
-				return true;
+			var args = [];
+			argString.split(',').forEach(function(arg, i) {
+				var type = getType(arg.trim(), debugContext + ' (type parameter #' + i + ' to ' + name + ')');
+				args.push(type || defaultType(arg.trim()));
 			});
 
-			if (foundMatch) {
-				return true;
-			}
+			return {
+				generic: true,
+				name: containerType.name,
+				longName: containerType.longName,
+				link: containerType.link,
+				args: args
+			};
+		}
 
-			if (create === false) {
-				return true;
-			}
-
-			//a class, not a method/member
-			if (name.search(/[#~\.]/g) === -1 && !missingNames[name]) {
-				missingNames[name] = true;
-				grunt.log.subhead('WARNING: The type ' + name + ' was not declared anywhere in the project. Documentation will not present a link.');
-			}
-
-			types.push({
-				name: name,
-				longName: name,
-				link: '/#/' + name
-			});
+		//next try short-names
+		var shortNames = _.filter(typeMap, function(type) {
+			return (name === type.name);
 		});
 
-		return types;
+		if (shortNames.length === 1) {
+			return shortNames[0];
+		}
+		else if (shortNames.length > 1){
+			grunt.log.subhead('WARNING: Ambiguous usage of short-name ' + name + '. Documentation will not present a link.');
+		}
+
+		var foundMatch;
+
+		//next try types specified as RegExp objects, matching
+		//against the provided name
+		_.every(typeMap, function(type) {
+			if (!type.regexp) {
+				return true;
+			}
+
+			if (name.search(type.regexp) !== -1) {
+				foundMatch = {
+					name: name.replace(type.regexp, '$1'),
+					longName: name,
+					link: name.replace(type.regexp, type.link)
+				};
+				return false;
+			}
+
+			return true;
+		});
+
+		if (foundMatch) {
+			return foundMatch;
+		}
+
+		undeclaredTypes.push({
+			name: name,
+			context: debugContext
+		});
+
+		//a class, not a method/member
+		/*
+		 *if (name.search(/[#~\.]/g) === -1 && !missingNames[name]) {
+		 *    missingNames[name] = true;
+		 *    grunt.log.subhead('WARNING: The type ' + name + ' was not declared anywhere in the project. Documentation will not present a link.');
+		 *}
+		 */
+
 	}
+
+
+	function defaultType(name) {
+		return {
+			name: name,
+			longName: name,
+			link: ''
+		};
+	}
+
+
+/*
+ *    function getTypes(names, create) {
+ *        if (!_.isArray(names)) {
+ *            names = [names];
+ *        }
+ *
+ *        var types = [];
+ *        names.forEach(function(name) {
+ *            types.push(getType(name, create));
+ *        });
+ *
+ *        return types;
+ *    }
+ */
 
 
 	function _fileToModuleName(filePath) {
@@ -252,9 +298,9 @@ module.exports = function(grunt) {
 		//in final documentation)
 		_.each(meta, function(value) {
 			_.each(value.deps, function(dep) {
-				var type = getTypes([dep.path], false);
-				if (type && type.length) {
-					dep.link = type[0].link;
+				var type = getType(dep.path, value.filename + ' requirejs dependency');
+				if (type && type.link) {
+					dep.link = type.link;
 				}
 			});
 		});
@@ -286,17 +332,24 @@ module.exports = function(grunt) {
 			if (record.kind === 'class') {
 				var constructor = graph[module]['constructor'] = record;
 				constructor.longName = constructor.longname;
-				constructor.link = getTypes([constructor.longName])[0].link;
+				constructor.link = getType(constructor.longName).link;
 				constructor.description = constructor.description || '';
 
 				constructor.params = constructor.params || [];
-				constructor.params.every(function(param) {
+				constructor.params.forEach(function(param) {
 					if (!param.type || !param.type.names) {
-						param.type = getTypes(null);
-						return true; //continue
+						param.type = getType(null);
+						return true;
 					}
-					param.types = getTypes(param.type.names);
-					return true;
+
+					param.types = [];
+					param.type.names.forEach(function(name, i) {
+						var type = getType(name, constructor.longName + ' constructor parameter #' + i);
+						if (!type) {
+							type = defaultType(name);
+						}
+						param.types.push(type);
+					});
 				});
 			}
 
@@ -304,8 +357,22 @@ module.exports = function(grunt) {
 			db({kind: 'member'}, {module: module}).each(function(record) {
 				var member = graph[module]['properties'][record.name] = record;
 				member.longName = member.longname;
-				member.link = getTypes([member.longname])[0].link;
-				member.types = member.type ? getTypes(member.type.names) : getTypes(null);
+				member.link = '/#/' + member.longName;
+
+				if (!member.type || !member.type.names) {
+					member.types = [getType(null)];
+				}
+				else {
+					member.types = [];
+					member.type.names.forEach(function(name) {
+						var type = getType(name, member.longName + ' type');
+						if (!type) {
+							type = defaultType(name);
+						}
+						member.types.push(type);
+					});
+				}
+
 				member.description = member.description || '';
 			});
 
@@ -323,24 +390,38 @@ module.exports = function(grunt) {
 				}
 
 				method.longName = method.longname;
-				method.link = getTypes([method.longname])[0].link;
+				method.link = '/#/' + method.longName;
 				method.description = method.description || '';
 
 				method.params = method.params || [];
-				method.params.every(function(param) {
+				method.params.forEach(function(param) {
 					if (!param.type || !param.type.names) {
-						param.type = getTypes(null);
-						return true; //continue
+						param.types = [getType(null)];
+						return true;
 					}
-					param.types = getTypes(param.type.names);
-					return true;
+
+					param.types = [];
+					param.type.names.forEach(function(name, i) {
+						var type = getType(name, method.longName + ' parameter #' + i);
+						if (!type) {
+							type = defaultType(name);
+						}
+						param.types.push(type);
+					});
 				});
 
 				if (method.returns) {
-					method.returns = {types: getTypes(method.returns[0].type.names)};
+					method.returns.types = [];
+					method.returns[0].type.names.forEach(function(name, i) {
+						var type = getType(name, method.longName + ' return type #' + i);
+						if (!type) {
+							type = defaultType(name);
+						}
+						method.returns.types.push(type);
+					});
 				}
 				else {
-					method.returns = {types: getTypes(null)};
+					method.returns = {types: [getType(null)]};
 				}
 
 				//accessor (get/set) detection, for nicer display than, for example, Number|Rect width([Number w])
@@ -480,39 +561,68 @@ module.exports = function(grunt) {
 	//example: joss.mvc.Controller#bind -> [Controller.bind](link to joss.mvc.Controller#bind)
 	var transformLongNames = function(graph) {
 
-		var descriptions = _getDescriptions(graph);
+		var sNamePath = '{(\\S*?)([#~\\.])(\\S*?)}';
+		var rNamePath = new RegExp(sNamePath);
+		var rNamePathGlobal = new RegExp(sNamePath, 'g');
+
+		var sClassName = '{(\\S*?)}';
+		var rClassName = new RegExp(sClassName);
+		var rClassNameGlobal = new RegExp(sClassName, 'g');
+
 		//console.log(descriptions);
 
-		_.each(descriptions, function(obj) {
+		_getDescriptions(graph).forEach(function(obj) {
 
 			var description = obj.description;
+			var matches;
+			
+			//first, class name + member name
+			
+			//global matching will disregard capturing groups, so
+			//capture the full matches and then iterate over all of
+			//them, matching again.
+			matches = description.match(rNamePathGlobal) || [];
+			matches.forEach(function(match) {
+				var submatches = match.match(rNamePath);
 
-			_.each(typeMap, function(type) {
-				if (!type.longName) {
-					return true;
+				var name = submatches[0];
+				var typeName = submatches[1];
+				var scope = submatches[2];
+				var propName = submatches[3];
+
+				var rName = new RegExp(name, 'g');
+
+				var type = getType(typeName, 'inside ' + obj.longName + ' description') || defaultType(typeName);
+
+				var longName = type.longName + scope + propName;
+				var shortName = type.name + '.' + propName;
+
+				if (type.link) {
+					description = description.replace(rName, '<a href="/#/' + longName + '" title="' + longName + '">' + shortName + '</a>');
+				}
+				else {
+					description = description.replace(rName, shortName);
+				}
+			});
+
+			//then, just plain class names (no member name following)
+			matches = description.match(rClassNameGlobal) || [];
+			matches.forEach(function(match) {
+				var submatches = match.match(rClassName);
+
+				var typeName = submatches[1];
+				var type = getType(typeName, 'inside ' + obj.longName + ' description') || defaultType(typeName);
+				var title = type.longName;
+				if (type.longName === type.name) {
+					title = '';
 				}
 
-				//first, class name + member name
-				var sLongName = '{' + type.longName + '[#~\\.]([a-zA-Z_]+)}';
-				var rLongName = new RegExp(sLongName);
-				var rLongNameGlobal = new RegExp(sLongName, 'g');
-				if (description.search(rLongNameGlobal) !== -1) {
-					//global matching will disregard capturing groups, so
-					//capture the full matches and then iterate over all of
-					//them, matching again.
-					var matches = description.match(rLongNameGlobal);
-					matches.forEach(function(match) {
-						var submatches = match.match(rLongName);
-						var longName = submatches[0];
-						var name = submatches[1];
-						description = description.replace(rLongName, '<a href="/#/' + longName.replace(/\{/g, '').replace(/\}/g, '') + '">' + type.name + '.' + name + '</a>');
-					});
+				if (type.link) {
+					description = description.replace(rClassNameGlobal, ' <a href="' + type.link + '" title="' + title + '">' + type.name + '</a>');
 				}
-
-				//then, just plain class names (no member name following)
-				var rClassName = new RegExp('{' + type.longName + '}', 'g');
-				//console.log(type.longName);
-				description = description.replace(rClassName, ' <a href="' + type.link + '">' + type.name + '</a>');
+				else {
+					description = description.replace(rClassNameGlobal, typeName);
+				}
 			});
 
 			obj.description = description;
@@ -758,9 +868,9 @@ module.exports = function(grunt) {
 								clazz[type][key].description = oldDescription;
 							}
 							clazz[type][key].inherited = {
-								name: getTypes(superclassName)[0].name,
-								longName: getTypes(prop.longName)[0].longName,
-								link: getTypes(prop.longName)[0].link
+								name: getType(superclassName).name,
+								longName: getType(prop.longName).longName,
+								link: getType(prop.longName).link
 							};
 							clazz[type][key].link = prop.link.replace(superclassName, className);
 							clazz[type][key].longName = prop.longName.replace(superclassName, className);
@@ -768,9 +878,9 @@ module.exports = function(grunt) {
 						//overridden
 						else {
 							clazz[type][key].overridden = {
-								name: getTypes(superclassName)[0].name,
-								longName: getTypes(prop.longName)[0].longName,
-								link: getTypes(prop.longName)[0].link
+								name: getType(superclassName).name,
+								longName: getType(prop.longName).longName,
+								link: getType(prop.longName).link
 							};
 							clazz[type][key].description = clazz[type][key].description || prop.description;
 						}
@@ -805,17 +915,18 @@ module.exports = function(grunt) {
 	var classTpl;
 
 	var renderModule = function(graph, path, config, callback) {
-		classTpl = classTpl || grunt.file.read(docdir + '/tpl/class.jade', 'utf-8');
-		//console.log(JSON.stringify(graph, false, 4));
-		var data = jade.compile(classTpl)({cl: graph, module: path, config: config});
+		var jadeOpts = {filename: docdir + '/tpl/class.jade'};
+		classTpl = classTpl || grunt.file.read(jadeOpts.filename, 'utf-8');
+		var data = jade.compile(classTpl, jadeOpts)({cl: graph, module: path, config: config});
 		callback(graph, path, data);
 	};
 
 	var tagListTpl;
 
 	var renderTagList = function(graph, path, callback) {
-		tagListTpl = tagListTpl || grunt.file.read(docdir + '/tpl/taglist.jade', 'utf-8');
-		var data = jade.compile(tagListTpl)({cl: graph, module: path});
+		var jadeOpts = {filename: docdir + '/tpl/taglist.jade'};
+		tagListTpl = tagListTpl || grunt.file.read(jadeOpts.filename, 'utf-8');
+		var data = jade.compile(tagListTpl, jadeOpts)({cl: graph, module: path});
 		callback(graph, path, data);
 	};
 
@@ -831,7 +942,7 @@ module.exports = function(grunt) {
 			var child = obj[key];
 
 			if (_.isString(_.values(obj)[0])) {
-				var type = getTypes([child])[0];
+				var type = getType(child, 'rendering menu') || defaultType(child);
 				html += '<li>';
 				html += '<a href="' + type.link + '#SOverview">' + key + '</a>';
 				return true;
@@ -1020,9 +1131,67 @@ module.exports = function(grunt) {
 				grunt.log.ok();
 
 
+				var typeNames = [];
+				_.each(typeMap, function(obj) {
+					typeNames.push(obj.name);
+				});
+
+				var typeConflicts = _.difference(typeNames, _.uniq(typeNames));
+
+				grunt.log.subhead('Declared types');
+				grunt.log.writeln('===========================================================');
+				grunt.log.writeln('Use --verbose for more information');
+
+				grunt.log.writeln('');
+				grunt.log.writeln('Ambiguous short-names: ' + typeConflicts.length);
+				grunt.verbose.writeln('-----------------------------------------------------------');
+				if (typeConflicts.length) {
+					grunt.verbose.writeln('Long-names must be used in jsdoc annotations and inline "{}" references for these types:');
+					typeConflicts.forEach(function(name) {
+						var types = _.filter(typeMap, function(obj) {
+							return obj.name === name;
+						});
+						grunt.verbose.write(name + ' could refer to: ');
+						types.forEach(function(obj) {
+							grunt.verbose.write(obj.longName + ' ');
+						});
+						grunt.verbose.write('\n');
+					});
+				}
+				else {
+					grunt.verbose.writeln('(None)');
+				}
+				/*
+				 *else {
+				 *    grunt.log.writeln('Congratulations! You can use short names ("Rect" vs "joss/geometry/Rect") in your jsdoc annotations and inline "{}" references!');
+				 *}
+				 */
+
+				grunt.verbose.writeln('');
+				grunt.log.writeln('Never-declared (but used) types: ' + undeclaredTypes.length);
+				grunt.verbose.writeln('-----------------------------------------------------------');
+				if (undeclaredTypes.length) {
+					undeclaredTypes.forEach(function(type) {
+						grunt.verbose.writeln(type.name + ' (Location: ' + type.context + ')');
+					});
+				}
+				else {
+					grunt.verbose.writeln('(None)');
+				}
+
+				grunt.verbose.writeln('');
+				grunt.verbose.writeln('All declared types:');
+				grunt.verbose.writeln('-----------------------------------------------------------');
+				var typeLongNames = _.compact(_.pluck(typeMap, 'longName'));
+				typeLongNames.sort().forEach(function(name) {
+					grunt.verbose.writeln(name + ' - ' + typeMap[name].name);
+				});
+
+
 				grunt.log.subhead('Documentation Coverage');
+				grunt.log.writeln('===========================================================');
 				grunt.log.writeln('Use --verbose to see the names of all undocumented variables');
-				grunt.log.writeln('============================================================');
+				grunt.log.writeln('');
 
 				//calculate documentation coverage
 				var docFileMap = {};
@@ -1037,12 +1206,19 @@ module.exports = function(grunt) {
 				docTotal = _.chain(docTotal).compact().uniq().value();
 
 				var mdownMissing = _.difference(docTotal, markdownDocumentedNames);
-				grunt.log.subhead('Markdown description coverage: ' + markdownDocumentedNames.length + ' of ' + docTotal.length + ' (' + ((markdownDocumentedNames.length / docTotal.length) * 100).toFixed(1) + '%)');
+				grunt.verbose.writeln('');
+				grunt.log.writeln('Markdown description coverage: ' + markdownDocumentedNames.length + ' of ' + docTotal.length + ' (' + ((markdownDocumentedNames.length / docTotal.length) * 100).toFixed(1) + '%)');
+				grunt.verbose.writeln('-----------------------------------------------------------');
 				grunt.verbose.writeln('The following variables have no markdown documentation:');
 				grunt.verbose.writeln('');
-				mdownMissing.sort().forEach(function(name) {
-					grunt.verbose.writeln(name + ' (' + docFileMap[name] + ')');
-				});
+				if (mdownMissing.length) {
+					mdownMissing.sort().forEach(function(name) {
+						grunt.verbose.writeln(name + ' (' + docFileMap[name] + ')');
+					});
+				}
+				else {
+					grunt.verbose.writeln('(None)');
+				}
 
 				var docPresent = _getDescriptions(graph).map(function(obj) {
 					if (obj.description && obj.description.trim() && !obj.inherited) {
@@ -1054,12 +1230,19 @@ module.exports = function(grunt) {
 				docPresent = _.chain(docPresent).compact().uniq().value();
 
 				var docMissing = _.difference(docTotal, docPresent);
-				grunt.log.subhead('All description coverage: ' + docPresent.length + ' of ' + docTotal.length + ' (' + ((docPresent.length / docTotal.length) * 100).toFixed(1) + '%)');
+				grunt.verbose.writeln('');
+				grunt.log.writeln('All description coverage: ' + docPresent.length + ' of ' + docTotal.length + ' (' + ((docPresent.length / docTotal.length) * 100).toFixed(1) + '%)');
+				grunt.verbose.writeln('-----------------------------------------------------------');
 				grunt.verbose.writeln('The following variables have no descriptions (inherited or otherwise):');
 				grunt.verbose.writeln('');
-				docMissing.sort().forEach(function(name) {
-					grunt.verbose.writeln(name + ' (' + docFileMap[name] + ')');
-				});
+				if (docMissing.lengt) {
+					docMissing.sort().forEach(function(name) {
+						grunt.verbose.writeln(name + ' (' + docFileMap[name] + ')');
+					});
+				}
+				else {
+					grunt.verbose.writeln('(None)');
+				}
 
 				undocumentedNames = undocumentedNames.filter(function(obj) {
 					//remove private-ish names and proven-documented names (jsdoc will count all usages of a property as separate undocumented cases)
@@ -1072,13 +1255,19 @@ module.exports = function(grunt) {
 
 				undocumentedNames = _.chain(undocumentedNames).compact().value();
 
-				grunt.log.subhead('Undocumented direct members of classes: ' + undocumentedNames.length);
+				grunt.verbose.writeln('');
+				grunt.log.writeln('Undocumented direct members of classes: ' + undocumentedNames.length);
+				grunt.verbose.writeln('-----------------------------------------------------------');
 				grunt.verbose.writeln('That is, direct members of classes with no jsdoc annotations at all. _name, \'name\', "name" not included.');
 				grunt.verbose.writeln('');
-
-				undocumentedNames.sort().forEach(function(name) {
-					grunt.verbose.writeln(name);
-				});
+				if (undocumentedNames.length) {
+					undocumentedNames.sort().forEach(function(name) {
+						grunt.verbose.writeln(name);
+					});
+				}
+				else {
+					grunt.verbose.writeln('(None)');
+				}
 
 				done();
 			});

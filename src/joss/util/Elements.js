@@ -68,7 +68,7 @@ define(function(require) {
 	/**
 	 * Returns a DOM element lying at a point
 	 *
-	 * @param {Point} p
+	 * @param {joss/geometry/Point} p
 	 * @return {Element}
 	 */
 	Elements.fromPoint = function(x, y) {

@@ -1,4 +1,11 @@
-h2=module
+h2
+    span.moduleName=module
+    -if (cl.extends)
+        span.extends=' extends '
+            each base, i in cl.extends
+                a.superclass(href=base.link, title=base.longName)=base.name
+                - if (i < cl.extends.length - 1)
+                    span.sep=','
 
 - if (cl.module)
     div.module

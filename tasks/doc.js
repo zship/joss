@@ -285,6 +285,7 @@ module.exports = function(grunt) {
 		//collect a map of longnames to short aliases for classes, to be used
 		//when printing parameters and return types
 		db({kind: ['class', 'namespace']}).each(function(record) {
+			//convention: class short names are the last part of their module's name (e.g. 'joss/geometry/Point' -> 'Point')
 			if (record.name.search(/\//g) !== -1) {
 				record.name = record.longname.match(/.*\/(.*)$/).pop();
 			}
@@ -849,12 +850,25 @@ module.exports = function(grunt) {
 			var clazz = graph[obj.name];
 			var className = obj.name;
 
+			//add inheritance info into `graph` for use in final doc templates
+			if (clazz.constructor && clazz.constructor.augments) {
+				clazz.extends = [];
+				clazz.constructor.augments.forEach(function(name) {
+					clazz.extends.push(getType(name, 'inheritance info - superclass of ' + className) || defaultType(name));
+				});
+			}
+
+			if (obj.bases.length) {
+				clazz.heirarchy = [];
+				obj.bases.forEach(function(name) {
+					clazz.heirarchy.push(getType(name, 'inheritance info - in heirarchy of ' + className) || defaultType(name));
+				});
+			}
+
 			//order from highest ancestor -> self
 			obj.bases = obj.bases.reverse();
 			//last entry is the class itself. remove.
 			obj.bases.pop();
-
-			clazz.extends = clazz.constructor.augments;
 
 			var ownProps = {};
 			['methods', 'properties'].forEach(function(type) {

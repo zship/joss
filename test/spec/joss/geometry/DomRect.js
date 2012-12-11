@@ -7,6 +7,7 @@ define(function(require){
 
 	module('joss/geometry/DomRect');
 
+
 	test('Basics', function() {
 		var fixture = $('#qunit-fixture');
 		var fixtureOffset = fixture.offset();

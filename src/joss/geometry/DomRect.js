@@ -1,19 +1,16 @@
 define(function(require) {
 
 	var $ = require('jquery');
-	var Classes = require('joss/util/Classes');
-	var lang = require('dojo/_base/lang');
 	var merge = require('amd-utils/object/merge');
 	var Rect = require('./Rect');
 	var Elements = require('joss/util/Elements');
+	var Classes = require('joss/util/Classes');
 
 
 
 	//Rect subclass which can track border, padding, and margin on a DOM
 	//Element, as well as read/write its dimensions from/to an Element
 	var DomRect = Classes.create(Rect, /** @lends joss/geometry/DomRect.prototype */ {
-
-		'-accessors-': ['border', 'padding'],
 
 		/**
 		 * @class
@@ -23,50 +20,65 @@ define(function(require) {
 		constructor: function(opts) {
 
 			//if no positioning info was passed, calculate from the DOM (below)
-			if (!(opts.top || opts.left || opts.right || opts.bottom)) {
-				var rect = DomRect.fromElement(opts.element);
-				this.top = rect.top;
-				this.right = rect.right;
-				this.bottom = rect.bottom;
-				this.left = rect.left;
-				opts = {
-					element: rect.element,
-					border: rect.border,
-					padding: rect.padding,
-					margin: rect.margin
-				};
+			if (!(opts.top || opts.left || opts.width || opts.height)) {
+				return DomRect.fromElement(opts.element);
 			}
 
-			this.element = opts.element;
-			this._border = merge({top: 0, right: 0, bottom: 0, left: 0}, opts.border);
-			this._padding = merge({top: 0, right: 0, bottom: 0, left: 0}, opts.padding);
-			this._margin = opts.margin;
+			this._data = merge({
+				border: {top: 0, right: 0, bottom: 0, left: 0},
+				margin: {top: 0, right: 0, bottom: 0, left: 0},
+				padding: {top: 0, right: 0, bottom: 0, left: 0}
+			}, opts);
 
+			this.element = opts.element;
+
+		},
+
+
+		right: {
+			get: function() {
+				return this._data.left +
+					this._data.width +
+					this._data.border.left +
+					this._data.border.right +
+					this._data.padding.left +
+					this._data.padding.right;
+			}
+		},
+
+
+		bottom: {
+			get: function() {
+				return this._data.top +
+					this._data.height +
+					this._data.border.top +
+					this._data.border.bottom +
+					this._data.padding.top +
+					this._data.padding.bottom;
+			}
 		},
 
 
 		_setElements: function(el) {
 			el = Elements.toJquery(el);
-			this._element = el[0];
-			this._$element = el;
+			this._data.element = el[0];
+			this._data.$element = el;
 		},
 
 
 		/** @type {Element} */
-		element: null,
-
-
-		'set element': function(el) {
-			this._setElements(el);
+		element: {
+			set: function(val) {
+				this._setElements(val);
+			}
 		},
 
 
 		/** @type {jQuery} */
-		$element: null,
-
-
-		'set $element': function(el) {
-			this._setElements(el);
+		$element: {
+			set: function(val) {
+				this._setElements(val);
+			}
 		},
 
 
@@ -74,40 +86,49 @@ define(function(require) {
 		border: null,
 
 
-		'set border.top': function(val, prev) {
-			this.height -= prev;
-			this.height += val;
-			this._border._top = val;
+		'border.top': {
+			set: function(val) {
+				var prev = this._data.border.top;
+				this._data.height -= prev;
+				this._data.height += val;
+				this._data.border.top = val;
+			}
 		},
 
 
-		'set border.right': function(val, prev) {
-			this.width -= prev;
-			this.width += val;
-			this._border._right = val;
+		'border.right': {
+			set: function(val) {
+				var prev = this._data.border.right;
+				this._data.width -= prev;
+				this._data.width += val;
+				this._data.border.right = val;
+			}
 		},
 
 
-		'set border.bottom': function(val, prev) {
-			this.height -= prev;
-			this.height += val;
-			this._border._bottom = val;
+		'border.bottom': {
+			set: function(val) {
+				var prev = this._data.border.bottom;
+				this._data.height -= prev;
+				this._data.height += val;
+				this._data.border.bottom = val;
+			}
 		},
 
 
-		'set border.left': function(val, prev) {
-			this.width -= prev;
-			this.width += val;
-			this._border._left = val;
+		'border.left': {
+			set: function(val) {
+				var prev = this._data.border.left;
+				this._data.width -= prev;
+				this._data.width += val;
+				this._data.border.left = val;
+			}
 		},
 
 
 		/** @type {Object} */
-		margin: null,
-
-
-		'set margin': function(val) {
-			this._margin = lang.mixin(this._margin, val);
+		margin: {
+			get: null, set: null
 		},
 
 
@@ -115,31 +136,43 @@ define(function(require) {
 		padding: null,
 
 
-		'set padding.top': function(val, prev) {
-			this.height -= prev;
-			this.height += val;
-			this._padding._top = val;
+		'padding.top': {
+			set: function(val) {
+				var prev = this._data.padding.top;
+				this._data.height -= prev;
+				this._data.height += val;
+				this._data.padding.top = val;
+			}
 		},
 
 
-		'set padding.right': function(val, prev) {
-			this.width -= prev;
-			this.width += val;
-			this._padding._right = val;
+		'padding.right': {
+			set: function(val) {
+				var prev = this._data.padding.right;
+				this._data.width -= prev;
+				this._data.width += val;
+				this._data.padding.right = val;
+			}
 		},
 
 
-		'set padding.bottom': function(val, prev) {
-			this.height -= prev;
-			this.height += val;
-			this._padding._bottom = val;
+		'padding.bottom': {
+			set: function(val) {
+				var prev = this._data.padding.bottom;
+				this._data.height -= prev;
+				this._data.height += val;
+				this._data.padding.bottom = val;
+			}
 		},
 
 
-		'set padding.left': function(val, prev) {
-			this.width -= prev;
-			this.width += val;
-			this._padding._left = val;
+		'padding.left': {
+			set: function(val) {
+				var prev = this._data.padding.left;
+				this._data.width -= prev;
+				this._data.width += val;
+				this._data.padding.left = val;
+			}
 		},
 
 
@@ -149,18 +182,12 @@ define(function(require) {
 		 * @return {joss/geometry/DomRect}
 		 */
 		intersected: function() {
-			var intersected = this.inherited(arguments);
-
-			return new DomRect({
-				element: this.element,
-				top: intersected.top,
-				right: intersected.right,
-				bottom: intersected.bottom,
-				left: intersected.left,
-				border: this.border,
-				margin: this.margin,
-				padding: this.padding
-			});
+			var intersected = new DomRect(this._super(arguments));
+			intersected.element = this.element;
+			intersected.border = this.border;
+			intersected.margin = this.margin;
+			intersected.padding = this.padding;
+			return intersected;
 		},
 
 
@@ -170,18 +197,12 @@ define(function(require) {
 		 * @return {joss/geometry/DomRect}
 		 */
 		united: function() {
-			var united = this.inherited(arguments);
-
-			return new DomRect({
-				element: this.element,
-				top: united.top,
-				right: united.right,
-				bottom: united.bottom,
-				left: united.left,
-				border: this.border,
-				margin: this.margin,
-				padding: this.padding
-			});
+			var united = new DomRect(this._super(arguments));
+			united.element = this.element;
+			united.border = this.border;
+			united.margin = this.margin;
+			united.padding = this.padding;
+			return united;
 		},
 
 
@@ -189,7 +210,7 @@ define(function(require) {
 		 * @return {joss/geometry/DomRect}
 		 */
 		apply: function() {
-			if (!this.element || this.$element.length > 1) {
+			if (!this.element || !this.$element || this.$element.length > 1) {
 				return this;
 			}
 			this.applyTo(this.element);
@@ -386,7 +407,7 @@ define(function(require) {
 
 			return true;
 
-		}.bind(this));
+		});
 
 		return bounding;
 

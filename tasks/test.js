@@ -99,7 +99,7 @@ module.exports = function(grunt) {
 		config.paths.joss = '../src/joss';
 		config.paths.jossx = '../src/jossx';
 		//config.paths.src = path.relative(baseDir, path.resolve('src'));
-		config.urlArgs = 'bust=' + (new Date()).getTime();
+		//config.urlArgs = 'bust=' + (new Date()).getTime();
 
 		return config;
 	};

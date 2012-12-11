@@ -1,9 +1,10 @@
 define(function(require) {
 
-	var Classes = require('joss/util/Classes');
 	var lang = require('dojo/_base/lang');
+	var defaults = require('amd-utils/lang/defaults');
 	var Point = require('./Point');
 	var Position = require('./Position');
+	var Classes = require('joss/util/Classes');
 
 
 
@@ -18,54 +19,56 @@ define(function(require) {
 		 * @constructs
 		 */
 		constructor: function(opts) {
-			opts = lang.mixin({
-				top: null,
-				t: null,
-				right: null,
-				r: null,
-				bottom: null,
-				b: null,
-				left: null,
-				l: null,
-				width: null,
-				w: null,
-				height: null,
-				h: null
-			}, opts);
-
-			opts.t = (opts.t === null) ? opts.top : opts.t;
-			opts.r = (opts.r === null) ? opts.right : opts.r;
-			opts.b = (opts.b === null) ? opts.bottom : opts.b;
-			opts.l = (opts.l === null) ? opts.left : opts.l;
-			opts.w = (opts.w === null) ? opts.width : opts.w;
-			opts.h = (opts.h === null) ? opts.height : opts.h;
-
-			if (opts.t === null) {
-				opts.t = opts.b - opts.h;
+			if (!arguments.length) {
+				opts = {
+					top: 0,
+					left: 0,
+					width: 0,
+					height: 0
+				};
 			}
 
-			if (opts.b === null) {
-				opts.b = opts.t + opts.h;
+			opts.top = defaults(opts.top, opts.t);
+			opts.right = defaults(opts.right, opts.r);
+			opts.bottom = defaults(opts.bottom, opts.b);
+			opts.left = defaults(opts.left, opts.l);
+			opts.width = defaults(opts.width, opts.w);
+			opts.height = defaults(opts.height, opts.h);
+
+			if (opts.top === undefined) {
+				opts.top = opts.bottom - opts.height;
 			}
 
-			if (opts.l === null) {
-				opts.l = opts.r - opts.w;
+			if (opts.left === undefined) {
+				opts.left = opts.right - opts.width;
 			}
 
-			if (opts.r === null) {
-				opts.r = opts.l + opts.w;
+			if (opts.width === undefined) {
+				opts.width = opts.right - opts.left;
+			}
+
+			if (opts.height === undefined) {
+				opts.height = opts.bottom - opts.top;
 			}
 
 			/** @type {Number} */
-			this.left = opts.l;
+			this.top = opts.top;
 			/** @type {Number} */
-			this.top = opts.t;
+			this.left = opts.left;
 			/** @type {Number} */
-			this.right = opts.r;
+			this.width = opts.width;
 			/** @type {Number} */
-			this.bottom = opts.b;
+			this.height = opts.height;
+		},
 
-			return this;
+
+		'get right': function() {
+			return this._data.left + this._data.width;
+		},
+
+
+		'get bottom': function() {
+			return this._data.top + this._data.height;
 		},
 
 
@@ -77,8 +80,6 @@ define(function(require) {
 		translate: function(dx, dy) {
 			this.left += dx;
 			this.top += dy;
-			this.right += dx;
-			this.bottom += dy;
 			return this;
 		},
 
@@ -293,28 +294,8 @@ define(function(require) {
 		width: null,
 
 
-		'get width': function() {
-			return this.right - this.left;
-		},
-
-
-		'set width': function(val) {
-			this.right = this.left + val;
-		},
-
-
 		/** @type {Number} */
 		height: null,
-
-
-		'get height': function() {
-			return this.bottom - this.top;
-		},
-
-
-		'set height': function(val) {
-			this.bottom = this.top + val;
-		},
 
 
 		/**
@@ -497,17 +478,16 @@ define(function(require) {
 		 * @return {joss/geometry/Rect}
 		 */
 		normalized: function() {
-			if (this.width < 0) {
-				var left = this.left;
-				this.left = this.right;
-				this.right = left;
+			var rect = this.clone();
+			if (rect.width < 0) {
+				rect.left = rect.right;
+				rect.width = Math.abs(rect.width);
 			}
-			if (this.height < 0) {
-				var top = this.top;
-				this.top = this.bottom;
-				this.bottom = top;
+			if (rect.height < 0) {
+				rect.top = rect.bottom;
+				rect.height = Math.abs(rect.height);
 			}
-			return lang.clone(this);
+			return rect;
 		},
 
 
@@ -522,6 +502,12 @@ define(function(require) {
 		}
 		
 	});
+
+
+	Classes.defineProp(Rect, 'top');
+	Classes.defineProp(Rect, 'left');
+	Classes.defineProp(Rect, 'width');
+	Classes.defineProp(Rect, 'height');
 
 
 	return Rect;

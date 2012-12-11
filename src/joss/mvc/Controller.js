@@ -39,6 +39,8 @@ define(function(require) {
 		 */
 		constructor: function(opts) {
 
+			this._data = {};
+
 			opts = lang.mixin({
 				root: null
 			}, opts);
@@ -88,8 +90,8 @@ define(function(require) {
 
 			this.unbind();
 
-			this._root = el;
-			this._$root = $(el);
+			this._data.root = el;
+			this._data.$root = $(el);
 
 			if (this.isRunning()) {
 				this.bind();

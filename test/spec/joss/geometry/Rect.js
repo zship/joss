@@ -3,11 +3,10 @@ define(function(require){
 	var Rect = require('joss/geometry/Rect');
 	var Point = require('joss/geometry/Point');
 	var Position = require('joss/geometry/Position');
-	var lang = require('dojo/_base/lang');
-
 
 
 	module('joss/geometry/Rect');
+
 
 	var tpl = new Rect({
 		top: 0,
@@ -18,7 +17,7 @@ define(function(require){
 
 
 	test('width & height | {t: 0, l: 0, w: 100, h: 100}', function() {
-		var rect = lang.clone(tpl);
+		var rect = tpl.clone();
 		strictEqual(rect.width, 100, '(get) width is accurate');
 		strictEqual(rect.height, 100, '(get) height is accurate');
 
@@ -33,7 +32,7 @@ define(function(require){
 
 
 	test('Point calculations | {t: 0, l: 0, w: 100, h: 100}', function() {
-		var rect = lang.clone(tpl);
+		var rect = tpl.clone();
 
 		[
 			//name, x, y
@@ -55,7 +54,7 @@ define(function(require){
 
 
 	test('Movements on a Point | rect = {t: 0, l: 0, w: 100, h: 100}; point = {x: 200, y: 200}', function() {
-		var rect = lang.clone(tpl);
+		var rect = tpl.clone();
 		var p = new Point(200, 200);
 
 		[
@@ -88,7 +87,7 @@ define(function(require){
 			['moveBottom', 100],
 			['moveTop', 200]
 		].forEach(function(arr) {
-			var rect = lang.clone(tpl);
+			var rect = tpl.clone();
 			var method = arr[0];
 			var top = arr[1];
 
@@ -104,7 +103,7 @@ define(function(require){
 			['moveLeft', 200],
 			['moveRight', 100]
 		].forEach(function(arr) {
-			var rect = lang.clone(tpl);
+			var rect = tpl.clone();
 			var method = arr[0];
 			var left = arr[1];
 
@@ -118,8 +117,8 @@ define(function(require){
 
 
 	test('contains & intersects', function() {
-		var rect = lang.clone(tpl);
-		var other = lang.clone(tpl);
+		var rect = tpl.clone();
+		var other = tpl.clone();
 
 		var surrounding = ['top left', 'top center', 'top right', 'right center', 'bottom right', 'bottom center', 'bottom left', 'left center'];
 
@@ -201,8 +200,8 @@ define(function(require){
 
 
 	test('intersected & united', function() {
-		var rect = lang.clone(tpl);
-		var other = lang.clone(tpl).translate(50, 50);
+		var rect = tpl.clone();
+		var other = tpl.clone().translate(50, 50);
 
 		var intersected = rect.intersected(other);
 		strictEqual(intersected.top, 50, 'intersected: top is accurate');
@@ -238,7 +237,7 @@ define(function(require){
 
 
 	test('position', function() {
-		var target = lang.clone(tpl);
+		var target = tpl.clone();
 		var rect = new Rect({
 			top: 0,
 			left: 0,

@@ -16,7 +16,7 @@ define(function(require) {
 
 		constructor: function() {
 
-			this.root().addClass('scrollable');
+			this.$root.addClass('scrollable');
 
 		},
 

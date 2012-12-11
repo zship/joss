@@ -1,6 +1,7 @@
 define(function(require) {
 
 	var Classes = require('joss/util/Classes');
+	var defaults = require('amd-utils/lang/defaults');
 
 
 
@@ -12,11 +13,16 @@ define(function(require) {
 		 * @param {Number} height
 		 * @constructs
 		 */
-		constructor: function(width, height) {
+		constructor: function(opts) {
+			if (!arguments.length) {
+				opts = {
+					width: 0,
+					height: 0
+				};
+			}
 
-			this.width = width || 0;
-			this.height = height || 0;
-
+			this.width = defaults(opts.width, opts.w);
+			this.height = defaults(opts.height, opts.h);
 		},
 
 
@@ -32,24 +38,25 @@ define(function(require) {
 		 * Scales the size to a rectangle with the given `other` size,
 		 * according to `mode`.
 		 * @param {joss/geometry/Size} other
-		 * @param {joss/geometry/Size.AspectRatioMode} mode
+		 * @param {joss/geometry/Size.ScaleMode} mode
 		 * @return {joss/geometry/Size}
 		 */
 		scale: function(other, mode) {
 
-			if (mode === Size.AspectRatioMode.Ignore) {
+			if (mode === Size.ScaleMode.Equal) {
 				this.width = other.width;
 				this.height = other.height;
 				return this;
 			}
 
 			var useHeight = false;
-			var scaledWidth = other.height * this.width / this.height;
+			var aspectRatio = this.width / this.height;
+			var scaledWidth = other.height * aspectRatio;
 
-			if (mode === Size.AspectRatioMode.Keep) {
+			if (mode === Size.ScaleMode.Contain) {
 				useHeight = (scaledWidth <= other.width);
 			}
-			else { // mode == Size.AspectRatioMode.KeepByExpanding
+			else { // mode == Size.ScaleMode.Cover
 				useHeight = (scaledWidth >= other.width);
 			}
 
@@ -59,7 +66,7 @@ define(function(require) {
 			}
 			else {
 				this.width = other.width;
-				this.height = other.width * this.height / this.width;
+				this.height = other.width * (1 / aspectRatio);
 			}
 
 			return this;
@@ -81,10 +88,11 @@ define(function(require) {
 	});
 
 
-	Size.AspectRatioMode = {
-		Ignore: 1,
-		Keep: 2,
-		KeepByExpanding: 3
+	/** @type {Object} */
+	Size.ScaleMode = {
+		Equal: 1,
+		Contain: 2,
+		Cover: 3
 	};
 
 

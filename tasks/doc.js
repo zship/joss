@@ -965,7 +965,7 @@ module.exports = function(grunt) {
 			if (_.isString(_.values(obj)[0])) {
 				var type = getType(child, 'rendering menu') || defaultType(child);
 				html += '<li>';
-				html += '<a href="' + type.link + '#SOverview">' + key + '</a>';
+				html += '<a href="' + type.link + '">' + key + '</a>';
 				return true;
 			}
 			else {
@@ -999,7 +999,8 @@ module.exports = function(grunt) {
 		requirejs(['../dist/lib/parse'], function(parse) {
 
 			var files = config.include;
-			grunt.log.write('Running jsdoc...');
+			grunt.log.writeln('Running jsdoc...');
+
 			async.map(files, function(path, callback) {
 				grunt.verbose.writeln('Running jsdoc on ' + path + '...');
 				var contents = grunt.file.read(path);
@@ -1145,8 +1146,8 @@ module.exports = function(grunt) {
 				});
 
 
+				grunt.log.write('Rendering module list into ' + docdir + '/out/menu.html...');
 				var menu = renderMenu(classStructure, '');
-
 				grunt.file.write(docdir + '/out/menu.html', menu, 'utf-8');
 				grunt.verbose.ok();
 				grunt.log.ok();

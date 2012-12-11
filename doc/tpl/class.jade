@@ -84,7 +84,7 @@ mixin methodDef(method)
                     i.icomoon-hash
                 a(class='srclink', alt='View Source', title='View Source', href=config.repoview + cl.constructor.meta.path + '/' + cl.constructor.meta.filename + '#L' + cl.constructor.meta.lineno)
                     i.icomoon-code
-            h4(rel=cl.constructor.link)
+            h4.subsection-header
                 mixin methodDef(cl.constructor)
             div.description!=cl.constructor.description
 

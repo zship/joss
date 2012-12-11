@@ -74,11 +74,12 @@ define(function(require) {
 
 
 	/**
-	 * Align all {Rect}s in `list` along `axis` at the given `position`.
+	 * Align all {Rect}s in `list` along `axis` ('x' or 'y') at the given
+	 * `position` ('top', 'right', 'bottom', 'left', or 'center').
 	 *
 	 * @param {Array<Rect>} list
 	 * @param {String} axis
-	 * @param {Number} position
+	 * @param {String} position
 	 */
 	Rects.align = function(list, axis, position) {
 
@@ -141,10 +142,10 @@ define(function(require) {
 		list.forEach(function(rect) {
 			switch(axis) {
 			case 'x':
-				cumulativeSize += rect.width();
+				cumulativeSize += rect.width;
 				break;
 			case 'y':
-				cumulativeSize += rect.height();
+				cumulativeSize += rect.height;
 				break;
 			}
 		});

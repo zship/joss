@@ -9,12 +9,16 @@ define(function(require){
 
 	test('Generated Accessors', function() {
 		var Class = Classes.create({
-			'-accessors-': ['a', 'b'],
 			constructor: function() {
-				this._a = 0;
-				this._b = 0;
+				this._data = {
+					a: 0,
+					b: 0
+				};
 			}
 		});
+
+		Classes.defineProp(Class, 'a');
+		Classes.defineProp(Class, 'b');
 
 		var keys = Object.getOwnPropertyNames(Class.prototype);
 		ok(keys.indexOf('a') !== -1, 'a is a property');
@@ -34,15 +38,17 @@ define(function(require){
 	test('Nested Accessors', function() {
 		var called = false;
 		var Class = Classes.create({
-			'-accessors-': ['a', 'a.b'],
-
 			constructor: function() {
-				this.a = {b: 'init'};
+				this._data = {
+					a: {
+						b: 'init'
+					}
+				};
 			},
 
 			'set a.b': function(val) {
 				called = true;
-				this._a._b = val;
+				this._data.a.b = val;
 			}
 		});
 
@@ -54,6 +60,7 @@ define(function(require){
 		ok(called, 'a.b setter was called');
 		called = false;
 		strictEqual(obj.a.b, 'foo', 'change a.b, get a.b');
+		strictEqual(obj._data.a.b, 'foo', 'change a.b, get a.b === _data.a.b');
 
 		obj.a = {
 			b: 'bar'
@@ -61,11 +68,34 @@ define(function(require){
 		ok(called, 'a.b setter was called');
 		called = false;
 		strictEqual(obj.a.b, 'bar', 'changed a, get a.b');
+		strictEqual(obj._data.a.b, 'bar', 'changed a, get a.b === _data.a.b');
 
 		obj.a.b = 'baz';
 		ok(called, 'a.b setter was called');
 		called = false;
 		strictEqual(obj.a.b, 'baz', 'changed a, set a.b');
+		strictEqual(obj._data.a.b, 'baz', 'changed a, set a.b, a.b === _data.a.b');
+
+		obj.a = {
+			b: {
+				c: 'foo'
+			}
+		};
+
+		strictEqual(obj.a.b.c, 'foo', 'add a.b.c (more deeply-nested than original definition of a)');
+		strictEqual(obj._data.a.b.c, 'foo', 'add a.b.c, a.b.c === _data.a.b.c');
+
+		obj.a.b.c = 'bar';
+
+		strictEqual(obj.a.b.c, 'bar', 'change a.b.c');
+		strictEqual(obj._data.a.b.c, 'bar', 'change a.b.c, a.b.c === _data.a.b.c');
+
+		obj.a.b = {
+			c: 'baz'
+		};
+
+		strictEqual(obj.a.b.c, 'baz', 'change a.b, get a.b.c');
+		strictEqual(obj._data.a.b.c, 'baz', 'change a.b, get a.b.c === _data.a.b.c');
 	});
 
 
@@ -76,11 +106,6 @@ define(function(require){
 		var stopCompleted = false;
 
 		var A = Classes.create({
-			'-chains-': {
-				'start': 'deferredAfter',
-				'stop': 'deferredBefore'
-			},
-
 			constructor: function() {
 				this.contextTestA = 'A';
 			},
@@ -103,6 +128,9 @@ define(function(require){
 				strictEqual(stopCompleted, true, 'A: A.stop waited for B.stop to complete');
 			}
 		});
+
+		Classes.chain(A, 'start', 'after');
+		Classes.chain(A, 'stop', 'before');
 
 		var B = Classes.create(A, {
 			constructor: function() {

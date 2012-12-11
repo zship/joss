@@ -6,7 +6,6 @@ define(function(require) {
 	require('jquery.hashchange');
 
 
-
 	var routeMatcher = /^\/.*/;
 	var param = /\{([\w\d]+)\}/g;
 

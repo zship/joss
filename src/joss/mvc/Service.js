@@ -6,7 +6,6 @@ define(function(require) {
 	var hub = require('dojo/topic');
 
 
-
 	var Service = Classes.create(/** @lends joss/mvc/Service.prototype */ {
 
 		constructor: function() {

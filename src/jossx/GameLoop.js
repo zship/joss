@@ -9,7 +9,6 @@ define(function(require) {
 	var lang = require('dojo/_base/lang');
 
 
-
 	// requestAnimationFrame polyfill by Erik Möller
 	// fixes from Paul Irish and Tino Zijdel
 	(function () {

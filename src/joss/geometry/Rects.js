@@ -5,7 +5,6 @@ define(function(require) {
 	var Point = require('./Point');
 
 
-
 	/**
 	 * @namespace
 	 * @alias joss/geometry/Rects

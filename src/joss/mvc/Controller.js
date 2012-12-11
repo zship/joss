@@ -11,7 +11,6 @@ define(function(require) {
 	var forEach = require('amd-utils/collection/forEach');
 
 
-
 	//object:create
 	var rPubsub = /^\S*:\S*$/;
 	//input[type="text"] click

@@ -1,12 +1,10 @@
 define(function(require) {
 
-	var $ = require('jquery');
 	var lang = require('dojo/_base/lang');
 	var number = require('dojo/number');
 	var date = require('dojo/date/locale');
 	var forOwn = require('amd-utils/object/forOwn');
 	var toArray = require('amd-utils/lang/toArray');
-
 
 
 	var Checks = {};

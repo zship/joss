@@ -4,7 +4,6 @@ define(function(require) {
 	var Classes = require('joss/util/Classes');
 
 
-
 	var View = Classes.create(/** @lends joss/mvc/View.prototype */ {
 
 		constructor: function() {

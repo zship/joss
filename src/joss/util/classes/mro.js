@@ -53,7 +53,7 @@ define(function() {
 	};
 
 
-	// C3 Method Resolution Order (see http://www.python.org/download/releases/2.3/mro/)
+	//C3 Method Resolution Order (see http://www.python.org/download/releases/2.3/mro/)
 	var mro = function(constructor){
 		var bases = constructor._meta.bases;
 

@@ -4,7 +4,6 @@ define(function(require) {
 	var defaults = require('amd-utils/lang/defaults');
 
 
-
 	//Defines the size of a two-dimensional object
 	var Size = Classes.create(/** @lends joss/geometry/Size.prototype */ {
 

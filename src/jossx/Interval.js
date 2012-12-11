@@ -5,7 +5,6 @@ define(function(require) {
 	var date = require('dojo/date');
 
 
-
 	var Interval = Classes.create(/** @lends jossx/Interval.prototype */ {
 
 		constructor: function(opts) {

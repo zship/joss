@@ -17,7 +17,6 @@ define(function(require) {
 	require('joss/geometry/DomRect');
 
 
-
 	var Callout = Classes.create(/** @lends jossx/Callout.prototype */ {
 
 		'-accessors-': [

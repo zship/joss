@@ -4,7 +4,6 @@ define(function(require) {
 	var Point = require('./Point');
 
 
-
 	//Describes a line in two-dimensional space
 	var Line = Classes.create(/** @lends joss/geometry/Line.prototype */ {
 

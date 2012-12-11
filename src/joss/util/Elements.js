@@ -9,7 +9,6 @@ define(function(require) {
 	var isElement = require('joss/util/lang/isElement');
 
 
-
 	/**
 	 * @namespace
 	 * @alias joss/util/Elements

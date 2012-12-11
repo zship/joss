@@ -1,11 +1,9 @@
 define(function(require) {
 
-	var lang = require('dojo/_base/lang');
 	var Elements = require('joss/util/Elements');
 	var Classes = require('joss/util/Classes');
 
 
-	
 	var ValidationError = Classes.create({
 
 		'-accessors-': ['el', 'message', 'type'],

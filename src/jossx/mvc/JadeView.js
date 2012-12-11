@@ -5,7 +5,6 @@ define(function(require) {
 	var jade = require('jade');
 
 
-
 	return declare(null, {
 
 		constructor: function() {

@@ -4,7 +4,6 @@ define(function(require) {
 	var Classes = require('joss/util/Classes');
 
 
-
 	var cache = [];
 
 	var HtmlView = Classes.create(/** @lends joss/mvc/HtmlView.prototype */ {

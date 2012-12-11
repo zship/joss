@@ -15,7 +15,6 @@ define(function(require) {
 	require('jquery.event.input');
 
 
-
 	var Validator = Classes.create(Controller, /** @lends jossx/validation/Validator.prototype */ {
 
 		constructor: function(opts) {

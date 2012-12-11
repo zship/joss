@@ -7,7 +7,6 @@ define(function(require) {
 	var Classes = require('joss/util/Classes');
 
 
-
 	//Describes a rectangle in two-dimensional space
 	var Rect = Classes.create(/** @lends joss/geometry/Rect.prototype */ {
 

@@ -10,7 +10,6 @@ define(function(require) {
 	require('joss/geometry/DomRect');
 
 
-
 	var Tooltip = Classes.create(/** @lends jossx/Tooltip.prototype */ {
 
 		/**

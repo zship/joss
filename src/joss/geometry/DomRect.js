@@ -7,7 +7,6 @@ define(function(require) {
 	var Classes = require('joss/util/Classes');
 
 
-
 	//Rect subclass which can track border, padding, and margin on a DOM
 	//Element, as well as read/write its dimensions from/to an Element
 	var DomRect = Classes.create(Rect, /** @lends joss/geometry/DomRect.prototype */ {

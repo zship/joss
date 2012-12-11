@@ -3,7 +3,6 @@ define(function(require) {
 	var Classes = require('joss/util/Classes');
 
 
-
 	var Lifecycle = Classes.create({
 
 		'-chains-': {

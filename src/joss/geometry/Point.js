@@ -3,7 +3,6 @@ define(function(require) {
 	var Classes = require('joss/util/Classes');
 
 
-
 	//Describes a point in two-dimensional space
 	var Point = Classes.create(/** @lends joss/geometry/Point.prototype */ {
 

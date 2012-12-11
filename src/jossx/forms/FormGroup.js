@@ -16,7 +16,6 @@ define(function(require) {
 	require('./FormToggle');
 
 
-
 	var FormGroup = Classes.create(/** @lends jossx/forms/FormGroup.prototype */ {
 
 		constructor: function(selector, opts) {

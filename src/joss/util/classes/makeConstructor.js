@@ -2,6 +2,7 @@ define(function(require) {
 
 	var applyNew = require('./applyNew');
 
+
 	var makeConstructor = function(bases, ctor) {
 		return function(other) {
 			if(!(this instanceof arguments.callee)){

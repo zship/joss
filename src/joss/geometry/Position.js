@@ -1,15 +1,7 @@
-/*
- Position
-
- Abstraction of relative positioning information, 
- modeled after jQuery UI (more predictable)
- and jquery.qTip (more precise)
- */
 define(function(require) {
 
 	var Classes = require('joss/util/Classes');
 	var lang = require('dojo/_base/lang');
-
 
 
 	//Abstraction of relative positioning information, modeled after jQuery UI

@@ -4,7 +4,6 @@ define(function(require) {
 	var waterfall = require('deferreds/waterfall');
 
 
-
 	var chain = function(proto, bases, members, key, type) {
 
 		//constructor, key, type (using meta-info in constructor)

@@ -11,7 +11,6 @@ define(function(require) {
 	require('jquery.jgestures');
 
 
-
 	var Scrollable = Classes.create(Controller, /** @lends jossx/Scrollable.prototype */ {
 
 		constructor: function() {

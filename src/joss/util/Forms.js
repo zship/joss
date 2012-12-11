@@ -6,7 +6,6 @@ define(function(require) {
 	var $ = require('jquery');
 
 
-
 	/**
 	 * @namespace
 	 * @alias joss.util.Forms

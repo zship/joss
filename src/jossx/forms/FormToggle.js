@@ -13,7 +13,6 @@ define(function(require) {
 	var Elements = require('joss/util/Elements');
 
 
-
 	var selfOrChildren = function(context) {
 		if (context.is('input, select, textarea')) {
 			return context;

@@ -17,7 +17,6 @@ define(function(require) {
 	};
 
 
-
 	var Errors = Classes.create(/** @lends jossx/validation/Errors.prototype */ {
 
 		constructor: function(opts) {

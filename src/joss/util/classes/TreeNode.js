@@ -4,7 +4,6 @@ define(function(require) {
 	var forOwn = require('amd-utils/object/forOwn');
 
 
-
 	//general-purpose tree data structure
 	var TreeNode = function(key, data) {
 		this.data = data;

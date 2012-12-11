@@ -4,7 +4,6 @@ define(function(require) {
 	var forOwn = require('amd-utils/object/forOwn');
 
 
-
 	var mixinMembers = function(proto, source) {
 		forOwn(source, function(member, key) {
 			if (!isFunction(member)) {

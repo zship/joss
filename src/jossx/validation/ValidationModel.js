@@ -5,7 +5,6 @@ define(function(require) {
 	var Elements = require('joss/util/Elements');
 
 
-
 	var ValidationModel = Classes.create(/** @lends jossx/validation/ValidationModel.prototype */ {
 
 		constructor: function() {

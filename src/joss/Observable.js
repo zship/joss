@@ -4,7 +4,6 @@ define(function(require) {
 	var forOwn = require('amd-utils/object/forOwn');
 
 
-
 	var Observable = function(opts) {
 		
 		this._data = {

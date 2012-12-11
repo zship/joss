@@ -1,8 +1,6 @@
 define(function(require) {
 
 	var TreeNode = require('./TreeNode');
-	var merge = require('amd-utils/object/merge');
-
 
 
 	var RecursiveProxy = function(opts) {

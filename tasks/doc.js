@@ -4,6 +4,7 @@ module.exports = function(grunt) {
 	var docdir = 'doc';
 	var libdir = 'doc/lib';
 
+	var fs = require('fs');
 	var path = require('path');
 	var child = require("child_process");
 	var _ = grunt.utils._;
@@ -12,7 +13,7 @@ module.exports = function(grunt) {
 	var jade = require('jade');
 	var md = require('marked');
 	var hljs = require('highlight.js');
-	var async = require('async');
+	//var async = require('async');
 	var util = require('./util.js');
 
 	var requirejs = require('../dist/lib/r.js');
@@ -225,6 +226,23 @@ module.exports = function(grunt) {
  *    }
  */
 
+	function _moduleFullName(declaredName, filePath) {
+		var srcDirectory = path.resolve(process.cwd() + '/' + rjsconfig.baseUrl);
+		var moduleDirectory = path.resolve(process.cwd() + '/' + _.initial(filePath.split('/')).join('/'));
+
+		declaredName = declaredName.replace(/\.js/, '');
+		var absolutePath;
+
+		//directory-relative path
+		if (declaredName.search(/^\.\.\//g) !== -1 || declaredName.search(/^\.\//) !== -1) {
+			absolutePath = path.resolve(moduleDirectory + '/' + declaredName + '.js');
+			return absolutePath.replace(srcDirectory + '/', '').replace('.js', '');
+		}
+
+		absolutePath = path.resolve(srcDirectory + '/' + declaredName + '.js');
+		return absolutePath.replace(srcDirectory + '/', '').replace('.js', '');
+	}
+
 
 	function _fileToModuleName(filePath) {
 		var srcDirectory = path.resolve(process.cwd() + '/' + rjsconfig.baseUrl);
@@ -236,59 +254,147 @@ module.exports = function(grunt) {
 	}
 
 
-	var processJsDoc = function(json, meta) {
+	var processJsDoc = function(json, deps) {
 
 		var db = taffy(json);
 
 
+		//we're handling (multiple) inheritance ourselves. besides, jsdoc has a
+		//weird behavior of assigning the filename and path from the superclass
+		//to the subclass, and I'd like to be able to identify methods by filename
+		db({inherited: true}).remove();
+
+
+		var cache = {};
+		//derive module names from the file name
+		db().each(function(record) {
+			if (record && record.meta && record.meta.path) {
+				var fileName = record.meta.path + '/' + record.meta.filename;
+				cache[fileName] = cache[fileName] || _fileToModuleName(fileName);
+				record.module = cache[fileName];
+			}
+		});
+
+		cache = {};
+
+
 		db({kind: ['class', 'namespace']}).each(function(record) {
-			var className = record.longname;
-			db({undocumented: true, memberof: className}).each(function(record) {
-				undocumentedNames.push({
-					name: record.longname,
-					file: record.meta.path + '/' + record.meta.filename + ':' + record.meta.lineno
-				});
+			//AMD convention: class names and namespace names are the same as
+			//their module name
+			var clazz = record;
+			var moduleName = record.module;
+
+			//update all members of this class to point to the new class name
+			db(function() {
+				return !!(
+					this.memberof === clazz.longname &&
+					this.meta &&
+					this.meta.path === clazz.meta.path &&
+					this.meta.filename === clazz.meta.filename
+				);
+			}).each(function(record) {
+				record.longname = record.longname.replace(record.memberof, moduleName);
+				record.memberof = moduleName;
 			});
+
+			clazz.longname = moduleName;
+			//convention: class short names are the last part of their module's name (e.g. 'joss/geometry/Point' -> 'Point')
+			clazz.name = moduleName.match(/.*\/(.*)$/).pop();
+			//console.log(JSON.stringify(clazz, false, 4));
 		});
 
 
+		db({kind: ['class', 'namespace']}).each(function(record) {
+			var clazz = record;
+			var className = clazz.longname;
+
+			//AMD convention: see if there's a sibling directory of the
+			//same name as the class which contains implementations (and
+			//documentation)
+			var implPath = clazz.meta.path + '/' + clazz.name.toLowerCase();
+			var resolvedImplPath = path.resolve(process.cwd() + '/' + implPath);
+			var hasImplDirectory = fs.existsSync(resolvedImplPath);
+			//console.log(implPath, hasImplDirectory);
+
+			//var stopwatch = new Stopwatch().start();
+			//var count = 0;
+			db(function() {
+				return (
+					this.undocumented &&
+					this.memberof === className &&
+					this.meta &&
+					this.meta.path === clazz.meta.path &&
+					this.meta.filename === clazz.meta.filename
+				);
+			}).each(function(record) {
+				var impl;
+				//count++;
+				//find a file with documentation under implPath with the same
+				//name as the undocumented member
+				if (hasImplDirectory && (impl = db(function() {
+					return (
+						this.name === record.name &&
+						this.meta &&
+						this.meta.path === implPath &&
+						this.meta.filename === record.name + '.js' &&
+						!this.undocumented
+					);
+				//if one exists, apply its documentation to the undocumented member
+				}).first())) {
+					record.kind = impl.kind;
+					record.type = impl.type;
+					record.params = impl.params;
+					record.returns = impl.returns;
+					record.description = impl.description;
+					//record.meta = impl.meta;
+					record.imported = {
+						module: impl.module,
+						path: impl.meta.path,
+						filename: impl.meta.filename,
+						lineno: impl.meta.lineno
+					};
+					record.undocumented = false;
+				}
+				//else, flag this as an undocumented class member (for summary info)
+				else {
+					undocumentedNames.push({
+						name: record.longname,
+						file: record.meta.path + '/' + record.meta.filename + ':' + record.meta.lineno
+					});
+				}
+			});
+			//console.log('processJsdoc: ' + className + ' ' + count + ' ' + stopwatch.elapsed() + 'ms');
+		});
+
+
+		//subsequent processing can be sped up by removing undocumented
+		//variables (which outnumber documented ones, since every single
+		//variable in any scope is counted by jsdoc)
 		db({undocumented: true}).remove();
 
 
-		db().each(function(record) {
-			record.lineno = record && record.meta && record.meta.lineno;
-
-			if (record && record.meta && record.meta.path) {
-				var fileName = record.meta.path + '/' + record.meta.filename;
-				record.module = _fileToModuleName(fileName);
-			}
-		});
-
-
-		//reassign 'anonymous'-scoped variables to their module's scope (from the file name)
-		db({longname: {'like': '<anonymous>'}}).each(function(record) {
-			if (record.module) {
-				//convention: 'anonymous' variables under the same name as the
-				//module/class's short name are static members of that class
-				var moduleShortName = record.module.match(/.*\/(.*)$/).pop();
-				if (record.longname.search(new RegExp('<anonymous>~' + moduleShortName)) !== -1) {
-					record.longname = record.longname.replace('<anonymous>~' + moduleShortName, record.module);
-					return; //continue
-				}
-
-				record.longname = record.longname.replace('<anonymous>', record.module);
-				record.name = record.longname.match(/.*~(.*)$/).pop();
-			}
-		});
+		//reassign 'anonymous'-scoped variables to their module's scope
+/*
+ *        db({longname: {'like': '<anonymous>'}}).each(function(record) {
+ *            if (record.module) {
+ *                //convention: 'anonymous' variables under the same name as the
+ *                //module/class's short name are static members of that class
+ *                var moduleShortName = record.module.match(/.*\/(.*)$/).pop();
+ *                if (record.longname.search(new RegExp('<anonymous>~' + moduleShortName)) !== -1) {
+ *                    record.longname = record.longname.replace('<anonymous>~' + moduleShortName, record.module);
+ *                    return; //continue
+ *                }
+ *
+ *                record.longname = record.longname.replace('<anonymous>', record.module);
+ *                record.name = record.longname.match(/.*~(.*)$/).pop();
+ *            }
+ *        });
+ */
 
 
 		//collect a map of longnames to short aliases for classes, to be used
 		//when printing parameters and return types
 		db({kind: ['class', 'namespace']}).each(function(record) {
-			//convention: class short names are the last part of their module's name (e.g. 'joss/geometry/Point' -> 'Point')
-			if (record.name.search(/\//g) !== -1) {
-				record.name = record.longname.match(/.*\/(.*)$/).pop();
-			}
 			var className = record.name;
 			var classLongName = record.longname;
 			typeMap[classLongName] = {
@@ -297,18 +403,6 @@ module.exports = function(grunt) {
 				name: className,
 				link: '/#/' + classLongName
 			};
-		});
-
-
-		//see if items in the dependency array are in the type map (for linking
-		//in final documentation)
-		_.each(meta, function(value) {
-			_.each(value.deps, function(dep) {
-				var type = getType(dep.path, value.filename + ' requirejs dependency');
-				if (type && type.link) {
-					dep.link = type.link;
-				}
-			});
 		});
 
 
@@ -325,15 +419,29 @@ module.exports = function(grunt) {
 		db({kind: ['class', 'namespace']}).each(function(record) {
 
 			var module = record.module;
+			var fileName = record.meta.path + '/' + record.meta.filename;
+
+			//see if items in the dependency array are in the type map (for linking
+			//in final documentation)
+			deps[module].forEach(function(dep) {
+				var type = getType(dep.fullName, fileName + ' requirejs dependency');
+				if (type && type.link) {
+					dep.link = type.link;
+				}
+			});
+
 
 			record.description = record.description || '';
 
 			graph[module] = {};
-			graph[module]['meta'] = meta[module];
+			graph[module]['meta'] = {
+				deps: deps[module]
+			};
 			graph[module]['constructor'] = {};
 			graph[module]['properties'] = {};
 			graph[module]['methods'] = {};
 			graph[module]['jquery'] = {};
+
 
 			if (record.kind === 'class') {
 				var constructor = graph[module]['constructor'] = record;
@@ -503,6 +611,7 @@ module.exports = function(grunt) {
 		var mixins = grunt.file.expandFiles(docdir + '/mixin/**');
 
 		mixins.every(function(path) {
+			grunt.verbose.write('\t');
 			var mixin = grunt.file.read(path);
 
 			var moduleName = path.replace(docdir + '/mixin/', '').replace('.md', '');
@@ -520,10 +629,13 @@ module.exports = function(grunt) {
 
 			//parse markdown "mixin" file for h2's "## [memberName]"
 			var mixinParts = mixin.split(/^(##\s*\S*)$/gm);
+			//console.log(moduleName);
+			//console.log('----');
+			//console.log(mixinParts);
 
 			//first description in the file is the module description, if no
 			//"%[memberName]" declaration exists before it
-			if (mixinParts.length && mixinParts[0].search(/^##\s*\S*$/) === -1) {
+			if (mixinParts.length && mixinParts[0].trim() && mixinParts[0].search(/^##\s*\S*$/) === -1) {
 				clazz['module'] = {};
 				clazz['module']['description'] = mixinParts[0];
 			}
@@ -937,7 +1049,10 @@ module.exports = function(grunt) {
 
 	var renderModule = function(graph, path, config, callback) {
 		var jadeOpts = {filename: docdir + '/tpl/class.jade'};
-		classTpl = classTpl || grunt.file.read(jadeOpts.filename, 'utf-8');
+		if (!classTpl) {
+			grunt.verbose.write('\t\t');
+			classTpl = grunt.file.read(jadeOpts.filename, 'utf-8');
+		}
 		var data = jade.compile(classTpl, jadeOpts)({cl: graph, module: path, config: config});
 		callback(graph, path, data);
 	};
@@ -946,7 +1061,10 @@ module.exports = function(grunt) {
 
 	var renderTagList = function(graph, path, callback) {
 		var jadeOpts = {filename: docdir + '/tpl/taglist.jade'};
-		tagListTpl = tagListTpl || grunt.file.read(jadeOpts.filename, 'utf-8');
+		if (!tagListTpl) {
+			grunt.verbose.write('\t\t');
+			tagListTpl = grunt.file.read(jadeOpts.filename, 'utf-8');
+		}
 		var data = jade.compile(tagListTpl, jadeOpts)({cl: graph, module: path});
 		callback(graph, path, data);
 	};
@@ -982,9 +1100,191 @@ module.exports = function(grunt) {
 	};
 
 
+	var printSummary = function(graph) {
+		var typeNames = [];
+		_.each(typeMap, function(obj) {
+			typeNames.push(obj.name);
+		});
+
+		var typeConflicts = _.difference(typeNames, _.uniq(typeNames));
+
+		grunt.log.subhead('Declared types');
+		grunt.log.writeln('===========================================================');
+		grunt.log.writeln('Use --verbose for more information');
+
+		grunt.log.writeln('');
+		grunt.log.writeln('Ambiguous short-names: ' + typeConflicts.length);
+		grunt.verbose.writeln('-----------------------------------------------------------');
+		if (typeConflicts.length) {
+			grunt.verbose.writeln('Long-names must be used in jsdoc annotations and inline "{}" references for these types:');
+			typeConflicts.forEach(function(name) {
+				var types = _.filter(typeMap, function(obj) {
+					return obj.name === name;
+				});
+				grunt.verbose.write(name + ' could refer to: ');
+				types.forEach(function(obj) {
+					grunt.verbose.write(obj.longName + ' ');
+				});
+				grunt.verbose.write('\n');
+			});
+		}
+		else {
+			grunt.verbose.writeln('(None)');
+		}
+		/*
+		 *else {
+		 *    grunt.log.writeln('Congratulations! You can use short names ("Rect" vs "joss/geometry/Rect") in your jsdoc annotations and inline "{}" references!');
+		 *}
+		 */
+
+		grunt.verbose.writeln('');
+		grunt.log.writeln('Never-declared (but used) types: ' + undeclaredTypes.length);
+		grunt.verbose.writeln('-----------------------------------------------------------');
+		if (undeclaredTypes.length) {
+			undeclaredTypes.forEach(function(type) {
+				grunt.verbose.writeln(type.name + ' (Location: ' + type.context + ')');
+			});
+		}
+		else {
+			grunt.verbose.writeln('(None)');
+		}
+
+		grunt.verbose.writeln('');
+		grunt.verbose.writeln('All declared types:');
+		grunt.verbose.writeln('-----------------------------------------------------------');
+		var typeLongNames = _.compact(_.pluck(typeMap, 'longName'));
+		var maxLength = _.max(typeLongNames, function(name) {
+			return name.length;
+		}).length + 1;
+		grunt.verbose.writeln(grunt.log.table([maxLength, 2, 40], ['Long Name', '|', 'Short Name']));
+		grunt.verbose.writeln('-----------------------------------------------------------');
+		typeLongNames.sort().forEach(function(name) {
+			grunt.verbose.writeln(grunt.log.table([maxLength, 2, 40], [name, '|', typeMap[name].name]));
+			//grunt.verbose.writeln(name + ' - ' + typeMap[name].name);
+		});
+
+
+		grunt.log.subhead('Documentation Coverage');
+		grunt.log.writeln('===========================================================');
+		grunt.log.writeln('Use --verbose to see the names of all undocumented variables');
+		grunt.log.writeln('');
+
+		//calculate documentation coverage
+		var docFileMap = {};
+		var docTotal = _getDescriptions(graph).map(function(obj) {
+			if (!obj.inherited) {
+				docFileMap[obj.longName] = obj.meta.path + '/' + obj.meta.filename + ':' + obj.meta.lineno;
+				return obj.longName;
+			}
+			return '';
+		});
+
+		docTotal = _.chain(docTotal).compact().uniq().value();
+
+		var mdownMissing = _.difference(docTotal, markdownDocumentedNames);
+		grunt.verbose.writeln('');
+		grunt.log.writeln('Markdown description coverage: ' + markdownDocumentedNames.length + ' of ' + docTotal.length + ' (' + ((markdownDocumentedNames.length / docTotal.length) * 100).toFixed(1) + '%)');
+		grunt.verbose.writeln('-----------------------------------------------------------');
+		grunt.verbose.writeln('The following variables have no markdown documentation:');
+		grunt.verbose.writeln('');
+		if (mdownMissing.length) {
+			mdownMissing.sort().forEach(function(name) {
+				grunt.verbose.writeln(name + ' (' + docFileMap[name] + ')');
+			});
+		}
+		else {
+			grunt.verbose.writeln('(None)');
+		}
+
+		var docPresent = _getDescriptions(graph).map(function(obj) {
+			if (obj.description && obj.description.trim() && !obj.inherited) {
+				return obj.longName;
+			}
+			return '';
+		});
+
+		docPresent = _.chain(docPresent).compact().uniq().value();
+
+		var docMissing = _.difference(docTotal, docPresent);
+		grunt.verbose.writeln('');
+		grunt.log.writeln('All description coverage: ' + docPresent.length + ' of ' + docTotal.length + ' (' + ((docPresent.length / docTotal.length) * 100).toFixed(1) + '%)');
+		grunt.verbose.writeln('-----------------------------------------------------------');
+		grunt.verbose.writeln('The following variables have no descriptions (inherited or otherwise):');
+		grunt.verbose.writeln('');
+		if (docMissing.length) {
+			docMissing.sort().forEach(function(name) {
+				grunt.verbose.writeln(name + ' (' + docFileMap[name] + ')');
+			});
+		}
+		else {
+			grunt.verbose.writeln('(None)');
+		}
+
+		undocumentedNames = undocumentedNames.filter(function(obj) {
+			//remove private-ish names and proven-documented names (jsdoc will count all usages of a property as separate undocumented cases)
+			return (obj.name.search(/.*[#.][_'"]/) === -1)
+				&& (!documentedNames[obj.name])
+				&& (obj.name.search(/~/g) === -1);
+		}).map(function(obj) {
+			return obj.name + ' (' + obj.file + ')';
+		});
+
+		undocumentedNames = _.chain(undocumentedNames).compact().value();
+
+		grunt.verbose.writeln('');
+		grunt.log.writeln('Direct members of classes with no jsdoc annotations: ' + undocumentedNames.length);
+		grunt.verbose.writeln('-----------------------------------------------------------');
+		grunt.verbose.writeln('_name, \'name\', "name" not included.');
+		grunt.verbose.writeln('');
+		if (undocumentedNames.length) {
+			undocumentedNames.sort().forEach(function(name) {
+				grunt.verbose.writeln(name);
+			});
+		}
+		else {
+			grunt.verbose.writeln('(None)');
+		}
+	};
+
+
+	//just a helper for logging elapsed time below, for brevity's sake
+	var Stopwatch = function() {
+		this._startTime = (new Date()).getTime();
+		this._stopTime = (new Date()).getTime();
+		this._running = false;
+	};
+
+	Stopwatch.prototype.start = function() {
+		this._startTime = (new Date()).getTime();
+		this._running = true;
+		return this;
+	};
+
+	Stopwatch.prototype.stop = function() {
+		this._stopTime = (new Date()).getTime();
+		this._running = false;
+		return this;
+	};
+
+	Stopwatch.prototype.reset = function() {
+		this._startTime = (new Date()).getTime();
+		this._stopTime = (new Date()).getTime();
+		return this;
+	};
+
+	Stopwatch.prototype.elapsed = function() {
+		if (!this._running) {
+			return this._stopTime - this._startTime;
+		}
+		var curTime = (new Date()).getTime();
+		return (curTime - this._startTime);
+	};
+
+
 
 	//idea: put a search box above class list that filters the class list
 	grunt.registerTask('doc', 'Runs jsdoc', function() {
+		var totalStopwatch = new Stopwatch().start();
 		var config = grunt.config.get(this.name);
 		var done = this.async();
 
@@ -999,297 +1299,187 @@ module.exports = function(grunt) {
 		requirejs(['../dist/lib/parse'], function(parse) {
 
 			var files = config.include;
-			grunt.log.writeln('Running jsdoc...');
+			var stopwatch = new Stopwatch().start();
 
-			async.map(files, function(path, callback) {
-				grunt.verbose.writeln('Running jsdoc on ' + path + '...');
-				var contents = grunt.file.read(path);
-				child.exec(libdir + '/jsdoc/jsdoc -X ' + path, {maxBuffer: 2000000}, function(error, stdout, stderr) {
-					//console.log(stdout);
-					grunt.verbose.ok('jsdoc on ' + path + ' DONE');
-					var deps;
-					try {
-						deps = parse.findDependencies(path, contents);
-					}
-					catch(e) {
-						deps = [];
-					}
-					callback(null, {
-						path: path,
-						deps: deps,
-						json: stdout
-					});
+			grunt.log.subhead('Generating documentation for ' + files.length + ' files');
+			grunt.log.writeln('===========================================================');
+
+
+			grunt.log.writeln('Tracing AMD dependencies...');
+			var deps = {};
+			files.forEach(function(filePath) {
+				var moduleName = _fileToModuleName(filePath);
+
+				grunt.verbose.write('\t');
+				var contents = grunt.file.read(filePath);
+
+				try {
+					deps[moduleName] = parse.findDependencies(filePath, contents);
+				}
+				catch(e) {
+					deps[moduleName] = [];
+				}
+
+				//resolve requirejs dependencies relative to src path
+				//(as opposed to relative to the file in which they're require'd)
+				deps[moduleName] = deps[moduleName].map(function(depName) {
+					return {
+						fullName: _moduleFullName(depName, filePath),
+						link: ''
+					};
 				});
-			}, function(err, resultList) {
+			});
+			grunt.log.ok(stopwatch.elapsed() + 'ms');
+			stopwatch.reset();
 
-				var meta = {};
-				var graph = [];
-				_.each(resultList, function(result) {
-					var json = result.json;
-					//strip out error-causing lines
-					json = json.replace(/<Object>/gm, "\"Object\"");
-					json = json.replace(/:\sundefined/gm, ": \"undef\"");
 
-					//resolve requirejs dependencies relative to src path
-					//(as opposed to relative to the file in which they're require'd)
-					var resultDirectory = path.resolve(process.cwd() + '/' + _.initial(result.path.split('/')).join('/'));
-					var srcDirectory = path.resolve(process.cwd() + '/' + rjsconfig.baseUrl);
-					result.deps = result.deps.map(function(depPath) {
-						depPath = depPath.replace(/\.js/, '');
-						var absolutePath;
+			var runJsdoc = function(callback) {
+				var jsdocCache = docdir + '/out.json';
+				//skip jsdoc parsing and use a cached file
+				if (config.useJsdocCache && fs.existsSync(jsdocCache)) {
+					grunt.log.writeln('');
+					grunt.log.writeln('Using jsdoc cache at ' + path.resolve(process.cwd() + '/' + jsdocCache + '...'));
+					var json = grunt.file.read(jsdocCache);
+					callback(json);
+					return;
+				}
 
-						//directory-relative path
-						if (depPath.search(/^\.\.\//g) !== -1 || depPath.search(/^\.\//) !== -1) {
-							absolutePath = path.resolve(resultDirectory + '/' + depPath + '.js');
-							return absolutePath.replace(srcDirectory + '/', '').replace('.js', '');
-						}
+				grunt.log.writeln('');
+				grunt.log.writeln('Running jsdoc...');
+				var command = libdir + '/jsdoc/jsdoc -X ' + files.join(' ');
+				grunt.verbose.writeln('> ' + command);
 
-						absolutePath = path.resolve(srcDirectory + '/' + depPath + '.js');
-						return absolutePath.replace(srcDirectory + '/', '').replace('.js', '');
-					});
-
-					result.deps = result.deps.map(function(depPath) {
-						return {
-							path: depPath,
-							link: ''
-						};
-					});
-
-					//collect meta information like class -> file name and
-					//class -> dependencies. We'll apply it to `graph` inside
-					//processJsDoc()
-					var clazz = JSON.parse(json);
-					clazz.every(function(item) {
-						if (item.kind && item.kind === 'class') {
-							meta[item.longname] = {
-								filename: result.path,
-								deps: result.deps
-							};
-							return false; //break;
-						}
-						return true;
-					});
-					//console.log(json);
-					graph = graph.concat(clazz);
+				child.exec(command, {maxBuffer: 2000000}, function(error, json) {
+					grunt.file.write(jsdocCache, json, 'utf-8');
+					callback(json);
 				});
+			};
+
+
+			runJsdoc(function(json) {
+
+				grunt.log.ok(stopwatch.elapsed() + 'ms');
+				stopwatch.reset();
+
+				grunt.log.writeln('');
+				grunt.log.writeln('Massaging jsdoc output...');
+
+				//strip out error-causing lines
+				json = json.replace(/<Object>/gm, "\"Object\"");
+				json = json.replace(/:\sundefined/gm, ": \"undef\"");
+				var graph = JSON.parse(json);
 
 				//console.log(JSON.stringify(graph, false, 4));
 
-				grunt.log.write('Parsing jsdoc output...');
-				graph = processJsDoc(graph, meta);
-				grunt.log.ok();
+				graph = processJsDoc(graph, deps);
+				grunt.log.ok(stopwatch.elapsed() + 'ms');
+				stopwatch.reset();
 
 				//console.log(JSON.stringify(graph, false, 4));
 
-				grunt.log.write('Mixing in markdown documentation...');
+				grunt.log.writeln('');
+				grunt.log.writeln('Mixing in markdown documentation...');
 				mixinMarkdown(graph);
-				grunt.log.ok();
+				grunt.log.ok(stopwatch.elapsed() + 'ms');
+				stopwatch.reset();
 
 				//console.log(JSON.stringify(graph, false, 4));
 
-				grunt.log.write('Transforming references to defined methods into links...');
+				grunt.log.writeln('');
+				grunt.log.writeln('Transforming references to defined methods in descriptions into links...');
 				transformLongNames(graph);
-				grunt.log.ok();
+				grunt.log.ok(stopwatch.elapsed() + 'ms');
+				stopwatch.reset();
 
-				grunt.log.write('Parsing markdown in member descriptions...');
+				grunt.log.writeln('');
+				grunt.log.writeln('Parsing and rendering markdown in descriptions...');
 				parseMarkdown(graph);
-				grunt.log.ok();
+				grunt.log.ok(stopwatch.elapsed() + 'ms');
+				stopwatch.reset();
 
-				grunt.log.write('Mixing inherited methods into class definitions...');
+				grunt.log.writeln('');
+				grunt.log.writeln('Mixing inherited methods into class definitions...');
 				mixinInherited(graph);
-				grunt.log.ok();
+				grunt.log.ok(stopwatch.elapsed() + 'ms');
+				stopwatch.reset();
 
-				grunt.log.write('Rendering module definition files into ' + docdir + '/out/classes...');
+				grunt.log.writeln('');
+				grunt.log.writeln('Rendering module definition files into ' + docdir + '/out/classes...');
 				_.each(graph, function(val, key) {
 					if (!key) {
 						return true; //continue
 					}
 
+					var jadeStopwatch = new Stopwatch().start();
+
 					//var path = key.replace(/\./g, '/');
-					grunt.verbose.write('Rendering class definition file ' + path + '...');
+					grunt.verbose.write('\t');
+					grunt.verbose.writeln('Rendering class definition file ' + key + '...');
 					//console.log(path);
 					//console.log(val);
 					renderModule(val, key, config, function(graph, path, data) {
 						var filePath = docdir + '/out/classes/' + path + '.html';
+						grunt.verbose.write('\t\t');
 						grunt.file.write(filePath, data, 'utf-8');
 					});
-					grunt.verbose.ok();
+
+					grunt.verbose.write('\t');
+					grunt.verbose.ok(jadeStopwatch.elapsed() + 'ms');
 				});
-				grunt.log.ok();
+				grunt.log.ok(stopwatch.elapsed() + 'ms');
+				stopwatch.reset();
 
 
-				grunt.log.write('Rendering taglist files into ' + docdir + '/out/taglists...');
+				grunt.log.writeln('');
+				grunt.log.writeln('Rendering taglist files into ' + docdir + '/out/taglists...');
 				_.each(graph, function(val, key) {
 					if (!key) {
 						return true; //continue
 					}
 
+					var jadeStopwatch = new Stopwatch().start();
+
 					//var path = key.replace(/\./g, '/');
-					grunt.verbose.write('Rendering taglist file ' + path + '...');
+					grunt.verbose.write('\t');
+					grunt.verbose.writeln('Rendering taglist file ' + key + '...');
 					//console.log(path);
 					//console.log(val);
 					renderTagList(val, key, function(graph, path, data) {
 						var filePath = docdir + '/out/taglists/' + path + '.html';
+						grunt.verbose.write('\t\t');
 						grunt.file.write(filePath, data, 'utf-8');
 					});
-					grunt.verbose.ok();
+					grunt.verbose.write('\t');
+					grunt.verbose.ok(jadeStopwatch.elapsed() + 'ms');
 				});
-				grunt.log.ok();
+				grunt.log.ok(stopwatch.elapsed() + 'ms');
+				stopwatch.reset();
 
 
-				grunt.verbose.write('Rendering menu...');
+				grunt.log.writeln('');
+				grunt.log.writeln('Rendering menu...');
 				var classList = _.clone(Object.keys(graph));
 				var classStructure = {};
 				_.each(classList, function(className) {
 					var path = className.replace(/\//g,'.');
 					setObject(path, className, classStructure);
 				});
+				grunt.log.ok(stopwatch.elapsed() + 'ms');
+				stopwatch.reset();
 
 
-				grunt.log.write('Rendering module list into ' + docdir + '/out/menu.html...');
+				grunt.log.writeln('');
+				grunt.log.writeln('Rendering module list into ' + docdir + '/out/menu.html...');
 				var menu = renderMenu(classStructure, '');
+				grunt.verbose.write('\t');
 				grunt.file.write(docdir + '/out/menu.html', menu, 'utf-8');
-				grunt.verbose.ok();
-				grunt.log.ok();
+				grunt.log.ok(stopwatch.elapsed() + 'ms');
+				stopwatch.reset();
 
-
-				var typeNames = [];
-				_.each(typeMap, function(obj) {
-					typeNames.push(obj.name);
-				});
-
-				var typeConflicts = _.difference(typeNames, _.uniq(typeNames));
-
-				grunt.log.subhead('Declared types');
-				grunt.log.writeln('===========================================================');
-				grunt.log.writeln('Use --verbose for more information');
+				printSummary(graph);
 
 				grunt.log.writeln('');
-				grunt.log.writeln('Ambiguous short-names: ' + typeConflicts.length);
-				grunt.verbose.writeln('-----------------------------------------------------------');
-				if (typeConflicts.length) {
-					grunt.verbose.writeln('Long-names must be used in jsdoc annotations and inline "{}" references for these types:');
-					typeConflicts.forEach(function(name) {
-						var types = _.filter(typeMap, function(obj) {
-							return obj.name === name;
-						});
-						grunt.verbose.write(name + ' could refer to: ');
-						types.forEach(function(obj) {
-							grunt.verbose.write(obj.longName + ' ');
-						});
-						grunt.verbose.write('\n');
-					});
-				}
-				else {
-					grunt.verbose.writeln('(None)');
-				}
-				/*
-				 *else {
-				 *    grunt.log.writeln('Congratulations! You can use short names ("Rect" vs "joss/geometry/Rect") in your jsdoc annotations and inline "{}" references!');
-				 *}
-				 */
-
-				grunt.verbose.writeln('');
-				grunt.log.writeln('Never-declared (but used) types: ' + undeclaredTypes.length);
-				grunt.verbose.writeln('-----------------------------------------------------------');
-				if (undeclaredTypes.length) {
-					undeclaredTypes.forEach(function(type) {
-						grunt.verbose.writeln(type.name + ' (Location: ' + type.context + ')');
-					});
-				}
-				else {
-					grunt.verbose.writeln('(None)');
-				}
-
-				grunt.verbose.writeln('');
-				grunt.verbose.writeln('All declared types:');
-				grunt.verbose.writeln('-----------------------------------------------------------');
-				var typeLongNames = _.compact(_.pluck(typeMap, 'longName'));
-				typeLongNames.sort().forEach(function(name) {
-					grunt.verbose.writeln(name + ' - ' + typeMap[name].name);
-				});
-
-
-				grunt.log.subhead('Documentation Coverage');
-				grunt.log.writeln('===========================================================');
-				grunt.log.writeln('Use --verbose to see the names of all undocumented variables');
-				grunt.log.writeln('');
-
-				//calculate documentation coverage
-				var docFileMap = {};
-				var docTotal = _getDescriptions(graph).map(function(obj) {
-					if (!obj.inherited) {
-						docFileMap[obj.longName] = obj.meta.path + '/' + obj.meta.filename + ':' + obj.meta.lineno;
-						return obj.longName;
-					}
-					return '';
-				});
-
-				docTotal = _.chain(docTotal).compact().uniq().value();
-
-				var mdownMissing = _.difference(docTotal, markdownDocumentedNames);
-				grunt.verbose.writeln('');
-				grunt.log.writeln('Markdown description coverage: ' + markdownDocumentedNames.length + ' of ' + docTotal.length + ' (' + ((markdownDocumentedNames.length / docTotal.length) * 100).toFixed(1) + '%)');
-				grunt.verbose.writeln('-----------------------------------------------------------');
-				grunt.verbose.writeln('The following variables have no markdown documentation:');
-				grunt.verbose.writeln('');
-				if (mdownMissing.length) {
-					mdownMissing.sort().forEach(function(name) {
-						grunt.verbose.writeln(name + ' (' + docFileMap[name] + ')');
-					});
-				}
-				else {
-					grunt.verbose.writeln('(None)');
-				}
-
-				var docPresent = _getDescriptions(graph).map(function(obj) {
-					if (obj.description && obj.description.trim() && !obj.inherited) {
-						return obj.longName;
-					}
-					return '';
-				});
-
-				docPresent = _.chain(docPresent).compact().uniq().value();
-
-				var docMissing = _.difference(docTotal, docPresent);
-				grunt.verbose.writeln('');
-				grunt.log.writeln('All description coverage: ' + docPresent.length + ' of ' + docTotal.length + ' (' + ((docPresent.length / docTotal.length) * 100).toFixed(1) + '%)');
-				grunt.verbose.writeln('-----------------------------------------------------------');
-				grunt.verbose.writeln('The following variables have no descriptions (inherited or otherwise):');
-				grunt.verbose.writeln('');
-				if (docMissing.length) {
-					docMissing.sort().forEach(function(name) {
-						grunt.verbose.writeln(name + ' (' + docFileMap[name] + ')');
-					});
-				}
-				else {
-					grunt.verbose.writeln('(None)');
-				}
-
-				undocumentedNames = undocumentedNames.filter(function(obj) {
-					//remove private-ish names and proven-documented names (jsdoc will count all usages of a property as separate undocumented cases)
-					return (obj.name.search(/.*[#.][_'"]/) === -1)
-						&& (!documentedNames[obj.name])
-						&& (obj.name.search(/~/g) === -1);
-				}).map(function(obj) {
-					return obj.name + ' (' + obj.file + ')';
-				});
-
-				undocumentedNames = _.chain(undocumentedNames).compact().value();
-
-				grunt.verbose.writeln('');
-				grunt.log.writeln('Undocumented direct members of classes: ' + undocumentedNames.length);
-				grunt.verbose.writeln('-----------------------------------------------------------');
-				grunt.verbose.writeln('That is, direct members of classes with no jsdoc annotations at all. _name, \'name\', "name" not included.');
-				grunt.verbose.writeln('');
-				if (undocumentedNames.length) {
-					undocumentedNames.sort().forEach(function(name) {
-						grunt.verbose.writeln(name);
-					});
-				}
-				else {
-					grunt.verbose.writeln('(None)');
-				}
+				grunt.log.writeln('Total Time: ' + totalStopwatch.elapsed() + 'ms');
 
 				done();
 			});

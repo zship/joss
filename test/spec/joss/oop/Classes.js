@@ -8,13 +8,15 @@ define(function(require){
 	module('joss/oop/Classes');
 
 
-	test('Inheritance', function() {
-		var lin = function(ctor) {
-			return ctor._meta.bases.map(function(base) {
-				return base._meta.name;
-			}).join(' ');
-		};
+	//string of linearized class heirarchy
+	var lin = function(ctor) {
+		return ctor._meta.bases.map(function(base) {
+			return base._meta.name;
+		}).join(' ');
+	};
 
+
+	test('Inheritance', function() {
 		var A = Classes.create({});
 		var B = Classes.create(A, {});
 		var C = Classes.create(B, {});
@@ -152,6 +154,82 @@ define(function(require){
 		var ret = c.start();
 
 		strictEqual(ret, 'A1 B2 C3', 'returning values from _super');
+
+
+		//passing args to _super()
+		A = Classes.create({
+			start: function(arg) {
+				return 'A' + arg;
+			}
+		});
+
+		B = Classes.create(A, {
+			start: function(arg) {
+				return this._super('B' + arg);
+			}
+		});
+
+		C = Classes.create(B, {
+			start: function() {
+				return this._super('C');
+			}
+		});
+
+		c = new C();
+		ret = c.start();
+
+		strictEqual(ret, 'ABC', 'passing arguments to _super');
+	});
+
+
+	test('extend()', function() {
+		var A = Classes.create({});
+		var B = A.extend({});
+
+		strictEqual(lin(B), 'A', 'A.extend creates a constructor inheriting from A');
+
+		var C = B.extend({});
+
+		strictEqual(lin(C), 'B A', 'B.extend creates a constructor inheriting from (B, A)');
+	});
+
+
+	test('Guessing class names from source', function() {
+		var A = Classes.create({});
+		strictEqual(A._meta.name, 'A', 'var A = Classes.create... - guessed "A"');
+
+		var B= Classes.create({});
+		strictEqual(B._meta.name, 'B', 'var B= Classes.create... - guessed "B"');
+
+		var C=Classes.create({});
+		strictEqual(C._meta.name, 'C', 'var C=Classes.create... - guessed "C"');
+
+		//throw one we won't detect into the mix
+		var O = (function() {
+			return Classes.create({});
+		})();
+
+		strictEqual(O._meta.name, 'Unnamed_Class', 'var O=(function(){ return Classes.create... })() - not guessed');
+
+		//throw an explicitly-defined one into the mix
+		var P = Classes.create('P', {});
+		strictEqual(P._meta.name, 'P', 'var P = Classes.create("P",... - explicitly defined, so not guessed');
+
+		var D;
+		D = Classes.create({});
+		strictEqual(D._meta.name, 'D', 'var D; <line break> D = Classes.create... - guessed "D"');
+
+		var E = A.extend({});
+		strictEqual(E._meta.name, 'E', 'var E = A.extend... - guessed "E"');
+
+		var F = B.extend({});
+		strictEqual(F._meta.name, 'F', 'var F = B.extend... - guessed "F"');
+
+		var G= C.extend({});
+		strictEqual(G._meta.name, 'G', 'var G= C.extend... - guessed "G"');
+
+		var H=D.extend({});
+		strictEqual(H._meta.name, 'H', 'var H=D.extend... - guessed "H"');
 	});
 
 

@@ -4,7 +4,6 @@ define(function(require){
 	var $ = require('jquery');
 
 
-
 	module('joss/geometry/DomRect');
 
 

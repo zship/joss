@@ -7,15 +7,25 @@ define(function(require) {
 
 	var ObjectProxy = function(opts) {
 
-		this._data = {
-			key: opts.key,
-			isChild: opts.isChild,
-			context: opts.context,
-			target: opts.target,
-			props: {},
-			descriptors: opts.descriptors || {},
-			proxies: {}
-		};
+		if (!opts.target) {
+			this._data = {
+				target: opts,
+				props: {},
+				descriptors: {},
+				proxies: {}
+			};
+		}
+		else {
+			this._data = {
+				key: opts.key,
+				isChild: opts.isChild,
+				context: opts.context,
+				target: opts.target,
+				props: {},
+				descriptors: opts.descriptors || {},
+				proxies: {}
+			};
+		}
 
 		Object.keys(this._data.target).forEach(function(key) {
 			this._data.props[key] = true;
@@ -100,39 +110,38 @@ define(function(require) {
 
 		if (arguments.length === 1) {
 			val = key;
+			key = null;
 		}
 
-		if (!isObject(val)) {
-			var setter = (this._data.descriptors[key] && this._data.descriptors[key].set) ||
-				function(val) {
-					this._data.target[key] = val;
-				}.bind(this);
-			setter(val);
+		//setting properties on this._data.target directly
+		if (!key) {
+			forOwn(val, function(obj, key) {
+				this._set(key, obj);
+			}.bind(this));
 			return;
 		}
 
-		if (this._data.proxies[key]) {
+		//setting a child of this._data.target
+
+		//new property added. set new sub-proxy.
+		if (isObject(val) && !isObject(this._data.target[key])) {
+			this._data.target[key] = val;
+			this._defineProps();
 			this._data.proxies[key]._set(val);
 			return;
 		}
 
-		forOwn(val, function(obj, key) {
-			//new property added. set new sub-proxy.
-			if (isObject(obj) && size(obj) && !this._data.proxies[key]) {
-				this._data.target[key] = obj;
-				this._defineProps();
-			}
+		if (isObject(val)) {
+			this._data.proxies[key]._set(val);
+			return;
+		}
 
-			if (this._data.proxies[key]) {
-				this._data.proxies[key]._set(obj);
-			}
-		}.bind(this));
+		var setter = (this._data.descriptors[key] && this._data.descriptors[key].set) ||
+			function(val) {
+				this._data.target[key] = val;
+			}.bind(this);
+		setter(val);
 
-		forOwn(val, function(obj, key) {
-			if (!this._data.proxies[key]) {
-				this._set(key, obj);
-			}
-		}.bind(this));
 	};
 
 

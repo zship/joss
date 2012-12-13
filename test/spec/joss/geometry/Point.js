@@ -3,8 +3,8 @@ define(function(require){
 	var Point = require('joss/geometry/Point');
 
 
-
 	module('joss/geometry/Point');
+
 
 	test('Basics', function() {
 		var p = new Point(1, 1);

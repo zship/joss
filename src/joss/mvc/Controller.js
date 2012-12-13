@@ -5,10 +5,9 @@ define(function(require) {
 	var Lifecycle = require('joss/oop/Lifecycle');
 	var lang = require('dojo/_base/lang');
 	var hub = require('dojo/topic');
-	var Objects = {};
-	Objects.methods = require('joss/util/object/methods');
 	var Elements = require('joss/util/Elements');
 	var forEach = require('amd-utils/collection/forEach');
+	var isFunction = require('amd-utils/lang/isFunction');
 
 
 	//object:create
@@ -25,11 +24,6 @@ define(function(require) {
 
 
 	var Controller = Classes.create(Lifecycle, /** @lends joss/mvc/Controller.prototype */ {
-
-		'-chains-': {
-			destroy: 'before'
-		},
-
 
 		/**
 		 * @class Controller
@@ -80,7 +74,7 @@ define(function(require) {
 		},
 
 
-		_setRoot: function(el) {
+		setRoot: function(el) {
 			el = Elements.fromAny(el);
 
 			if (el === this._root) {
@@ -99,20 +93,18 @@ define(function(require) {
 
 
 		/** @type {Element} */
-		root: null,
-
-
-		'set root': function(el) {
-			this._setRoot(el);
+		root: {
+			set: function(val) {
+				this.setRoot(val);
+			}
 		},
 
 
 		/** @type {jQuery} */
-		$root: null,
-
-
-		'set $root': function(el) {
-			this._setRoot(el);
+		$root: {
+			set: function(val) {
+				this.setRoot(val);
+			}
 		},
 
 
@@ -135,7 +127,9 @@ define(function(require) {
 		 */
 		bind: function() {
 
-			var methods = Objects.methods(this);
+			var methods = Object.keys(this).filter(function(key, obj) {
+				return isFunction(obj);
+			});
 
 			//check for event data (denoted with " _data" at the end of the
 			//method name) before binding events, and include that data in the
@@ -322,6 +316,9 @@ define(function(require) {
 		}
 
 	});
+
+
+	Classes.chain(Controller, 'destroy', 'before');
 
 
 	$.fn.controller = function() {

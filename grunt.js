@@ -46,12 +46,19 @@ module.exports = function( grunt ) {
 
 		doc: {
 			repoview: 'https://github.com/zship/joss/blob/develop/',
+			useJsdocCache: true,
 			include: 'src/joss/**',
+			//include: 'src/joss/oop/**',
 			//include: ['src/joss/geometry/DomRect.js', 'src/joss/geometry/Rect.js', 'src/joss/geometry/TestRect.js', 'src/joss/geometry/Position.js'],
 			//include: 'src/joss/mvc/Controller.js',
 			//include: ['src/joss/geometry/Rects.js', 'src/joss/geometry/Rect.js'],
 			types: (function() {
 				var types = [];
+
+				types.push({
+					name: 'Constructor',
+					link: 'https://developer.mozilla.org/en-US/docs/JavaScript/Reference/Global_Objects/Object/constructor'
+				});
 
 				types.push({
 					name: 'jQuery',
@@ -125,10 +132,10 @@ module.exports = function( grunt ) {
 		},
 
 		whatrequires: {
-			//module: 'src/joss/util/Classes.js',
-			//pool: 'src/joss/**/*.js'
-			module: 'test/spec/joss/Lifecycle.js',
-			pool: 'test/spec/**/*.js'
+			module: 'src/joss/oop/classes/defaults.js',
+			pool: 'src/joss/**/*.js'
+			//module: 'test/spec/joss/Lifecycle.js',
+			//pool: 'test/spec/**/*.js'
 		}
 
 	});

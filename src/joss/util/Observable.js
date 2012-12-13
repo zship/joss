@@ -5,14 +5,13 @@ define(function(require) {
 
 
 	var Observable = function(opts) {
-		
+
 		this._data = {
-			context: {},
 			target: opts.target,
 			observers: []
 		};
 
-		forOwn(this._target, function(obj, key) {
+		forOwn(this._data.target, function(obj, key) {
 
 			var descriptor = {};
 			var hasChildren = isObject(obj) && Object.keys(obj).length;
@@ -22,7 +21,7 @@ define(function(require) {
 					target: this._data.target[key]
 				});
 				descriptor.get = function() {
-					return observable._data.context;
+					return observable._data.holder;
 				};
 			}
 			else {
@@ -47,7 +46,7 @@ define(function(require) {
 				});
 			};
 
-			Object.defineProperty(this._data.context, key, descriptor);
+			Object.defineProperty(this._data.target, key, descriptor);
 
 		}.bind(this));
 

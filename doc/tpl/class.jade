@@ -71,9 +71,9 @@ mixin methodDef(method)
                 each dep in cl.meta.deps
                     - if (dep.link)
                         li
-                            a(href=dep.link)=dep.path
+                            a(href=dep.link)=dep.fullName
                     - else
-                        li=dep.path
+                        li=dep.fullName
 
 - if (cl.constructor && cl.constructor.kind === 'class')
     div.constructors.section
@@ -104,12 +104,14 @@ mixin methodDef(method)
                             i.icomoon-code
                 - if (prop.inherited)
                     div.inherit-info
-                        span inherited from&nbsp;
-                        a(title=prop.inherited.longName, href=prop.inherited.link)=prop.inherited.name
+                        div.inner
+                            span inherited from&nbsp;
+                            a(title=prop.inherited.longName, href=prop.inherited.link)=prop.inherited.name
                 - if (prop.overridden)
                     div.override-info
-                        span overridden from&nbsp;
-                        a(title=prop.overridden.longName, href=prop.overridden.link)=prop.overridden.name
+                        div.inner
+                            span overridden from&nbsp;
+                            a(title=prop.overridden.longName, href=prop.overridden.link)=prop.overridden.name
                 div.description!=prop.description
 
 - if (cl.methods && Object.keys(cl.methods).length)
@@ -128,12 +130,19 @@ mixin methodDef(method)
                             i.icomoon-code
                 - if (method.inherited)
                     div.inherit-info
-                        span inherited from&nbsp;
-                        a(title=method.inherited.longName, href=method.inherited.link)=method.inherited.name
+                        div.inner
+                            span inherited from&nbsp;
+                            a(title=method.inherited.longName, href=method.inherited.link)=method.inherited.name
+                - else if (method.imported)
+                    div.import-info
+                        div.inner
+                            span imported from&nbsp;
+                            a(title=method.imported.module, href=config.repoview + method.imported.path + '/' + method.imported.filename + '#L' + method.imported.lineno)=method.imported.module
                 - if (method.overridden)
                     div.override-info
-                        span overridden from&nbsp;
-                        a(title=method.overridden.longName, href=method.overridden.link)=method.overridden.name
+                        div.inner
+                            span overridden from&nbsp;
+                            a(title=method.overridden.longName, href=method.overridden.link)=method.overridden.name
                 div.description!=method.description
 
 - if (cl.jquery && Object.keys(cl.jquery).length)

@@ -96,7 +96,10 @@ define(function(require) {
 		meta.ctor = members.hasOwnProperty('constructor') ? members.constructor : function() {};
 
 		//keep the className for error messages and forceNew.js
-		meta.name = className || guessClassName(create.caller);
+		if (className) {
+			guessClassName(create.caller, meta.bases, true);
+		}
+		meta.name = className || guessClassName(create.caller, meta.bases);
 
 		//cache of which base methods should be used for each _super method (see superMethod.js)
 		meta.superFn = superCache(meta.members, meta.bases);
@@ -143,6 +146,8 @@ define(function(require) {
 		constructor._meta = meta;
 		constructor.prototype = proto;
 		proto.constructor = constructor;
+		//extend() is just a curried version of create()
+		constructor.extend = create.bind(create, constructor);
 		return constructor;
 
 	};

@@ -41,7 +41,7 @@ define(function(require) {
 				opts.height = opts.bottom - opts.top;
 			}
 
-			Classes.defaults({
+			Classes.apply({
 				top: 0,
 				left: 0,
 				width: 0,

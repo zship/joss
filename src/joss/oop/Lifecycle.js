@@ -30,6 +30,7 @@ define(function(require) {
 	Classes.chain(Lifecycle, 'start', 'after');
 	Classes.chain(Lifecycle, 'stop', 'before');
 
+
 	return Lifecycle;
 
 });

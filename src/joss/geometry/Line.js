@@ -38,26 +38,24 @@ define(function(require) {
 
 
 		/** @type {joss/geometry/Point} */
-		m: null,
-
-
-		'get m': function() {
-			if (this.p1.x - this.p2.x === 0) {
-				return null;
+		m: {
+			get: function() {
+				if (this.p1.x - this.p2.x === 0) {
+					return null;
+				}
+				return (this.p1.y - this.p2.y) / (this.p1.x - this.p2.x);
 			}
-			return (this.p1.y - this.p2.y) / (this.p1.x - this.p2.x);
 		},
 
 
 		/** @type {Number} */
-		b: null,
-
-
-		'get b': function() {
-			if (this.m === null) {
-				return null;
+		b: {
+			get: function() {
+				if (this.m === null) {
+					return null;
+				}
+				return this.m * this.p1.x - this.p1.y;
 			}
-			return this.m * this.p1.x - this.p1.y;
 		},
 
 

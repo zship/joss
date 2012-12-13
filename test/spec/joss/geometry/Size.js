@@ -4,8 +4,8 @@ define(function(require){
 	var lang = require('dojo/_base/lang');
 
 
-
 	module('joss/geometry/Size');
+
 
 	test('scale', function() {
 		var smaller = new Size({width: 50, height: 50});

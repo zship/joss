@@ -6,7 +6,7 @@ define(function(require) {
 	//Describes a point in two-dimensional space
 	var Point = Classes.create(/** @lends joss/geometry/Point.prototype */ {
 
-		/** 
+		/**
 		 * Point describes a point in a plane. It is used as a very basic building
 		 * block in most of the joss geometry classes.
 		 * @param {Number} x

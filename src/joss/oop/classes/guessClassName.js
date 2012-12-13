@@ -18,33 +18,106 @@ define(function() {
 
 
 	var count = {};
+	var lastMatches = {};
+	var lastCaller;
 
 
 	/*
-	 * We can discern an appropriate className for a constructor in a somewhat
-	 * hacky way given the following condition:
-	 *  The result of the call to create() is assigned to a variable,
-	 *  whose name we use as the class name
+	 * If the result of the call to create() or extend() is assigned to a
+	 * variable, we can use that name as the class name
 	 */
-	var guessClassName = function(caller) {
+	var guessClassName = function(caller, bases, skip) {
+		lastCaller = lastCaller || caller;
+
+		var changedScope = true;
+		var curr = caller;
+		for (var j = 0; j < 10; j++) {
+			if (curr === lastCaller) {
+				changedScope = false;
+				break;
+			}
+			if (curr.caller === null) {
+				break;
+			}
+			curr = curr.caller;
+		}
+
+		//when we move out of scope of a group of classes, we can delete our
+		//caches pertaining to them
+		if (changedScope) {
+			count = {};
+			lastMatches = {};
+			lastCaller = caller;
+		}
+
 		var sCaller = caller.toString();
 
-		//store count of class declarations we have processed in `caller`'s
-		//scope. this works because because create() calls will be executed in
-		//order within the same `caller` scope
+		//store count of class declarations we have already processed in `caller`'s
+		//scope. We'll keep looking until we've exceeded this count in `hits` below.
 		var hash = _hashCode(sCaller);
 		count[hash] = count[hash] || 0;
+		lastMatches[hash] = lastMatches[hash] || [];
+
+		//mark an explicitly-named class, and increment the count of guessed
+		//class names (guessClassName holds a good bit of state, so it's for
+		//the next invocation)
+		if (skip) {
+			count[hash]++;
+			lastMatches[hash][count[hash]] = '';
+			return;
+		}
+
+		var superclassName = '';
+		if (bases && bases.length) {
+			superclassName = bases[0]._meta.name;
+		}
 
 		//e.g. var (name) = Classes.create({...
-		var rClassCreate = /\s*?(\S+?)\s*?=\s+?Classes\.create/;
+		var rClassCreate = /^\s*?(?:var)?\s*?(\S+?)\s*?=\s*?Classes\.create/;
+		//e.g. var (name) = (Superclass).extend({...
+		var rClassExtend = /^\s*?(?:var)?\s*?(\S+?)\s*?=\s*?(\S+?)\.extend/;
 
-		var matches = sCaller.match(new RegExp(rClassCreate.source, 'g'));
-		if (matches && matches.length >= count[hash]) {
-			var ret = matches[count[hash]].match(rClassCreate)[1];
+		var lines = sCaller.split(/\n/);
+		var hits = 0;
+		for (var i = 0; i < lines.length; i++) {
+			var line = lines[i];
+
+			if (line === lastMatches[hash][hits]) {
+				hits++;
+				continue;
+			}
+
+			var matches = line.match(rClassCreate);
+
+			if (!matches) {
+				matches = line.match(rClassExtend);
+				//it's an extend() match, but not with the superclass name
+				//we're looking for (extend is a somewhat common function name,
+				//so we're being precise with this match)
+				if (matches && matches[2] !== superclassName) {
+					matches = false;
+				}
+			}
+
+			if (!matches) {
+				continue;
+			}
+
+			hits++;
+
+			//discard matches we've already assigned to classes (returned from
+			//this method)
+			if (hits <= count[hash]) {
+				continue;
+			}
+
+			var ret = matches[1];
+			lastMatches[hash][count[hash]] = line;
 			count[hash]++;
 			return ret;
 		}
-		return 'Class';
+
+		return 'Unnamed_Class';
 	};
 
 

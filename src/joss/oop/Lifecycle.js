@@ -1,15 +1,9 @@
 define(function(require) {
 
-	var Classes = require('joss/util/Classes');
+	var Classes = require('./Classes');
 
 
 	var Lifecycle = Classes.create({
-
-		'-chains-': {
-			start: 'deferredAfter',
-			stop: 'deferredBefore'
-		},
-
 
 		constructor: function() {
 			this._lifecycle_running = false;
@@ -31,6 +25,10 @@ define(function(require) {
 		}
 
 	});
+
+
+	Classes.chain(Lifecycle, 'start', 'after');
+	Classes.chain(Lifecycle, 'stop', 'before');
 
 	return Lifecycle;
 

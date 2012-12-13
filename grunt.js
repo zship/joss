@@ -125,9 +125,10 @@ module.exports = function( grunt ) {
 		},
 
 		whatrequires: {
-			//module: 'src/jossx/mvc/JadeView.js',
-			module: 'src/joss/util/collection/forEach.js',
-			pool: 'src/jossx/**/*.js'
+			//module: 'src/joss/util/Classes.js',
+			//pool: 'src/joss/**/*.js'
+			module: 'test/spec/joss/Lifecycle.js',
+			pool: 'test/spec/**/*.js'
 		}
 
 	});

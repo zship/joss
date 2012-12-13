@@ -1,6 +1,6 @@
 define(function(require) {
 
-	var Classes = require('joss/util/Classes');
+	var Classes = require('joss/oop/Classes');
 
 
 	//Describes a point in two-dimensional space

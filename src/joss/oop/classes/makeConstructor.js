@@ -1,13 +1,20 @@
 define(function(require) {
 
-	var applyNew = require('./applyNew');
+	var forceNew = require('./forceNew');
 
 
-	var makeConstructor = function(bases, ctor) {
+	var fn = function(bases, ctor) {
 		return function(other) {
+			//this following is eval'd from joss/oop/classes/makeConstructor,
+			//in order to override the constructor name given in common
+			//debuggers
+			//more: http://stackoverflow.com/questions/8073055/minor-drawback-with-crockford-prototypical-inheritance/8076515
+		
 			if(!(this instanceof arguments.callee)){
 				// not called via new, so force it
-				return applyNew(arguments);
+				var instance = forceNew(arguments.callee);
+				arguments.callee.apply(instance, arguments);
+				return instance;
 			}
 
 			//copy constructor for instances of this or any superclasses
@@ -22,16 +29,15 @@ define(function(require) {
 			//instances do not inadvertently modify the prototype object's
 			//_data
 			this._data = {};
-			this._proxies = {};
-
-			var args = arguments;
-			bases.reverse().forEach(function(base) {
-				base._meta.ctor.apply(this, args);
-			}.bind(this));
 
 			//give user the opportunity to override return value
 			return ctor.apply(this, arguments);
 		};
+	};
+
+
+	var makeConstructor = function(className, bases, ctor) {
+		return eval('1&&function ' + className + fn(bases, ctor).toString().replace(/^function\s+/, ''));
 	};
 
 

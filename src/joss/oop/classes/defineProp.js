@@ -1,10 +1,10 @@
 define(function(require) {
 
-	var RecursiveProxy = require('./RecursiveProxy');
+	var ObjectProxy = require('joss/util/ObjectProxy');
 
 
 	var _defineProxy = function(context, name) {
-		return new RecursiveProxy({
+		return new ObjectProxy({
 			target: context._data[name] || {},
 			prefix: name,
 			get: function(key, path, target) {
@@ -36,8 +36,8 @@ define(function(require) {
 
 		proto._proxies = proto._proxies || {};
 
-		//if any properties have '.' in the name, they'll be accessed through a
-		//RecursiveProxy (so that child Object.defineProperty properties are
+		//if any properties have '.' in the name, they'll be accessed through an
+		//ObjectProxy (so that child Object.defineProperty properties are
 		//not overwritten when setting values of parents)
 		if (descriptor.hasChildren) {
 			descriptor.get = function() {

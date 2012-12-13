@@ -1,8 +1,8 @@
 define(function(require) {
 
 	var $ = require('jquery');
-	var Classes = require('joss/util/Classes');
-	var Lifecycle = require('joss/Lifecycle');
+	var Classes = require('joss/oop/Classes');
+	var Lifecycle = require('joss/oop/Lifecycle');
 	var lang = require('dojo/_base/lang');
 	var hub = require('dojo/topic');
 	var Objects = {};

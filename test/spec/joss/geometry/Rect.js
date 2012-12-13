@@ -8,7 +8,7 @@ define(function(require){
 	module('joss/geometry/Rect');
 
 
-	var tpl = new Rect({
+	var tpl = Rect({
 		top: 0,
 		left: 0,
 		width: 100,

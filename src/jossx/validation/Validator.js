@@ -1,7 +1,7 @@
 define(function(require) {
 
 	var $ = require('jquery');
-	var Classes = require('joss/util/Classes');
+	var Classes = require('joss/oop/Classes');
 	var lang = require('dojo/_base/lang');
 	var Controller = require('joss/mvc/Controller');
 	var Errors = require('./Errors');

@@ -6,25 +6,25 @@ define(function() {
 
 		while (true) {
 
-			seqs = seqs.filter(function(seq) {
+			var nonemptyseqs = seqs.filter(function(seq) {
 				return seq && seq.length;
 			});
 
-			if (!seqs.length) {
+			if (!nonemptyseqs.length) {
 				return result;
 			}
 
 			var candidate;
 
 			//find merge candidates among seq heads
-			seqs.every(function(seq) {
+			nonemptyseqs.every(function(seq) {
 				candidate = seq[0];
 
-				//if the candidate is not in the tail of any other seqs
-				var notHead = seqs.filter(function(seq) {
+				//if the candidate is in the tail of any other seqs
+				var notHead = nonemptyseqs.filter(function(seq) {
 					var tail = seq.slice(1);
 					return tail.indexOf(candidate) !== -1;
-				}).length === 0;
+				}).length > 0;
 
 				//reject candidate
 				if (notHead) {
@@ -42,7 +42,7 @@ define(function() {
 			result.push(candidate);
 
 			//remove candidate
-			seqs = seqs.map(function(seq) {
+			seqs = nonemptyseqs.map(function(seq) {
 				if (seq[0] === candidate) {
 					return seq.slice(1);
 				}
@@ -54,15 +54,15 @@ define(function() {
 
 
 	//C3 Method Resolution Order (see http://www.python.org/download/releases/2.3/mro/)
-	var mro = function(constructor){
-		var bases = constructor._meta.bases;
+	var methodResolutionOrder = function(constructor){
+		var bases = constructor._meta.bases.slice(0);
 
 		var seqs =
 			[[constructor]]
 			.concat(bases.map(function(base) {
-				return mro(base);
+				return methodResolutionOrder(base);
 			}))
-			.concat([bases]);
+			.concat([bases.slice(0)]);
 
 		//the linearization of C is the sum of C plus the merge of the
 		//linearizations of the parents and the list of the parents.
@@ -70,6 +70,6 @@ define(function() {
 	};
 
 
-	return mro;
+	return methodResolutionOrder;
 
 });

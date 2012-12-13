@@ -1,10 +1,10 @@
 define(function(require) {
 
+	var Classes = require('joss/oop/Classes');
 	var lang = require('dojo/_base/lang');
-	var defaults = require('amd-utils/lang/defaults');
 	var Point = require('./Point');
 	var Position = require('./Position');
-	var Classes = require('joss/util/Classes');
+	var defaults = require('amd-utils/lang/defaults');
 
 
 	//Describes a rectangle in two-dimensional space
@@ -18,15 +18,6 @@ define(function(require) {
 		 * @constructs
 		 */
 		constructor: function(opts) {
-			if (!arguments.length) {
-				opts = {
-					top: 0,
-					left: 0,
-					width: 0,
-					height: 0
-				};
-			}
-
 			opts.top = defaults(opts.top, opts.t);
 			opts.right = defaults(opts.right, opts.r);
 			opts.bottom = defaults(opts.bottom, opts.b);
@@ -50,24 +41,52 @@ define(function(require) {
 				opts.height = opts.bottom - opts.top;
 			}
 
-			/** @type {Number} */
-			this.top = opts.top;
-			/** @type {Number} */
-			this.left = opts.left;
-			/** @type {Number} */
-			this.width = opts.width;
-			/** @type {Number} */
-			this.height = opts.height;
+			Classes.defaults({
+				top: 0,
+				left: 0,
+				width: 0,
+				height: 0
+			}, opts, this);
 		},
 
 
-		'get right': function() {
-			return this._data.left + this._data.width;
+		/** @type {Number} */
+		top: {
+			get: null, set: null
 		},
 
 
-		'get bottom': function() {
-			return this._data.top + this._data.height;
+		/** @type {Number} */
+		left: {
+			get: null, set: null
+		},
+
+
+		/** @type {Number} */
+		width: {
+			get: null, set: null
+		},
+
+
+		/** @type {Number} */
+		height: {
+			get: null, set: null
+		},
+
+
+		/** @type {Number} */
+		right: {
+			get: function() {
+				return this._data.left + this._data.width;
+			}
+		},
+
+
+		/** @type {Number} */
+		bottom: {
+			get: function() {
+				return this._data.top + this._data.height;
+			}
 		},
 
 
@@ -289,14 +308,6 @@ define(function(require) {
 		},
 
 
-		/** @type {Number} */
-		width: null,
-
-
-		/** @type {Number} */
-		height: null,
-
-
 		/**
 		 * @param {joss/geometry/Point|joss/geometry/Rect} target
 		 * @return {Boolean}
@@ -360,78 +371,63 @@ define(function(require) {
 
 
 		/** @type {joss/geometry/Point} */
-		center: null,
-
-
-		'get center': function() {
-			var center = this.left + (this.right - this.left) / 2;
-			var middle = this.top + (this.bottom - this.top) / 2;
-			return new Point(center, middle);
-		},
-
-
-		'set center': function(p) {
-			this.moveCenter(p);
-		},
-
-
-		/** @type {joss/geometry/Point} */
-		topLeft: null,
-
-
-		'get topLeft': function() {
-			return new Point(this.left, this.top);
-		},
-
-
-		'set topLeft': function(p) {
-			this.top = p.y;
-			this.left = p.x;
+		center: {
+			get: function() {
+				var center = this.left + (this.right - this.left) / 2;
+				var middle = this.top + (this.bottom - this.top) / 2;
+				return new Point(center, middle);
+			},
+			set: function(p) {
+				this.moveCenter(p);
+			}
 		},
 
 
 		/** @type {joss/geometry/Point} */
-		topRight: null,
-
-
-		'get topRight': function() {
-			return new Point(this.right, this.top);
-		},
-
-
-		'set topRight': function(p) {
-			this.top = p.y;
-			this.right = p.x;
-		},
-
-
-		/** @type {joss/geometry/Point} */
-		bottomLeft: null,
-
-
-		'get bottomLeft': function() {
-			return new Point(this.left, this.bottom);
-		},
-
-
-		'set bottomLeft': function(p) {
-			this.bottom = p.y;
-			this.left = p.x;
+		topLeft: {
+			get: function() {
+				return new Point(this.left, this.top);
+			},
+			set: function(p) {
+				this.top = p.y;
+				this.left = p.x;
+			}
 		},
 
 
 		/** @type {joss/geometry/Point} */
-		bottomRight: null,
-
-
-		'get bottomRight': function() {
-			return new Point(this.right, this.bottom);
+		topRight: {
+			get: function() {
+				return new Point(this.right, this.top);
+			},
+			set: function(p) {
+				this.top = p.y;
+				this.right = p.x;
+			}
 		},
 
 
-		'set bottomRight': function(p) {
-			this.bottom = p.y;
-			this.right = p.x;
+		/** @type {joss/geometry/Point} */
+		bottomLeft: {
+			get: function() {
+				return new Point(this.left, this.bottom);
+			},
+			set: function(p) {
+				this.bottom = p.y;
+				this.left = p.x;
+			}
+		},
+
+
+		/** @type {joss/geometry/Point} */
+		bottomRight: {
+			get: function() {
+				return new Point(this.right, this.bottom);
+			},
+			set: function(p) {
+				this.bottom = p.y;
+				this.right = p.x;
+			}
 		},
 
 
@@ -499,17 +495,10 @@ define(function(require) {
 				' w:' + this.width +
 				' h:' + this.height;
 		}
-		
+
 	});
 
 
-	Classes.defineProp(Rect, 'top');
-	Classes.defineProp(Rect, 'left');
-	Classes.defineProp(Rect, 'width');
-	Classes.defineProp(Rect, 'height');
-
-
 	return Rect;
-
 
 });

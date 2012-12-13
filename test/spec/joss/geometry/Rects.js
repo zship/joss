@@ -2,12 +2,10 @@ define(function(require){
 
 	var Rects = require('joss/geometry/Rects');
 	var Rect = require('joss/geometry/Rect');
-	var lang = require('dojo/_base/lang');
-
-
 
 
 	module('joss/geometry/Rects');
+
 
 	var tpl = new Rect({
 		top: 0,
@@ -18,9 +16,9 @@ define(function(require){
 
 
 	test('Align', function() {
-		var rect = lang.clone(tpl);
-		var rect2 = lang.clone(tpl);
-		var orig = lang.clone(tpl);
+		var rect = tpl.clone();
+		var rect2 = tpl.clone();
+		var orig = tpl.clone();
 
 		rect.translate(0, 10);
 		rect2.translate(0, 20);
@@ -34,9 +32,9 @@ define(function(require){
 		pass = (rect2.left === orig.left && rect2.width === orig.width && rect2.height === orig.height);
 		ok(pass, 'rect2: align (y, top) does not alter left, width, or height');
 
-		rect = lang.clone(tpl);
-		rect2 = lang.clone(tpl);
-		orig = lang.clone(tpl);
+		rect = tpl.clone();
+		rect2 = tpl.clone();
+		orig = tpl.clone();
 
 		rect.translate(10, 0);
 		rect2.translate(20, 0);
@@ -52,7 +50,7 @@ define(function(require){
 
 
 	test('Distribute', function() {
-		var rect = lang.clone(tpl);
+		var rect = tpl.clone();
 		//rect to the left of rect2, with 10px between
 		rect.position({
 			my: 'right',
@@ -61,9 +59,9 @@ define(function(require){
 		}).translate(-10, 0);
 
 		//rect2 in the middle
-		var rect2 = lang.clone(tpl);
+		var rect2 = tpl.clone();
 
-		var rect3 = lang.clone(tpl);
+		var rect3 = tpl.clone();
 		//rect3 to the right of rect2, with 20px between
 		rect3.position({
 			my: 'left',

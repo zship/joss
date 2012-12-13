@@ -1,6 +1,5 @@
 define(function(require) {
 
-	var forOwn = require('amd-utils/object/forOwn');
 	var isObject = require('amd-utils/lang/isObject');
 
 
@@ -41,7 +40,7 @@ define(function(require) {
 			}
 		});
 
-		//always make descriptors for parents of nested properties
+		//if they don't exist, make placeholders for parents of nested properties
 		Object.keys(descriptors).filter(function(key) {
 			return key.search(/\./) !== -1;
 		}).forEach(function(key) {
@@ -52,18 +51,6 @@ define(function(require) {
 				descriptors[path] = descriptors[path] || {};
 				descriptors[path].get = descriptors[path].get || undefined;
 				descriptors[path].set = descriptors[path].set || undefined;
-			}
-		});
-
-		//if any properties have '.' in the name, they'll be accessed through a
-		//RecursiveProxy (see defineProp.js)
-		forOwn(descriptors, function(descriptor, name) {
-			var children = Object.keys(descriptors).filter(function(key) {
-				return (key.search(new RegExp('^' + name + '\\.')) !== -1);
-			});
-
-			if (children.length !== 0) {
-				descriptor.hasChildren = true;
 			}
 		});
 

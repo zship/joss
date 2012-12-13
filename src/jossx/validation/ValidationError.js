@@ -1,7 +1,7 @@
 define(function(require) {
 
 	var Elements = require('joss/util/Elements');
-	var Classes = require('joss/util/Classes');
+	var Classes = require('joss/oop/Classes');
 
 
 	var ValidationError = Classes.create({

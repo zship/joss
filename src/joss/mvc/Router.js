@@ -1,7 +1,7 @@
 define(function(require) {
 
 	var $ = require('jquery');
-	var Classes = require('joss/util/Classes');
+	var Classes = require('joss/oop/Classes');
 	var forOwn = require('amd-utils/object/forOwn');
 	require('jquery.hashchange');
 

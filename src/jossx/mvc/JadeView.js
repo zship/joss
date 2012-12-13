@@ -1,11 +1,11 @@
 define(function(require) {
 
 	var $ = require('jquery');
-	var declare = require('dojo/_base/declare');
+	var Classes = require('joss/oop/Classes');
 	var jade = require('jade');
 
 
-	return declare(null, {
+	return Classes.create({
 
 		constructor: function() {
 		},

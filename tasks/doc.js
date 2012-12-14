@@ -7,6 +7,7 @@ module.exports = function(grunt) {
 	var fs = require('fs');
 	var path = require('path');
 	var child = require("child_process");
+	var crypto = require('crypto');
 	var _ = grunt.utils._;
 
 	var taffy = require("../doc/lib/taffy.js").taffy;
@@ -79,7 +80,7 @@ module.exports = function(grunt) {
 
 
 	//keep a list of all types used in the project
-	//build the list in processJsDoc() below
+	//build the list in processJsdoc() below
 	var typeMap = {};
 
 	function populateTypeMap(types) {
@@ -254,7 +255,35 @@ module.exports = function(grunt) {
 	}
 
 
-	var processJsDoc = function(json, deps) {
+	function _hashFile(file) {
+		return crypto.createHash('md5').update(grunt.file.read(file)).digest('hex');
+	}
+
+
+	var cacheJsdoc = function(json) {
+
+		var cacheDir = docdir + '/cache';
+
+		var cache = json.filter(function(record) {
+			return record.meta && record.meta.filename && record.meta.path;
+		});
+
+		var moduleNameCache = {};
+		cache = _.groupBy(cache, function(record) {
+			var file = record.meta.path + '/' + record.meta.filename;
+			moduleNameCache[file] = moduleNameCache[file] || _fileToModuleName(file);
+			return moduleNameCache[file];
+		});
+		moduleNameCache = {};
+
+		_.each(cache, function(obj, key) {
+			grunt.file.write(cacheDir + '/' + key + '.json', JSON.stringify(obj, false, 2), 'utf-8');
+		});
+
+	};
+
+
+	var processJsdoc = function(json, deps) {
 
 		var db = taffy(json);
 
@@ -274,7 +303,6 @@ module.exports = function(grunt) {
 				record.module = cache[fileName];
 			}
 		});
-
 		cache = {};
 
 
@@ -1053,8 +1081,17 @@ module.exports = function(grunt) {
 			grunt.verbose.write('\t\t');
 			classTpl = grunt.file.read(jadeOpts.filename, 'utf-8');
 		}
-		var data = jade.compile(classTpl, jadeOpts)({cl: graph, module: path, config: config});
-		callback(graph, path, data);
+		try {
+			var data = jade.compile(classTpl, jadeOpts)({cl: graph, module: path, config: config});
+			callback(graph, path, data);
+		}
+		catch(e) {
+			grunt.log.writeln('');
+			grunt.log.error('Failed rendering ' + path);
+			console.error(e);
+			//console.log(JSON.stringify(graph, false, 4));
+			grunt.log.writeln('');
+		}
 	};
 
 	var tagListTpl;
@@ -1334,23 +1371,97 @@ module.exports = function(grunt) {
 
 
 			var runJsdoc = function(callback) {
-				var jsdocCache = docdir + '/out.json';
-				//skip jsdoc parsing and use a cached file
-				if (config.useJsdocCache && fs.existsSync(jsdocCache)) {
-					grunt.log.writeln('');
-					grunt.log.writeln('Using jsdoc cache at ' + path.resolve(process.cwd() + '/' + jsdocCache + '...'));
-					var json = grunt.file.read(jsdocCache);
-					callback(json);
-					return;
+
+				var fileHashesPath = docdir + '/cache/cache.json';
+				var cacheDir = docdir + '/cache';
+
+				var fileHashes = {};
+				var staleFiles = [];
+				var freshFiles = [];
+				var cacheFiles = [];
+
+				if (fs.existsSync(fileHashesPath)) {
+					fileHashes = JSON.parse(grunt.file.read(fileHashesPath));
+
+					staleFiles = _.chain(fileHashes).map(function(hash, filePath) {
+						return {
+							file: filePath,
+							hash: hash
+						};
+					}).filter(function(obj) {
+						var cur = _hashFile(obj.file);
+						var prev = obj.hash;
+						return cur !== prev;
+					}).pluck('file').value();
+					freshFiles = _.difference(files, staleFiles);
+
+					//marking new files stale
+					var toRemove = [];
+					freshFiles.forEach(function(filePath) {
+						var module = _fileToModuleName(filePath);
+						var cachePath = cacheDir + '/' + module + '.json';
+
+						if (!fs.existsSync(cachePath)) {
+							staleFiles.push(filePath);
+							toRemove.push(filePath);
+						}
+						else {
+							cacheFiles.push(cachePath);
+						}
+					});
+					freshFiles = _.difference(freshFiles, toRemove);
+					//staleFiles = _.difference(files, freshFiles);
+				}
+				else {
+					staleFiles = files.slice(0);
 				}
 
+				var json = [];
+				cacheFiles.forEach(function(filePath) {
+					grunt.verbose.write('\t');
+					json = json.concat(JSON.parse(grunt.file.read(filePath)));
+				});
+
 				grunt.log.writeln('');
-				grunt.log.writeln('Running jsdoc...');
-				var command = libdir + '/jsdoc/jsdoc -X ' + files.join(' ');
+				grunt.log.writeln('Running jsdoc on ' + staleFiles.length + ' files (' + cacheFiles.length + ' cached)...');
+
+				if (!staleFiles.length) {
+					grunt.log.ok(stopwatch.elapsed() + 'ms');
+					stopwatch.reset();
+					callback(json);
+				}
+
+				var command = libdir + '/jsdoc/jsdoc -X ' + staleFiles.join(' ');
 				grunt.verbose.writeln('> ' + command);
 
-				child.exec(command, {maxBuffer: 2000000}, function(error, json) {
-					grunt.file.write(jsdocCache, json, 'utf-8');
+				child.exec(command, {maxBuffer: 2000000}, function(error, stdout) {
+					grunt.log.ok(stopwatch.elapsed() + 'ms');
+					stopwatch.reset();
+
+					grunt.log.writeln('');
+					grunt.log.writeln('Caching jsdoc output for future runs...');
+
+					//update freshness data
+					if (error === null) {
+						files.forEach(function(filePath) {
+							fileHashes[filePath] = _hashFile(filePath);
+						});
+
+						grunt.file.write(fileHashesPath, JSON.stringify(fileHashes, false, 2), 'utf-8');
+					}
+
+
+					//strip out error-causing lines
+					stdout = stdout.replace(/<Object>/gm, "\"Object\"");
+					stdout = stdout.replace(/:\sundefined/gm, ": \"undef\"");
+					var jsdocJson = JSON.parse(stdout);
+
+					cacheJsdoc(jsdocJson);
+					grunt.log.ok(stopwatch.elapsed() + 'ms');
+					stopwatch.reset();
+
+					json = json.concat(jsdocJson);
+
 					callback(json);
 				});
 			};
@@ -1358,20 +1469,14 @@ module.exports = function(grunt) {
 
 			runJsdoc(function(json) {
 
-				grunt.log.ok(stopwatch.elapsed() + 'ms');
-				stopwatch.reset();
-
 				grunt.log.writeln('');
 				grunt.log.writeln('Massaging jsdoc output...');
 
-				//strip out error-causing lines
-				json = json.replace(/<Object>/gm, "\"Object\"");
-				json = json.replace(/:\sundefined/gm, ": \"undef\"");
-				var graph = JSON.parse(json);
+				var graph = json;
 
 				//console.log(JSON.stringify(graph, false, 4));
 
-				graph = processJsDoc(graph, deps);
+				graph = processJsdoc(graph, deps);
 				grunt.log.ok(stopwatch.elapsed() + 'ms');
 				stopwatch.reset();
 
@@ -1457,22 +1562,19 @@ module.exports = function(grunt) {
 
 
 				grunt.log.writeln('');
-				grunt.log.writeln('Rendering menu...');
+				grunt.log.writeln('Rendering module list into ' + docdir + '/out/menu.html...');
+
 				var classList = _.clone(Object.keys(graph));
 				var classStructure = {};
 				_.each(classList, function(className) {
 					var path = className.replace(/\//g,'.');
 					setObject(path, className, classStructure);
 				});
-				grunt.log.ok(stopwatch.elapsed() + 'ms');
-				stopwatch.reset();
 
-
-				grunt.log.writeln('');
-				grunt.log.writeln('Rendering module list into ' + docdir + '/out/menu.html...');
 				var menu = renderMenu(classStructure, '');
 				grunt.verbose.write('\t');
 				grunt.file.write(docdir + '/out/menu.html', menu, 'utf-8');
+
 				grunt.log.ok(stopwatch.elapsed() + 'ms');
 				stopwatch.reset();
 

@@ -38,7 +38,8 @@ mixin methodDef(method)
         span.paren &#40;
         span.params
             each param, i in method.params
-                span.param
+                - var clazz = (param.optional) ? 'param optional' : 'param'
+                span(class=clazz)
                     - if (param.optional)
                         span.opt [
                     - if (i !== 0)
@@ -46,6 +47,8 @@ mixin methodDef(method)
                     mixin typeDef(param.types)
                     &nbsp;
                     span.name=param.name
+                    - if (param.variable)
+                        span.varargs=', ...'
                     - if (param.optional)
                         span.opt ]
         span.paren &#41;

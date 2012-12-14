@@ -1,5 +1,6 @@
 define(function(require) {
 
+	var Class = require('joss/oop/Class');
 	var Classes = require('joss/oop/Classes');
 	var lang = require('dojo/_base/lang');
 	var Point = require('./Point');
@@ -8,7 +9,7 @@ define(function(require) {
 
 
 	//Describes a rectangle in two-dimensional space
-	var Rect = Classes.create(/** @lends joss/geometry/Rect.prototype */ {
+	var Rect = Class.extend(/** @lends Rect.prototype */ {
 
 		/**
 		 * @class

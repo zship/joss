@@ -1,6 +1,3 @@
-/*
- * Static utility methods dealing with dojo "Classes"
- */
 define(function(require) {
 
 	/**

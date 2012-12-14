@@ -240,11 +240,11 @@ define(function(require){
 					a: 0,
 					b: 0
 				};
-			}
-		});
+			},
 
-		Classes.defineProp(Class, 'a');
-		Classes.defineProp(Class, 'b');
+			a: { get: null, set: null },
+			b: { get: null, set: null }
+		});
 
 		var keys = Object.getOwnPropertyNames(Class.prototype);
 		ok(keys.indexOf('a') !== -1, 'a is a property');

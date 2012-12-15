@@ -1,25 +1,34 @@
 define(function(require) {
 
-	var create = require('./classes/create');
+	var Classes = require('./Classes');
 
 
-	var Class = create(/** @lends Class.prototype */{
+	var Class = Classes.create(/** @lends Class.prototype */{
+
 		/**
 		 * @class
 		 * @constructs
 		 */
 		constructor: function() {},
 
-		/**
-		 * Convenience shortcut for {joss/oop/Classes.create}
-		 * @method
-		 * @param {String} [className]
-		 * @param {...Constructor} [superclasses]
-		 * @param {Object} members
-		 * @return {Constructor}
-		 */
-		extend: create.bind(create, Class)
+
+		destroy: function() {}
+
 	});
+
+
+	/**
+	 * Convenience shortcut for {joss/oop/Classes.create}
+	 * @method
+	 * @param {String} [className]
+	 * @param {...joss/oop/Class} [superclasses]
+	 * @param {Object} members
+	 * @return {Constructor}
+	 */
+	Class.extend = Classes.create.bind(Classes.create, Class);
+
+
+	Classes.chain(Class, 'destroy', 'before');
 
 
 	return Class;

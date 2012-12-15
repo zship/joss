@@ -93,7 +93,22 @@ define(function(require) {
 		var meta = {};
 		meta.bases = bases;
 		meta.members = members;
-		meta.ctor = members.hasOwnProperty('constructor') ? members.constructor : function() {};
+
+		//the constructor which will be called by makeConstructor (see makeConstructor.js)
+		meta.ctor = null;
+		if (members.hasOwnProperty('constructor')) {
+			meta.ctor = members.constructor;
+		}
+		//if one wasn't provided, use the nearest superclass' ctor
+		else {
+			meta.bases.every(function(base) {
+				if (base._meta.ctor) {
+					meta.ctor = base._meta.ctor;
+					return false;
+				}
+				return true;
+			});
+		}
 
 		//keep the className for error messages and forceNew.js
 		if (className) {

@@ -23,6 +23,9 @@ mixin methodDef(method)
     - if (method.scope === 'static')
         span.scope static&nbsp;
 
+    - if (method.chainable)
+        span.chainable chainable&nbsp;
+
     - if (method.returns)
         span.returns
             mixin typeDef(method.returns.types)

@@ -6,7 +6,8 @@ define(function(require) {
 	var Classes = {
 		apply: require('./classes/apply'),
 		chain: require('./classes/chain'),
-		create: require('./classes/create')
+		create: require('./classes/create'),
+		defaults: require('./classes/defaults')
 	};
 
 	return Classes;

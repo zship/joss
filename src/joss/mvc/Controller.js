@@ -23,32 +23,26 @@ define(function(require) {
 	var rEventData = /^(.*\s[a-z]*?)\s*_data/;
 
 
-	var Controller = Classes.create(Lifecycle, /** @lends joss/mvc/Controller.prototype */ {
+	var Controller = Lifecycle.extend(/** @lends Controller.prototype */ {
+
 
 		/**
-		 * @class Controller
+		 * @description Constructor
 		 * @param {Object|jQuery|Element} opts
 		 * @constructs
 		 */
 		constructor: function(opts) {
 
-			this._data = {};
-
-			opts = lang.mixin({
-				root: null
-			}, opts);
-
 			//useful for off-screen rendering
 			if (!opts.root) {
-				this.$root = $('<div></div>');
+				opts.root = $('<div></div>')[0];
 			}
-			else {
-				this.root = opts.root;
-			}
+
+			Classes.apply(opts, this);
 
 			//store a reference to the controller in the root element
 			this.$root.data('controller', this);
-			this._bindings = {};
+			this._data.bindings = {};
 
 		},
 
@@ -111,7 +105,7 @@ define(function(require) {
 		/**
 		 * Replace the contents of `this.root` with **val**
 		 * @param {String} val
-		 * @return {joss/mvc/Controller} this
+		 * @return this
 		 */
 		contents: function(val) {
 			this.$root.empty().append(val);
@@ -123,29 +117,42 @@ define(function(require) {
 		 * Handle methods matching particular patterns as events.  This allows
 		 * us to guarantee proper unbinding when {joss/mvc/Controller#stop} is
 		 * called.
-		 * @return {joss/mvc/Controller} this
+		 * @return this
 		 */
 		bind: function() {
 
-			var methods = Object.keys(this).filter(function(key, obj) {
-				return isFunction(obj);
-			});
+			var proto = Object.getPrototypeOf(this);
+
+			//get functions on proto or this which match any special patterns
+			//defined at the top of this file
+			var methods = Object.keys(this)
+				.concat(Object.keys(proto))
+				.filter(function(key) {
+					if (!isFunction(this[key])) {
+						return false;
+					}
+
+					return (
+						rPubsub.test(key) ||
+						rEvent.test(key) ||
+						rSpecialEvent.test(key) ||
+						rEventData.test(key)
+					);
+				}.bind(this));
 
 			//check for event data (denoted with " _data" at the end of the
 			//method name) before binding events, and include that data in the
 			//bindings if present
 			var eventData = {};
-			methods.forEach(function(key) {
-
-				var method = this[key];
-				var match = rEventData.exec(key);
-				if (match === null) {
-					return true; //continue
-				}
-				eventData[lang.trim(match[1])] = method;
-				return true;
-			
-			}.bind(this));
+			methods
+				.filter(function(key) {
+					return rEventData.test(key);
+				})
+				.forEach(function(key) {
+					var method = this[key];
+					var match = rEventData.exec(key);
+					eventData[lang.trim(match[1])] = method;
+				}.bind(this));
 
 			//loop through this controller's methods, looking for keys that
 			//match the patterns defined at the top of this file
@@ -155,7 +162,7 @@ define(function(require) {
 
 				//don't bind the same selector more than once (for calls to
 				//rebind() or multiple calls to bind())
-				if (this._bindings[key]) {
+				if (this._data.bindings[key]) {
 					return true; //continue;
 				}
 
@@ -165,7 +172,7 @@ define(function(require) {
 					var handle = hub.subscribe(key, lang.hitch(this, function() {
 						method.apply(this, arguments);
 					}));
-					this._bindings[key] = {
+					this._data.bindings[key] = {
 						type: 'pubsub',
 						handle: handle 
 					};
@@ -228,7 +235,7 @@ define(function(require) {
 					if (subSelector) {
 						$(obj).on(eventName, subSelector, eventData[key], handler);
 
-						this._bindings[key] = {
+						this._data.bindings[key] = {
 							type: 'delegateOutside',
 							root: obj,
 							selector: subSelector,
@@ -239,7 +246,7 @@ define(function(require) {
 					else {
 						$(obj).on(eventName, eventData[key], handler);
 
-						this._bindings[key] = {
+						this._data.bindings[key] = {
 							type: 'bind',
 							selector: obj,
 							eventName: eventName,
@@ -254,7 +261,7 @@ define(function(require) {
 				//the delegation target for performance and versatility
 				this.$root.on(eventName, selector, eventData[key], handler);
 
-				this._bindings[key] = {
+				this._data.bindings[key] = {
 					type: 'delegate',
 					root: this.$root,
 					selector: selector,
@@ -271,10 +278,10 @@ define(function(require) {
 
 		/**
 		 * Unbind all events previously bound with {joss/mvc/Controller#bind}.
-		 * @return {joss/mvc/Controller} this
+		 * @return this
 		 */
 		unbind: function() {
-			forEach(this._bindings, function(binding) {
+			forEach(this._data.bindings, function(binding) {
 				if (binding.type === 'pubsub') {
 					hub.unsubscribe(binding.handle);
 				}
@@ -286,20 +293,20 @@ define(function(require) {
 				}
 			});
 
-			this._bindings = {};
+			this._data.bindings = {};
 		},
 
 
 		/**
 		 * Re-bind only those events which do not delegate to this Controller's
 		 * root element (as their delegation targets may have changed).
-		 * @return {joss/mvc/Controller} this
+		 * @return this
 		 */
 		rebind: function() {
 			//only unbind events that could possibly have become detached:
 			//those outside this.root or bound without delegation
 			var toDelete = [];
-			forEach(this._bindings, function(binding, key) {
+			forEach(this._data.bindings, function(binding, key) {
 				if (binding.type === 'bind') {
 					$(binding.selector).off(binding.eventName, binding.handler);
 					toDelete.push(key);
@@ -310,15 +317,13 @@ define(function(require) {
 				}
 			});
 			forEach(toDelete, function(key) {
-				delete this._bindings[key];
+				delete this._data.bindings[key];
 			});
 			this.bind();
 		}
 
+
 	});
-
-
-	Classes.chain(Controller, 'destroy', 'before');
 
 
 	$.fn.controller = function() {

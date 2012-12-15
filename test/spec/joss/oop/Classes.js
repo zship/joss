@@ -129,6 +129,29 @@ define(function(require){
 		strictEqual(called.join(' '), 'C B A', '_start called after: methods called in correct order');
 
 
+		//missing a link in the chain
+		called = [];
+		A = Classes.create({
+			start: function() {
+				called.push('A');
+			}
+		});
+
+		B = Classes.create(A, {});
+
+		C = Classes.create(B, {
+			start: function() {
+				called.push('C');
+				this._super();
+			}
+		});
+
+		c = new C();
+		c.start();
+
+		strictEqual(called.join(' '), 'C A', 'superclass missing a method: skip to next superclass in the chain');
+
+
 		//returning values from _super()
 		A = Classes.create({
 			start: function() {
@@ -325,9 +348,9 @@ define(function(require){
 	});
 
 
-	asyncTest('Deferred Chaining', function() {
-		var startCalled = 0;
-		var stopCalled = 0;
+	asyncTest('Chaining and Deferreds', function() {
+		var startCalled = [];
+		var stopCalled = [];
 		var startCompleted = false;
 		var stopCompleted = false;
 
@@ -337,8 +360,7 @@ define(function(require){
 			},
 
 			start: function() {
-				startCalled++;
-				strictEqual(startCalled, 1, 'A: A.start called before B.start');
+				startCalled.push('A');
 				strictEqual(this.contextTestA, 'A', 'A: chained method retains context');
 				var deferred = $.Deferred();
 				window.setTimeout(function() {
@@ -349,8 +371,7 @@ define(function(require){
 			},
 
 			stop: function() {
-				stopCalled++;
-				strictEqual(stopCalled, 2, 'A: B.stop called before A.stop');
+				stopCalled.push('A');
 				strictEqual(stopCompleted, true, 'A: A.stop waited for B.stop to complete');
 			}
 		});
@@ -365,15 +386,13 @@ define(function(require){
 			},
 
 			start: function() {
-				startCalled++;
-				strictEqual(startCalled, 2, 'B: A.start called before B.start');
+				startCalled.push('B');
 				strictEqual(this.contextTestB, 'B', 'B: chained method retains context');
 				strictEqual(startCompleted, true, 'B: B.start waited for A.start to complete');
 			},
 
 			stop: function() {
-				stopCalled++;
-				strictEqual(stopCalled, 1, 'B: B.stop called before A.stop');
+				stopCalled.push('B');
 				var deferred = $.Deferred();
 				window.setTimeout(function() {
 					stopCompleted = true;
@@ -385,9 +404,38 @@ define(function(require){
 
 		var b = new B();
 		b.start().then(function() {
+			strictEqual(startCalled.join(' '), 'A B', 'A.start called before B.start');
 			b.stop().then(function() {
+				strictEqual(stopCalled.join(' '), 'B A', 'B.stop called before A.stop');
 				start();
 			});
+		});
+	});
+
+
+	asyncTest('Chaining with missing link', function() {
+		var startCalled = [];
+
+		var A = Classes.create({
+			start: function() {
+				startCalled.push('A');
+			}
+		});
+
+		Classes.chain(A, 'start', 'after');
+
+		var B = A.extend({});
+
+		var C = B.extend({
+			start: function() {
+				startCalled.push('C');
+			}
+		});
+
+		var c = new C();
+		c.start().then(function() {
+			strictEqual(startCalled.join(' '), 'A C', 'A.start called, then C.start');
+			start();
 		});
 	});
 

@@ -8,7 +8,7 @@ define(function(require) {
 
 	//Rect subclass which can track border, padding, and margin on a DOM
 	//Element, as well as read/write its dimensions from/to an Element
-	var DomRect = Classes.create(Rect, /** @lends DomRect.prototype */ {
+	var DomRect = Rect.extend(/** @lends DomRect.prototype */ {
 
 		/**
 		 * @class
@@ -24,7 +24,7 @@ define(function(require) {
 
 			this._super(opts);
 
-			Classes.apply({
+			opts = Classes.defaults({
 				element: null,
 				top: 0,
 				left: 0,
@@ -48,7 +48,9 @@ define(function(require) {
 					bottom: 0,
 					left: 0
 				}
-			}, opts, this);
+			}, opts);
+
+			Classes.apply(opts, this);
 
 		},
 

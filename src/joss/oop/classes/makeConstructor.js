@@ -30,6 +30,10 @@ define(function(require) {
 			//_data
 			this._data = {};
 
+			if (!ctor) {
+				return;
+			}
+
 			//give user the opportunity to override return value
 			return ctor.apply(this, arguments);
 		};

@@ -554,13 +554,21 @@ module.exports = function(grunt) {
 
 				if (method.returns) {
 					method.returns.types = [];
-					method.returns[0].type.names.forEach(function(name, i) {
-						var type = getType(name, method.longName + ' return type #' + i);
-						if (!type) {
-							type = defaultType(name);
-						}
-						method.returns.types.push(type);
-					});
+
+					//special: '@return this' sets the return type to the class' type
+					if (method.returns[0].description === 'this' && method.memberof) {
+						method.returns.types.push(getType(method.memberof));
+						method.chainable = true;
+					}
+					else {
+						method.returns[0].type.names.forEach(function(name, i) {
+							var type = getType(name, method.longName + ' return type #' + i);
+							if (!type) {
+								type = defaultType(name);
+							}
+							method.returns.types.push(type);
+						});
+					}
 				}
 				else {
 					method.returns = {types: [getType(null)]};

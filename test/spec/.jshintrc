@@ -5,7 +5,9 @@
 		"module": false,
 		"test": false,
 		"asyncTest": false,
+		"start": false,
 		"ok": false,
+		"expect": false,
 		"equal": false,
 		"strictEqual": false,
 		"deepEqual": false

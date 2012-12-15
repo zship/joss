@@ -23,15 +23,15 @@ define(function() {
 
 
 	/*
-	 * If the result of the call to create() or extend() is assigned to a
-	 * variable, we can use that name as the class name
+	 * Convention: if the result of the call to create() or extend() is
+	 * assigned to a variable, we use that name as the class name
 	 */
 	var guessClassName = function(caller, bases, skip) {
 		lastCaller = lastCaller || caller;
 
 		var changedScope = true;
 		var curr = caller;
-		for (var j = 0; j < 10; j++) {
+		for (var i = 0; i < 10; i++) {
 			if (curr === lastCaller) {
 				changedScope = false;
 				break;
@@ -79,8 +79,8 @@ define(function() {
 
 		var lines = sCaller.split(/\n/);
 		var hits = 0;
-		for (var i = 0; i < lines.length; i++) {
-			var line = lines[i];
+		for (var j = 0; j < lines.length; j++) {
+			var line = lines[j];
 
 			if (line === lastMatches[hash][hits]) {
 				hits++;

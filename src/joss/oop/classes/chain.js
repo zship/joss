@@ -4,6 +4,15 @@ define(function(require) {
 	var waterfall = require('deferreds/waterfall');
 
 
+	/**
+	 * Replaces a method on `class` with a new function calling all superclass
+	 * methods of the same name either before or after itself (set by `type`),
+	 * then returning a {Deferred} object. Methods in the chain will wait for
+	 * any {Deferred}s to resolve.
+	 * @param {Constructor} class
+	 * @param {String} method
+	 * @param {String} type
+	 */
 	var chain = function(proto, bases, members, key, type) {
 
 		//constructor, key, type (using meta-info in constructor)
@@ -31,6 +40,10 @@ define(function(require) {
 
 		proto[key] = function() {
 			var args = toArray(arguments);
+
+			bases = bases.filter(function(base) {
+				return base._meta.members.hasOwnProperty(key);
+			});
 
 			var methods = bases.map(function(base) {
 				return base._meta.members[key].bind(this);

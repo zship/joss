@@ -42,12 +42,14 @@ define(function(require) {
 				opts.height = opts.bottom - opts.top;
 			}
 
-			Classes.apply({
+			opts = Classes.defaults({
 				top: 0,
 				left: 0,
 				width: 0,
 				height: 0
-			}, opts, this);
+			}, opts);
+
+			Classes.apply(opts, this);
 		},
 
 

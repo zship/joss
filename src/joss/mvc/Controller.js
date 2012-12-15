@@ -23,13 +23,12 @@ define(function(require) {
 	var rEventData = /^(.*\s[a-z]*?)\s*_data/;
 
 
-	var Controller = Lifecycle.extend(/** @lends Controller.prototype */ {
-
+	var Controller = Lifecycle.extend(/** @lends __.prototype */{
 
 		/**
-		 * @description Constructor
-		 * @param {Object|jQuery|Element} opts
 		 * @constructs
+		 * @extends {joss/oop/Lifecycle}
+		 * @param {Object|jQuery|Element} opts
 		 */
 		constructor: function(opts) {
 
@@ -60,15 +59,17 @@ define(function(require) {
 
 		start: function() {
 			this.bind();
+			return this;
 		},
 
 
 		stop: function() {
 			this.unbind();
+			return this;
 		},
 
 
-		setRoot: function(el) {
+		_setRoot: function(el) {
 			el = Elements.fromAny(el);
 
 			if (el === this._root) {
@@ -89,7 +90,7 @@ define(function(require) {
 		/** @type {Element} */
 		root: {
 			set: function(val) {
-				this.setRoot(val);
+				this._setRoot(val);
 			}
 		},
 
@@ -97,7 +98,7 @@ define(function(require) {
 		/** @type {jQuery} */
 		$root: {
 			set: function(val) {
-				this.setRoot(val);
+				this._setRoot(val);
 			}
 		},
 
@@ -321,7 +322,6 @@ define(function(require) {
 			});
 			this.bind();
 		}
-
 
 	});
 

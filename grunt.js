@@ -32,7 +32,7 @@ module.exports = function( grunt ) {
 			standalone: true,
 			//String or Array of files for which to trace dependencies and build
 			//include: ['joss/geometry/**', 'joss/util/**', 'jossx/validation/**'],
-			include: ['joss/**', 'jossx/**'],
+			include: ['joss/**/*.js', 'jossx/**/*.js'],
 			//exclude files from the 'include' list. Useful to add specific
 			//exceptions to globbing.
 			exclude: ['joss/util/collection/**'],
@@ -48,6 +48,8 @@ module.exports = function( grunt ) {
 			repoview: 'https://github.com/zship/joss/blob/develop/',
 			useJsdocCache: true,
 			include: 'src/joss/**/*.js',
+			//use joss/oop/Classes to discern inheritance heirarchy, rather than @extends annotations
+			autoInherit: true,
 			//include: 'src/joss/oop/**',
 			//include: ['src/joss/geometry/DomRect.js', 'src/joss/geometry/Rect.js', 'src/joss/geometry/TestRect.js', 'src/joss/geometry/Position.js'],
 			//include: 'src/joss/mvc/Controller.js',
@@ -136,6 +138,45 @@ module.exports = function( grunt ) {
 			pool: 'src/joss/**/*.js'
 			//module: 'test/spec/joss/Lifecycle.js',
 			//pool: 'test/spec/**/*.js'
+		},
+
+		requirejs: {
+			baseUrl: 'src',
+
+			optimize: 'none',
+
+			packages: [
+				{ name: 'dojo', location: 'lib/dojo' },
+				{ name: 'amd-utils', location: 'lib/amd-utils/src' },
+				{ name: 'deferreds', location: 'lib/deferreds/src/deferreds' }
+			],
+
+			paths: {
+				//dojo's i18n module doesn't build with r.js (errors out)
+				'dojo/i18n': '../dist/lib/i18n-patched',
+				'jade': 'lib/jade/jade',
+				'jquery': 'empty:',
+				'jquery.hashchange': 'lib/jquery.ba-hashchange',
+				'jquery.mousewheel': 'lib/jquery.mousewheel',
+				'jquery.event.drag': 'lib/jquery.event.drag-2.0',
+				'jquery.event.input': 'lib/jquery.event.input',
+				'jquery.jgestures': 'lib/jgestures'
+			},
+
+			shim: {
+				'jade': {
+					exports: 'jade'
+				}
+			},
+
+			keepBuildDir: true,
+			locale: "en-us",
+			useStrict: false,
+			skipModuleInsertion: false,
+			findNestedDependencies: false,
+			removeCombined: false,
+			preserveLicenseComments: false,
+			logLevel: 0
 		}
 
 	});

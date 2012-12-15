@@ -3,10 +3,9 @@ define(function(require) {
 	var Classes = require('./Classes');
 
 
-	var Class = Classes.create(/** @lends Class.prototype */{
+	var Class = Classes.create(/** @lends __.prototype */{
 
 		/**
-		 * @class
 		 * @constructs
 		 */
 		constructor: function() {},

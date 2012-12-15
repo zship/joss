@@ -3,8 +3,12 @@ define(function(require) {
 	var Classes = require('./Classes');
 
 
-	var Lifecycle = Classes.create({
+	var Lifecycle = Classes.create(/** @lends __.prototype */{
 
+		/**
+		 * @constructs
+		 * @extends {joss/oop/Class}
+		 */
 		constructor: function() {
 			this._lifecycle_running = false;
 		},

@@ -3,15 +3,15 @@
   <head>
     <meta charset="utf-8">
     <title>joss test</title>
-    <link rel="stylesheet" href="/test/lib/qunit-1.10.0.css">
-    <script src="/test/lib/qunit-1.10.0.js"></script>
+    <link rel="stylesheet" href="./lib/qunit-1.10.0.css">
+    <script src="./lib/qunit-1.10.0.js"></script>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.8.3/jquery.min.js"></script>
-    <script src="/test/lib/require.js"></script>
+    <script src="./lib/require.js"></script>
     <script>
       QUnit.config.autostart = false;
       require(
        {
-    "baseUrl": "",
+    "baseUrl": "../src",
     "optimize": "none",
     "packages": [
         {
@@ -28,16 +28,14 @@
         }
     ],
     "paths": {
-        "dojo/i18n": "../dist/lib/i18n-patched",
+        "dojo/i18n": "../tasks/dist/lib/i18n-patched",
         "jade": "../src/lib/jade/jade",
         "jquery": "../src/lib/jquery",
         "jquery.hashchange": "../src/lib/jquery.ba-hashchange",
         "jquery.mousewheel": "../src/lib/jquery.mousewheel",
         "jquery.event.drag": "../src/lib/jquery.event.drag-2.0",
         "jquery.event.input": "../src/lib/jquery.event.input",
-        "jquery.jgestures": "../src/lib/jgestures",
-        "joss": "../src/joss",
-        "jossx": "../src/jossx"
+        "jquery.jgestures": "../src/lib/jgestures"
     },
     "shim": {
         "jade": {
@@ -58,41 +56,61 @@
     <script>
       require(
        [
-    "spec/joss/oop/Lifecycle",
-    "spec/joss/oop/Classes",
-    "spec/joss/util/object/methods",
-    "spec/joss/util/Functions",
-    "spec/joss/util/lang/isNode",
-    "spec/joss/util/lang/is",
-    "spec/joss/util/lang/isElement",
-    "spec/joss/util/Elements",
-    "spec/joss/util/Forms",
-    "spec/joss/util/ObjectProxy",
-    "spec/joss/mvc/HtmlView",
-    "spec/joss/mvc/View",
-    "spec/joss/mvc/Router",
-    "spec/joss/mvc/Service",
-    "spec/joss/mvc/Controller",
-    "spec/joss/geometry/Point",
-    "spec/joss/geometry/Rects",
-    "spec/joss/geometry/DomRect",
-    "spec/joss/geometry/Size",
-    "spec/joss/geometry/Position",
-    "spec/joss/geometry/Rect",
-    "spec/joss/geometry/Line",
-    "spec/jossx/forms/FormToggle",
-    "spec/jossx/forms/FormGroup",
-    "spec/jossx/validation/Checks",
-    "spec/jossx/validation/ValidationModel",
-    "spec/jossx/validation/Errors",
-    "spec/jossx/validation/Validator",
-    "spec/jossx/validation/ValidationError",
-    "spec/jossx/mvc/JadeView",
-    "spec/jossx/Tooltip",
-    "spec/jossx/Interval",
-    "spec/jossx/GameLoop",
-    "spec/jossx/Scrollable",
-    "spec/jossx/Callout"
+    "../test/spec/joss/collect/TreeNode",
+    "../test/spec/joss/util/object/methods",
+    "../test/spec/joss/util/Observable",
+    "../test/spec/joss/util/Functions",
+    "../test/spec/joss/util/ObjectProxy",
+    "../test/spec/joss/util/lang/isNode",
+    "../test/spec/joss/util/lang/is",
+    "../test/spec/joss/util/lang/isElement",
+    "../test/spec/joss/util/Elements",
+    "../test/spec/joss/util/Forms",
+    "../test/spec/joss/mvc/HtmlView",
+    "../test/spec/joss/mvc/View",
+    "../test/spec/joss/mvc/Router",
+    "../test/spec/joss/mvc/Service",
+    "../test/spec/joss/mvc/Controller",
+    "../test/spec/joss/oop/Lifecycle",
+    "../test/spec/joss/oop/Classes",
+    "../test/spec/joss/oop/Class",
+    "../test/spec/joss/oop/classes/create",
+    "../test/spec/joss/oop/classes/forceNew",
+    "../test/spec/joss/oop/classes/chain",
+    "../test/spec/joss/oop/classes/makeConstructor",
+    "../test/spec/joss/oop/classes/defaults",
+    "../test/spec/joss/oop/classes/mixinMembers",
+    "../test/spec/joss/oop/classes/detectAccessors",
+    "../test/spec/joss/oop/classes/apply",
+    "../test/spec/joss/oop/classes/superMethod",
+    "../test/spec/joss/oop/classes/defineProp",
+    "../test/spec/joss/oop/classes/cloneMethod",
+    "../test/spec/joss/oop/classes/defineProps",
+    "../test/spec/joss/oop/classes/methodResolutionOrder",
+    "../test/spec/joss/oop/classes/guessClassName",
+    "../test/spec/joss/oop/classes/superCache",
+    "../test/spec/joss/oop/classes/applyNew",
+    "../test/spec/joss/geometry/Point",
+    "../test/spec/joss/geometry/Rects",
+    "../test/spec/joss/geometry/DomRect",
+    "../test/spec/joss/geometry/Size",
+    "../test/spec/joss/geometry/Position",
+    "../test/spec/joss/geometry/Rect",
+    "../test/spec/joss/geometry/Line",
+    "../test/spec/joss/geometry/TestRect",
+    "../test/spec/jossx/forms/FormToggle",
+    "../test/spec/jossx/forms/FormGroup",
+    "../test/spec/jossx/validation/Checks",
+    "../test/spec/jossx/validation/ValidationModel",
+    "../test/spec/jossx/validation/Errors",
+    "../test/spec/jossx/validation/Validator",
+    "../test/spec/jossx/validation/ValidationError",
+    "../test/spec/jossx/mvc/JadeView",
+    "../test/spec/jossx/Tooltip",
+    "../test/spec/jossx/Interval",
+    "../test/spec/jossx/GameLoop",
+    "../test/spec/jossx/Scrollable",
+    "../test/spec/jossx/Callout"
 ],
        function() {
         QUnit.start();

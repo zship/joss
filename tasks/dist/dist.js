@@ -1,15 +1,17 @@
 module.exports = function(grunt) {
 	'use strict';
 
-	var libdir = '../dist/lib';
+	var path = require('path');
+	var libdir = path.resolve(__dirname + '/lib');
 	var requirejs = require(libdir + '/r.js');
-	var rjsconfig = require('./rjsconfig');
 	var _ = grunt.utils._;
 
 
 	grunt.registerTask('dist', 'Runs requirejs optimizer', function() {
 		var config = grunt.config.get(this.name);
 		var done = this.async();
+
+		var rjsconfig = grunt.config.get('requirejs');
 		var baseUrl = rjsconfig.baseUrl;
 		var rStripBaseUrl = new RegExp('^' + baseUrl + '\\/');
 
@@ -47,7 +49,7 @@ module.exports = function(grunt) {
 
 		//use almond to remove requirejs dependency
 		if (config.standalone) {
-			config.name = libdir + '/almond';
+			config.name = path.relative(baseUrl, libdir + '/almond');
 			config.wrap = {};
 			config.wrap.start = 'window.joss = (function() {\n\t"use strict";';
 			config.wrap.end = '';

@@ -3,7 +3,7 @@
 
 var grunt = require('grunt/lib/grunt.js');
 var jade = require('jade');
-var constants = require('./constants.js');
+var constants = require('../constants.js');
 
 
 var tpl;

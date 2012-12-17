@@ -1,19 +1,17 @@
 module.exports = function(grunt) {
 	'use strict';
 
-	var baseDir = 'test';
-	var specTplPath = 'test/tpl/spec.hbs';
-	var testRunner = 'test/tpl/runner.jade';
-	var specDir = 'test/spec';
-
-	var fs = require('fs');
 	var path = require('path');
+	var fs = require('fs');
 	var _ = grunt.utils._;
 	var jade = require('jade');
 	var handlebars = require('handlebars');
-	var rjsconfig = require('./rjsconfig.js');
-	var util = require('./util.js');
+	var util = require('../util.js');
 
+	var baseDir = path.resolve(process.cwd() + '/test');
+	var specDir = path.resolve(baseDir + '/spec');
+	var specTplPath = path.resolve(__dirname + '/tpl/spec.hbs');
+	var testRunner = path.resolve(__dirname + '/tpl/runner.jade');
 
 
 	var specTpl;
@@ -24,7 +22,7 @@ module.exports = function(grunt) {
 
 		src.forEach(function(file) {
 			var module = path.relative(config.baseUrl, path.resolve(file));
-			file = path.resolve(specDir + '/' + module);
+			file = specDir + '/' + module;
 			module = module.replace('.js', '');
 			moduleList.push(module);
 			//console.log(file);
@@ -48,14 +46,18 @@ module.exports = function(grunt) {
 		config = _rjsAdjust(config);
 
 		modules = modules.map(function(mod) {
-			return 'spec/' + mod;
+			return path.relative(path.resolve(baseDir + '/' + config.baseUrl), specDir) + '/' + mod;
 		});
 
 		var tpl = grunt.file.read(testRunner, 'utf-8');
 		tpl = jade.compile(tpl, {filename: testRunner, pretty: true});
-		var data = tpl({rjsconfig: JSON.stringify(rjsconfig, false, 4), modules: JSON.stringify(modules, false, 4)});
+		var data = tpl({rjsconfig: JSON.stringify(config, false, 4), modules: JSON.stringify(modules, false, 4)});
 		var outPath = baseDir + '/runner.html';
 		grunt.file.write(outPath, data, 'utf-8');
+
+		util.expand(path.resolve(__dirname + '/lib') + '/**').forEach(function(file) {
+			grunt.file.copy(file, baseDir + '/lib/' + path.basename(file));
+		});
 
 		return outPath;
 	};
@@ -94,12 +96,7 @@ module.exports = function(grunt) {
 			config.paths[key] = path.relative(baseDir, file);
 		});
 
-		config.baseUrl = path.relative('test', path.resolve(baseDir));
-		config.paths.jquery = '../src/lib/jquery';
-		config.paths.joss = '../src/joss';
-		config.paths.jossx = '../src/jossx';
-		//config.paths.src = path.relative(baseDir, path.resolve('src'));
-		//config.urlArgs = 'bust=' + (new Date()).getTime();
+		config.baseUrl = path.relative(baseDir, config.baseUrl);
 
 		return config;
 	};
@@ -107,17 +104,18 @@ module.exports = function(grunt) {
 
 	grunt.registerTask('test', 'Generates QUnit html and optionally runs QUnit', function() {
 		var config = grunt.config.get(this.name);
+		var rjsconfig = grunt.config.get('requirejs');
 
 		var modules = _generateFailing(config.generateFailing, rjsconfig);
 		var file = _generateRunner(rjsconfig, modules);
 
-		var serverPath = 'http://localhost:';
-		serverPath += grunt.config.get('server').port + '/';
-		serverPath += path.relative(grunt.config.get('server').base, path.resolve(file));
-
 		if (!config.run) {
 			return;
 		}
+
+		var serverPath = 'http://localhost:';
+		serverPath += grunt.config.get('server').port + '/';
+		serverPath += path.relative(grunt.config.get('server').base, path.resolve(file));
 
 		grunt.config.set('qunit', {
 			test: serverPath

@@ -3,7 +3,7 @@
 
 var fs = require('fs');
 var path = require('path');
-var constants = require('./constants.js');
+var constants = require('../constants.js');
 var rjsconfig = require('../rjsconfig.js');
 var requirejs = require(constants.rjs);
 var grunt = require('grunt/lib/grunt.js');

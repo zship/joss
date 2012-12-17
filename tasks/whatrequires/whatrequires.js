@@ -3,19 +3,19 @@ module.exports = function( grunt ) {
 
 	var _ = grunt.utils._;
 	var path = require('path');
-	var requirejs = require('../dist/lib/r.js');
-	var rjsconfig = require('./rjsconfig');
+	var requirejs = require('./lib/r.js');
 	requirejs.config({
 		baseUrl: __dirname,
 		nodeRequire: require
 	});
-	var parseDir = '../dist/lib/parse';
-
+	var parseDir = './lib/parse';
 
 
 	grunt.registerTask('whatrequires', 'Traces which files depend on given js file', function() {
 		var config = grunt.config.get(this.name);
 		var done = this.async();
+
+		var rjsconfig = grunt.config.get('requirejs');
 		var baseUrl = rjsconfig.baseUrl;
 		var searchFile = path.resolve(process.cwd() + '/' + config.module);
 

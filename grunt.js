@@ -153,9 +153,9 @@ module.exports = function( grunt ) {
 
 			paths: {
 				//dojo's i18n module doesn't build with r.js (errors out)
-				'dojo/i18n': '../dist/lib/i18n-patched',
+				'dojo/i18n': '../tasks/dist/lib/i18n-patched',
 				'jade': 'lib/jade/jade',
-				'jquery': 'empty:',
+				'jquery': 'lib/jquery',
 				'jquery.hashchange': 'lib/jquery.ba-hashchange',
 				'jquery.mousewheel': 'lib/jquery.mousewheel',
 				'jquery.event.drag': 'lib/jquery.event.drag-2.0',
@@ -186,6 +186,9 @@ module.exports = function( grunt ) {
 	
 	grunt.loadNpmTasks('grunt-contrib-clean');
 
-	grunt.loadTasks('tasks');
+	grunt.loadTasks('tasks/dist');
+	grunt.loadTasks('tasks/doc');
+	grunt.loadTasks('tasks/test');
+	grunt.loadTasks('tasks/whatrequires');
 
 };

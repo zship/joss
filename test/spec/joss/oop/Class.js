@@ -1,9 +1,9 @@
 define(function(require){
 
-	var {{name}} = require('{{module}}');
+	var Class = require('joss/oop/Class');
 
 
-	module('{{module}}');
+	module('joss/oop/Class');
 
 
 	test('', function() {

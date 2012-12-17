@@ -1,7 +1,7 @@
 'use strict';
 
 
-var constants = require('./constants.js');
+var constants = require('../constants.js');
 var requirejs = require(constants.rjs);
 var grunt = require('grunt/lib/grunt.js');
 var util = require('./util.js');
@@ -17,7 +17,7 @@ var traceDependencies = function(files) {
 		nodeRequire: require
 	});
 
-	requirejs(['../../dist/lib/parse'], function(parse) {
+	requirejs(['../lib/parse'], function(parse) {
 
 		var deps = {};
 

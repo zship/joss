@@ -3,19 +3,19 @@ module.exports = function(grunt) {
 
 
 	var _ = grunt.utils._;
-	var constants = require('./doc/constants.js');
+	var constants = require('./constants.js');
 	//var rjsconfig = require('./rjsconfig.js');
 	var requirejs = require(constants.rjs);
 	var Deferred = require('simply-deferred').Deferred;
 
-	var util = require('./util.js');
+	var util = require('../util.js');
+	var docutil = require('./doc/util.js');
 	var Stopwatch = require('./doc/Stopwatch.js');
 
 	var Types = require('./doc/Types.js');
 	var runJsdoc = require('./doc/runJsdoc.js');
 	var cacheJsdoc = require('./doc/cacheJsdoc.js');
 	var getJsdocCache = require('./doc/getJsdocCache.js');
-	var docutil = require('./doc/util.js');
 	var massageJsdoc = require('./doc/massageJsdoc.js');
 	var mixinMarkdown = require('./doc/mixinMarkdown.js');
 	var transformLongNames = require('./doc/transformLongNames.js');

@@ -1,16 +1,15 @@
 var path = require('path');
 
 
-var docdir = 'doc';
-var cachedir = docdir + '/cache';
+var cachedir = path.resolve(__dirname + '/cache');
 
 
 var constants = {
-	docdir: path.resolve(process.cwd() + '/' + docdir),
-	cachedir: path.resolve(process.cwd() + '/' + cachedir),
-	rjs: path.resolve(process.cwd() + '/dist/lib/r.js'),
-	fileHashesPath: path.resolve(process.cwd() + '/' + cachedir + '/cache.json'),
-	jsdocExe: 'doc/lib/jsdoc/jsdoc'
+	docdir: path.resolve(process.cwd() + '/doc'),
+	cachedir: cachedir,
+	rjs: path.resolve(__dirname + '/lib/r.js'),
+	fileHashesPath: path.resolve(cachedir + '/cache.json'),
+	jsdocExe: path.resolve(__dirname + '/lib/jsdoc/jsdoc')
 };
 
 

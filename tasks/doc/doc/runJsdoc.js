@@ -3,7 +3,7 @@
 
 var grunt = require('grunt/lib/grunt.js');
 var child = require("child_process");
-var constants = require('./constants.js');
+var constants = require('../constants.js');
 var Deferred = require('simply-deferred').Deferred;
 
 

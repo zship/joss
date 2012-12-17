@@ -5,7 +5,7 @@ var fs = require('fs');
 var grunt = require('grunt/lib/grunt.js');
 var _ = grunt.utils._;
 var util = require('./util.js');
-var constants = require('./constants.js');
+var constants = require('../constants.js');
 
 
 var getJsdocCache = function(files) {

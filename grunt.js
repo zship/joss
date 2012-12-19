@@ -153,7 +153,7 @@ module.exports = function( grunt ) {
 
 			paths: {
 				//dojo's i18n module doesn't build with r.js (errors out)
-				'dojo/i18n': '../tasks/dist/lib/i18n-patched',
+				'dojo/i18n': '../node_modules/grunt-amd-dist/tasks/lib/i18n-patched',
 				'jade': 'lib/jade/jade',
 				'jquery': 'lib/jquery',
 				'jquery.hashchange': 'lib/jquery.ba-hashchange',
@@ -185,10 +185,10 @@ module.exports = function( grunt ) {
 	//grunt.registerTask( 'default', 'update_submodules dist min' );
 	
 	grunt.loadNpmTasks('grunt-contrib-clean');
+	grunt.loadNpmTasks('grunt-amd-dist');
+	grunt.loadNpmTasks('grunt-amd-doc');
+	grunt.loadNpmTasks('grunt-amd-test');
 
-	grunt.loadTasks('tasks/dist');
-	grunt.loadTasks('tasks/doc');
-	grunt.loadTasks('tasks/test');
 	grunt.loadTasks('tasks/whatrequires');
 
 };

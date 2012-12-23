@@ -30,12 +30,16 @@ module.exports = function( grunt ) {
 			out: 'dist/joss.js',
 			//remove requirejs dependency from built package (almond)
 			standalone: true,
+			//build standalone for node or browser
+			//env: 'node',
+			env: 'browser',
+			exports: 'deferreds',
 			//String or Array of files for which to trace dependencies and build
 			//include: ['joss/geometry/**', 'joss/util/**', 'jossx/validation/**'],
-			include: ['joss/**/*.js', 'jossx/**/*.js'],
+			include: ['src/joss/**/*.js', 'src/jossx/**/*.js'],
 			//exclude files from the 'include' list. Useful to add specific
 			//exceptions to globbing.
-			exclude: ['joss/util/collection/**'],
+			//exclude: ['joss/util/collection/**'],
 			//exclude files and their dependencies from the *built* source
 			//Difference from 'exclude': files in 'excludeBuilt' will be
 			//excluded even if they are dependencies of files in 'include'
@@ -45,15 +49,15 @@ module.exports = function( grunt ) {
 		},
 
 		doc: {
-			repoview: 'https://github.com/zship/joss/blob/develop/',
-			useJsdocCache: true,
 			include: 'src/joss/**/*.js',
-			//use joss/oop/Classes to discern inheritance heirarchy, rather than @extends annotations
-			autoInherit: true,
+			out: 'doc/out',
+			cache: 'doc/cache',
+			mixin: 'doc/mixin',
 			//include: 'src/joss/oop/**',
 			//include: ['src/joss/geometry/DomRect.js', 'src/joss/geometry/Rect.js', 'src/joss/geometry/TestRect.js', 'src/joss/geometry/Position.js'],
 			//include: 'src/joss/mvc/Controller.js',
 			//include: ['src/joss/geometry/Rects.js', 'src/joss/geometry/Rect.js'],
+			repoview: 'https://github.com/zship/joss/blob/develop/',
 			types: (function() {
 				var types = [];
 
@@ -147,8 +151,8 @@ module.exports = function( grunt ) {
 
 			packages: [
 				{ name: 'dojo', location: 'lib/dojo' },
-				{ name: 'amd-utils', location: 'lib/amd-utils/src' },
-				{ name: 'deferreds', location: 'lib/deferreds/src/deferreds' }
+				{ name: 'amd-utils', location: 'lib/amd-utils' },
+				{ name: 'deferreds', location: 'lib/deferreds' }
 			],
 
 			paths: {

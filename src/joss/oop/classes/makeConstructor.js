@@ -5,6 +5,8 @@ define(function(require) {
 
 	var fn = function(bases, ctor) {
 		return function(other) {
+			eval(''); //signal minifiers to avoid mangling names in this eval'd scope
+
 			//this following is eval'd from joss/oop/classes/makeConstructor,
 			//in order to override the constructor name given in common
 			//debuggers

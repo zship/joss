@@ -1,26 +1,26 @@
 {
 	"name": "joss",
-		"title": "joss",
-		"description": "AMD-compliant MVC JavaScript library",
-		"version": "0.1.0",
-		"homepage": "https://github.com/zship/joss",
-		"author": "Zach Shipley <zach@zachshipley.com>",
-		"repository": {
-			"type": "git",
-			"url": "https://github.com/zship/joss.git"
-		},
-		"license": "MIT",
-		"dependencies": {
-			"amd-utils": "git://github.com/millermedeiros/amd-utils.git#v0.10.0",
-			"dojo": "git://github.com/dojo/dojo.git#1.8.2",
-			"deferreds": "git://github.com/zship/deferreds.js.git#develop",
-			"jade": "git://github.com/visionmedia/jade.git#0.27.7"
-		},
-		"devDependencies": {
-			"grunt-contrib-clean": "0.3.x",
-			"grunt-amd-doc": "git://github.com/zship/grunt-amd-doc.git",
-			"grunt-amd-dist": "git://github.com/zship/grunt-amd-dist.git",
-			"grunt-amd-test": "git://github.com/zship/grunt-amd-test.git"
-		},
-		"keywords": []
+	"title": "joss",
+	"description": "AMD-compliant MVC JavaScript library",
+	"version": "0.1.0",
+	"homepage": "https://github.com/zship/joss",
+	"author": "Zach Shipley <zach@zachshipley.com>",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/zship/joss.git"
+	},
+	"license": "MIT",
+	"dependencies": {
+		"amd-utils": "git://github.com/millermedeiros/amd-utils.git#v0.10.0",
+		"dojo": "git://github.com/dojo/dojo.git#1.8.2",
+		"deferreds": "git://github.com/zship/deferreds.js.git#develop",
+		"jade": "git://github.com/visionmedia/jade.git#0.27.7"
+	},
+	"devDependencies": {
+		"grunt-contrib-clean": "0.3.x",
+		"grunt-amd-doc": "git://github.com/zship/grunt-amd-doc.git",
+		"grunt-amd-dist": "git://github.com/zship/grunt-amd-dist.git",
+		"grunt-amd-test": "git://github.com/zship/grunt-amd-test.git"
+	},
+	"keywords": []
 }

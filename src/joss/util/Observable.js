@@ -6,7 +6,15 @@ define(function(require) {
 
 	var Observable = function(opts) {
 
+		if (!(opts.key && opts.parent && opts.target)) {
+			var tgt = opts;
+			opts = {};
+			opts.target = tgt;
+		}
+
 		this._data = {
+			key: opts.key,
+			parent: opts.parent,
 			target: opts.target,
 			observers: []
 		};
@@ -18,10 +26,12 @@ define(function(require) {
 
 			if (hasChildren) {
 				var observable = new Observable({
+					key: key,
+					parent: this,
 					target: this._data.target[key]
 				});
 				descriptor.get = function() {
-					return observable._data.holder;
+					return observable;
 				};
 			}
 			else {
@@ -34,19 +44,22 @@ define(function(require) {
 				var prev = this._data.target[key];
 				this._data.target[key] = val;
 
-				//we modified a property with children. update children.
-				if (hasChildren) {
-					forOwn(obj, function(child, childKey) {
-						obj[childKey] = val[childKey];
-					});
+				var root = this;
+				var path = [key];
+				while (true) {
+					if (root._data.parent === undefined) {
+						break;
+					}
+					path.unshift(root._data.key);
+					root = root._data.parent;
 				}
 
-				this._data.observers.forEach(function(observer) {
-					observer(key, val, prev);
-				});
+				root._data.observers.forEach(function(observer) {
+					observer(root._data.target, path.join('.'), val, prev);
+				}.bind(this));
 			};
 
-			Object.defineProperty(this._data.target, key, descriptor);
+			Object.defineProperty(this, key, descriptor);
 
 		}.bind(this));
 

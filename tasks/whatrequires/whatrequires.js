@@ -1,13 +1,9 @@
 module.exports = function( grunt ) {
 	'use strict';
 
+
 	var _ = grunt.utils._;
 	var path = require('path');
-	var requirejs = require('./lib/r.js');
-	requirejs.config({
-		baseUrl: __dirname,
-		nodeRequire: require
-	});
 	var parseDir = './lib/parse';
 
 
@@ -21,6 +17,12 @@ module.exports = function( grunt ) {
 
 		grunt.log.writeln('Files depending on ' + searchFile + ':');
 		grunt.log.writeln('-----------------------------------------------------------');
+
+		var requirejs = require('./lib/r.js');
+		requirejs.config({
+			baseUrl: __dirname,
+			nodeRequire: require
+		});
 
 		requirejs([parseDir], function(parse) {
 			var pool = grunt.file.expandFiles(config.pool);

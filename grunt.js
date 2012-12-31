@@ -49,14 +49,13 @@ module.exports = function( grunt ) {
 		},
 
 		doc: {
-			include: 'src/joss/**/*.js',
+			include: [
+				'src/joss/**/*.js',
+				'src/jossx/**/*.js'
+			],
 			out: 'doc/out',
 			cache: 'doc/cache',
 			mixin: 'doc/mixin',
-			//include: 'src/joss/oop/**',
-			//include: ['src/joss/geometry/DomRect.js', 'src/joss/geometry/Rect.js', 'src/joss/geometry/TestRect.js', 'src/joss/geometry/Position.js'],
-			//include: 'src/joss/mvc/Controller.js',
-			//include: ['src/joss/geometry/Rects.js', 'src/joss/geometry/Rect.js'],
 			repoview: 'https://github.com/zship/joss/blob/develop/',
 			types: (function() {
 				var types = [];

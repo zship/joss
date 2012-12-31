@@ -8,10 +8,10 @@ define(function(require) {
 	var ValidationModel = require('./ValidationModel');
 	var Forms = require('joss/util/Forms');
 	var Elements = require('joss/util/Elements');
-	var Functions = require('joss/util/Functions');
 	var forEach = require('amd-utils/collection/forEach');
 	var objectSize = require('amd-utils/object/size');
 	var objectKeys = require('amd-utils/object/keys');
+	var throttle = require('amd-utils/function/throttle');
 	require('jquery.event.input');
 
 
@@ -101,7 +101,7 @@ define(function(require) {
 		},
 
 
-		_processValidationQueue: Functions.throttle(function() {
+		_processValidationQueue: throttle(function() {
 			
 			//clone the validationQueue and clear it immediately so the queue
 			//can continue to be built while this method runs

@@ -152,7 +152,12 @@ module.exports = function( grunt ) {
 				'src/jossx/**/*.js'
 			],
 			exclude: [
-				'src/joss/oop/classes/**'
+				//covered in joss/oop/Classes
+				'src/joss/oop/classes/**',
+				//covered in elements/ tests
+				'src/joss/util/Elements.js',
+				//mostly covered in joss/util/elements/getDimensions
+				'src/joss/util/elements/getStyles.js'
 			],
 			run: false
 		},
@@ -163,8 +168,11 @@ module.exports = function( grunt ) {
 		},
 
 		whatrequires: {
-			module: 'src/joss/oop/classes/defaults.js',
-			pool: 'src/joss/**/*.js'
+			module: 'src/joss/collect/TreeNode.js',
+			pool: [
+				'src/joss/**/*.js',
+				'src/jossx/**/*.js'
+			]
 			//module: 'test/spec/joss/Lifecycle.js',
 			//pool: 'test/spec/**/*.js'
 		},

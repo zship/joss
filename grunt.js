@@ -147,9 +147,12 @@ module.exports = function( grunt ) {
 		})(),
 
 		test: {
-			generateFailing: [
+			include: [
 				'src/joss/**/*.js',
 				'src/jossx/**/*.js'
+			],
+			exclude: [
+				'src/joss/oop/classes/**'
 			],
 			run: false
 		},

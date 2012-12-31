@@ -2,12 +2,12 @@ define(function(require) {
 
 	var $ = require('jquery');
 	var Classes = require('joss/oop/Classes');
-	var forOwn = require('amd-utils/object/forOwn');
 	require('jquery.hashchange');
 
 
 	var routeMatcher = /^\/.*/;
 	var param = /\{([\w\d]+)\}/g;
+
 
 	var Router = Classes.create(/** @lends joss/mvc/Router.prototype */ {
 
@@ -40,27 +40,30 @@ define(function(require) {
 
 			this._routes = [];
 
-			var self = this;
+			var proto = Object.getPrototypeOf(this);
 
-			forOwn(this, function(key, method) {
-				if (key === '*') {
-					return; //continue;
-				}
-
-				if (routeMatcher.test(key) !== true) {
-					return; //continue;
-				}
-
-				var route = self._routeToRegExp(key);
-				self._routes.push({
-					route: route,
-					callback: function(fragment) {
-						var args = self._extractParameters(route, fragment);
-						method.apply(self, args);
+			var methods = Object.keys(this)
+				.concat(Object.keys(proto))
+				.filter(function(key) {
+					if (key === '*' || key === '*?') {
+						return false;
 					}
+
+					return routeMatcher.test(key);
+				}.bind(this));
+
+			methods.forEach(function(key) {
+				var method = this[key];
+				var route = this._routeToRegExp(key);
+				this._routes.push({
+					pattern: route,
+					callback: function(fragment) {
+						var args = this._extractParameters(route, fragment);
+						args.push(fragment); //last arg is always full fragment
+						method.apply(this, args);
+					}.bind(this)
 				});
-			
-			});
+			}.bind(this));
 
 		},
 
@@ -68,37 +71,45 @@ define(function(require) {
 		route: function(fragment) {
 
 			//special case: no hash triggers the '/' mapping, if there is one
-			if (!fragment && this['/']) {
-				this['/']();
+			if (!fragment) {
+				if (this['/']) {
+					this['/']();
+				}
 				return;
 			}
 
-			if (this['*']) {
-				this['*'](fragment);
-				return;
-			}
-
-			this._routes.forEach(function(binding) {
-				//console.log('testing', binding.route.toString(), fragment);
-				if (binding.route.test(fragment)) {
-					//because of the history api being used, errors may
-					//result in a full page load, which could be an invalid
-					//URL. We catch errors here to ensure that doesn't happen
-					try {
-						binding.callback(fragment);
-					}
-					catch(e) {
-						console.error(e);
-					}
+			var matching = this._routes.filter(function(route) {
+				return (route.pattern.test(fragment));
+			});
+			
+			matching.forEach(function(route) {
+				//because of the history api being used, errors may
+				//result in a full page load, which could be an invalid
+				//URL. We catch errors here to ensure that doesn't happen
+				try {
+					route.callback(fragment);
+				}
+				catch(e) {
+					console.error(e);
 				}
 			});
+
+			//match any hashchange event
+			if (this['*']) {
+				this['*'](fragment);
+			}
+
+			//match any hashchange event not explicitly defined
+			if (this['*?'] && matching.length === 0) {
+				this['*?'](fragment);
+			}
 
 		},
 
 
 		_routeToRegExp : function(route) {
 			route = route.replace(param, "([^\/]*)");
-			return new RegExp('^' + route + '$');
+			return new RegExp('^' + route + '(?:\/)?$');
 		},
 
 		_extractParameters : function(route, fragment) {
@@ -106,6 +117,7 @@ define(function(require) {
 		}
 	
 	});
+
 
 	return Router;
 

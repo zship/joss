@@ -4,8 +4,18 @@ define(function(require){
 	var $ = require('jquery');
 
 
-
 	module('joss/oop/Classes');
+
+
+	test('new operator', function() {
+		var A = Classes.create({});
+
+		var a = new A();
+		strictEqual(a.constructor, A, 'new A().constructor === A');
+
+		a = A();
+		strictEqual(a.constructor, A, 'A().constructor === A');
+	});
 
 
 	//string of linearized class heirarchy

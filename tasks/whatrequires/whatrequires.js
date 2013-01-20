@@ -26,10 +26,10 @@ module.exports = function( grunt ) {
 
 		requirejs([parseDir], function(parse) {
 			var pool = grunt.file.expandFiles(config.pool);
+			//console.log(JSON.stringify(pool, false, 4));
 
 			_.each(pool, function(file) {
 				file = path.resolve(process.cwd() + '/' + file);
-				//console.log(file);
 				var deps;
 				try {
 					deps = parse.findDependencies(file, grunt.file.read(file));
@@ -37,11 +37,19 @@ module.exports = function( grunt ) {
 				catch(e) {
 					deps = [];
 				}
+
 				deps = _.map(deps, function(depPath) {
 					depPath = depPath.replace(/\.js/, '');
+					//leading '.'; relative
+					if (depPath.search(/^\./) !== -1) {
+						return path.normalize(path.dirname(file) + '/' + depPath + '.js');
+					}
 					return path.resolve(process.cwd() + '/' + baseUrl + '/' + depPath + '.js');
 				});
-				//console.log(deps);
+
+				//console.log(file);
+				//console.log(JSON.stringify(deps, false, 4));
+
 				var match = _.intersection(deps, [searchFile]);
 				if (match.length) {
 					grunt.log.writeln(file);

@@ -1,12 +1,12 @@
 define(function(require) {
 
 	var $ = require('jquery');
-	var Classes = require('joss/oop/Classes');
+	var Class = require('class/Class');
 	var lang = require('dojo/_base/lang');
 	var hub = require('dojo/topic');
 
 
-	var Service = Classes.create(/** @lends joss/mvc/Service.prototype */ {
+	var Service = Class.extend(/** @lends Service.prototype */ {
 
 		constructor: function() {
 		},

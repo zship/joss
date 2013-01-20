@@ -1,7 +1,6 @@
 define(function(require) {
 
 	var $ = require('jquery');
-	var Classes = require('joss/oop/Classes');
 	var Rect = require('./Rect');
 	var Elements = require('joss/util/Elements');
 
@@ -9,6 +8,33 @@ define(function(require) {
 	//Rect subclass which can track border, padding, and margin on a DOM
 	//Element, as well as read/write its dimensions from/to an Element
 	var DomRect = Rect.extend(/** @lends DomRect.prototype */ {
+
+		__defaults: {
+			element: null,
+			top: 0,
+			left: 0,
+			width: 0,
+			height: 0,
+			border: {
+				top: 0,
+				right: 0,
+				bottom: 0,
+				left: 0
+			},
+			margin: {
+				top: 0,
+				right: 0,
+				bottom: 0,
+				left: 0
+			},
+			padding: {
+				top: 0,
+				right: 0,
+				bottom: 0,
+				left: 0
+			}
+		},
+
 
 		/**
 		 * @class
@@ -23,34 +49,7 @@ define(function(require) {
 			}
 
 			this._super(opts);
-
-			opts = Classes.defaults({
-				element: null,
-				top: 0,
-				left: 0,
-				width: 0,
-				height: 0,
-				border: {
-					top: 0,
-					right: 0,
-					bottom: 0,
-					left: 0
-				},
-				margin: {
-					top: 0,
-					right: 0,
-					bottom: 0,
-					left: 0
-				},
-				padding: {
-					top: 0,
-					right: 0,
-					bottom: 0,
-					left: 0
-				}
-			}, opts);
-
-			Classes.apply(opts, this);
+			this._apply(opts);
 
 		},
 

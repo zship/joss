@@ -1,11 +1,11 @@
 define(function(require) {
 
-	var Classes = require('joss/oop/Classes');
+	var Class = require('class/Class');
 	var lang = require('dojo/_base/lang');
 	var date = require('dojo/date');
 
 
-	var Interval = Classes.create(/** @lends jossx/Interval.prototype */ {
+	var Interval = Class.extend(/** @lends jossx/Interval.prototype */ {
 
 		constructor: function(opts) {
 

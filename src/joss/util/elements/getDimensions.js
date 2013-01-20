@@ -1,7 +1,7 @@
 define(function(require) {
 
 	var $ = require('jquery');
-	var forOwn = require('amd-utils/object/forOwn');
+	var forOwn = require('mout/object/forOwn');
 	var getStyles = require('./getStyles');
 
 

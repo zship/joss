@@ -1,11 +1,11 @@
 define(function(require) {
 
 	var $ = require('jquery');
-	var Classes = require('joss/oop/Classes');
+	var Class = require('class/Class');
 	var jade = require('jade');
 
 
-	return Classes.create({
+	return Class.extend({
 
 		constructor: function() {
 		},

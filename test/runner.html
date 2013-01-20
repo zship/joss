@@ -19,12 +19,16 @@
             "location": "lib/dojo"
         },
         {
-            "name": "amd-utils",
-            "location": "lib/amd-utils"
+            "name": "mout",
+            "location": "lib/mout"
         },
         {
             "name": "deferreds",
             "location": "lib/deferreds"
+        },
+        {
+            "name": "class",
+            "location": "lib/class"
         }
     ],
     "paths": {
@@ -56,9 +60,9 @@
     <script>
       require(
        [
-    "../test/spec/joss/collect/TreeNode",
     "../test/spec/joss/util/Observable",
     "../test/spec/joss/util/elements/fromPoint",
+    "../test/spec/joss/util/elements/isElement",
     "../test/spec/joss/util/elements/getDimensions",
     "../test/spec/joss/util/elements/setStyles",
     "../test/spec/joss/util/elements/fromAny",
@@ -73,8 +77,6 @@
     "../test/spec/joss/mvc/Service",
     "../test/spec/joss/mvc/Controller",
     "../test/spec/joss/oop/Lifecycle",
-    "../test/spec/joss/oop/Classes",
-    "../test/spec/joss/oop/Class",
     "../test/spec/joss/geometry/Point",
     "../test/spec/joss/geometry/Rects",
     "../test/spec/joss/geometry/DomRect",

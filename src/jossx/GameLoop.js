@@ -5,7 +5,7 @@
 define(function(require) {
 
 	var $ = require('jquery');
-	var Classes = require('joss/oop/Classes');
+	var Class = require('class/Class');
 	var lang = require('dojo/_base/lang');
 
 
@@ -48,7 +48,7 @@ define(function(require) {
 		function() { return new Date().getTime(); };
 
 
-	var GameLoop = Classes.create(/** @lends jossx/GameLoop.prototype */ {
+	var GameLoop = Class.extend(/** @lends jossx/GameLoop.prototype */ {
 
 		constructor: function(opts) {
 

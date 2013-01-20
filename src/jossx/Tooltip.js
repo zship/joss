@@ -1,7 +1,7 @@
 define(function(require) {
 
 	var $ = require('jquery');
-	var Classes = require('joss/oop/Classes');
+	var Class = require('class/Class');
 	var lang = require('dojo/_base/lang');
 	var Callout = require('./Callout');
 	var Position = require('joss/geometry/Position');
@@ -10,7 +10,7 @@ define(function(require) {
 	require('joss/geometry/DomRect');
 
 
-	var Tooltip = Classes.create(/** @lends jossx/Tooltip.prototype */ {
+	var Tooltip = Class.extend(/** @lends jossx/Tooltip.prototype */ {
 
 		/**
 		 * @param {Object} opts

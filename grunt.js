@@ -151,8 +151,6 @@ module.exports = function( grunt ) {
 				'src/jossx/**/*.js'
 			],
 			exclude: [
-				//covered in joss/oop/Classes
-				'src/joss/oop/classes/**',
 				//covered in elements/ tests
 				'src/joss/util/Elements.js',
 				//mostly covered in joss/util/elements/getDimensions
@@ -167,13 +165,21 @@ module.exports = function( grunt ) {
 		},
 
 		whatrequires: {
-			module: 'src/joss/collect/TreeNode.js',
+			module: 'src/joss/plugin/makeSuper.js',
 			pool: [
 				'src/joss/**/*.js',
 				'src/jossx/**/*.js'
 			]
 			//module: 'test/spec/joss/Lifecycle.js',
 			//pool: 'test/spec/**/*.js'
+		},
+
+		checkrequire: {
+			include: [
+				'src/joss/**/*.js',
+				'src/jossx/**/*.js',
+				'test/spec/**/*.js'
+			]
 		},
 
 		requirejs: {
@@ -183,8 +189,9 @@ module.exports = function( grunt ) {
 
 			packages: [
 				{ name: 'dojo', location: 'lib/dojo' },
-				{ name: 'amd-utils', location: 'lib/amd-utils' },
-				{ name: 'deferreds', location: 'lib/deferreds' }
+				{ name: 'mout', location: 'lib/mout' },
+				{ name: 'deferreds', location: 'lib/deferreds' },
+				{ name: 'class', location: 'lib/class' }
 			],
 
 			paths: {
@@ -224,6 +231,7 @@ module.exports = function( grunt ) {
 	grunt.loadNpmTasks('grunt-amd-dist');
 	grunt.loadNpmTasks('grunt-amd-doc');
 	grunt.loadNpmTasks('grunt-amd-test');
+	grunt.loadNpmTasks('grunt-amd-checkrequire');
 
 	grunt.loadTasks('tasks/whatrequires');
 

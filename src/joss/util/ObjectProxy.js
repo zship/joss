@@ -1,8 +1,8 @@
 define(function(require) {
 
-	var isObject = require('amd-utils/lang/isObject');
-	var forOwn = require('amd-utils/object/forOwn');
-	var size = require('amd-utils/object/size');
+	var isObject = require('mout/lang/isObject');
+	var forOwn = require('mout/object/forOwn');
+	var size = require('mout/object/size');
 
 
 	var ObjectProxy = function(opts) {

@@ -1,14 +1,11 @@
 define(function(require) {
 
-	var Classes = require('joss/oop/Classes');
+	var Class = require('class/Class');
 	var Point = require('./Point');
 
 
 	//Describes a line in two-dimensional space
-	var Line = Classes.create(/** @lends joss/geometry/Line.prototype */ {
-
-		'-accessors-': ['p1', 'p2', 'm', 'b'],
-
+	var Line = Class.extend(/** @lends Line.prototype */ {
 
 		/**
 		 * @param {joss/geometry/Point} p1
@@ -21,20 +18,20 @@ define(function(require) {
 				this.p2 = opts.p2;
 			}
 
-			if (opts.m && opts.b) {
-				var line = Line.fromSlopeIntercept(opts.m, opts.b);
-				this.p1 = line.p1;
-				this.p2 = line.p2;
+			//slope-intercept
+			if (opts.m !== undefined && opts.b !== undefined) {
+				this.p1 = new Point(0, opts.b);
+				this.p2 = new Point(1, opts.m + opts.b);
 			}
 		},
 
 
 		/** @type {joss/geometry/Point} */
-		p1: null,
+		p1: { get: null, set: null },
 
 
 		/** @type {joss/geometry/Point} */
-		p2: null,
+		p2: { get: null, set: null },
 
 
 		/** @type {joss/geometry/Point} */
@@ -65,10 +62,10 @@ define(function(require) {
 		 * @return {joss/geometry/Point}
 		 */
 		translate: function(dx, dy) {
-			return new Line(
-				this.p1.translate(dx, dy),
-				this.p2.translate(dx, dy)
-			);
+			return new Line({
+				p1: this.p1.translate(dx, dy),
+				p2: this.p2.translate(dx, dy)
+			});
 		},
 
 
@@ -103,20 +100,6 @@ define(function(require) {
 		}
 
 	});
-
-
-	/**
-	 * @param {Number} m
-	 * @param {Number} b
-	 * @return {joss/geometry/Line}
-	 */
-	Line.fromSlopeIntercept = function(m, b) {
-
-		var p1 = new Point(0, b);
-		var p2 = new Point(1, m + b);
-		return new Line(p1, p2);
-	
-	};
 
 
 	return Line;

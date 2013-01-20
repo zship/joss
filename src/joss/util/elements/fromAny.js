@@ -1,7 +1,7 @@
 define(function(require) {
 
 	var $ = require('jquery');
-	var isString = require('amd-utils/lang/isString');
+	var isString = require('mout/lang/isString');
 
 
 	var isElement = function(obj) {

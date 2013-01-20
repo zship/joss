@@ -11,7 +11,8 @@
 		"equal": false,
 		"strictEqual": false,
 		"notStrictEqual": false,
-		"deepEqual": false
+		"deepEqual": false,
+		"throws": false
 	},
 
 	"browser":   true,

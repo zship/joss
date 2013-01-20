@@ -1,10 +1,10 @@
 define(function(require) {
 
-	var Classes = require('joss/oop/Classes');
+	var Class = require('class/Class');
 
 
 	//Describes a point in two-dimensional space
-	var Point = Classes.create(/** @lends joss/geometry/Point.prototype */ {
+	var Point = Class.extend(/** @lends Point.prototype */ {
 
 		/**
 		 * Point describes a point in a plane. It is used as a very basic building
@@ -52,6 +52,13 @@ define(function(require) {
 			else {
 				this.translate(-dx, -dy);
 			}
+			return this;
+		},
+
+
+		round: function() {
+			this.x = Math.round(this.x);
+			this.y = Math.round(this.y);
 			return this;
 		}
 

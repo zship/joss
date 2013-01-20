@@ -1,13 +1,14 @@
 define(function(require) {
 
 	var $ = require('jquery');
-	var Classes = require('joss/oop/Classes');
 	var Lifecycle = require('joss/oop/Lifecycle');
 	var lang = require('dojo/_base/lang');
 	var hub = require('dojo/topic');
-	var Elements = require('joss/util/Elements');
-	var forEach = require('amd-utils/collection/forEach');
-	var isFunction = require('amd-utils/lang/isFunction');
+	var Elements = {
+		fromAny: require('joss/util/elements/fromAny')
+	};
+	var forOwn = require('mout/object/forOwn');
+	var isFunction = require('mout/lang/isFunction');
 
 
 	//object:create
@@ -23,7 +24,7 @@ define(function(require) {
 	var rEventData = /^(.*\s[a-z]*?)\s*_data/;
 
 
-	var Controller = Lifecycle.extend(/** @lends __.prototype */{
+	var Controller = Lifecycle.extend(/** @lends Controller.prototype */{
 
 		/**
 		 * @constructs
@@ -37,7 +38,7 @@ define(function(require) {
 				opts.root = $('<div></div>')[0];
 			}
 
-			Classes.apply(opts, this);
+			this._apply(opts);
 
 			//store a reference to the controller in the root element
 			this.$root.data('controller', this);
@@ -47,7 +48,7 @@ define(function(require) {
 
 
 		/**
-		 * Call joss/mvc/Controller#stop and then remove the Controller's
+		 * Call {Controller#stop} and then remove the Controller's
 		 * root element.
 		 */
 		destroy: function() {
@@ -282,7 +283,7 @@ define(function(require) {
 		 * @return this
 		 */
 		unbind: function() {
-			forEach(this._data.bindings, function(binding) {
+			forOwn(this._data.bindings, function(binding) {
 				if (binding.type === 'pubsub') {
 					hub.unsubscribe(binding.handle);
 				}
@@ -307,7 +308,8 @@ define(function(require) {
 			//only unbind events that could possibly have become detached:
 			//those outside this.root or bound without delegation
 			var toDelete = [];
-			forEach(this._data.bindings, function(binding, key) {
+
+			forOwn(this._data.bindings, function(binding, key) {
 				if (binding.type === 'bind') {
 					$(binding.selector).off(binding.eventName, binding.handler);
 					toDelete.push(key);
@@ -317,9 +319,11 @@ define(function(require) {
 					toDelete.push(key);
 				}
 			});
-			forEach(toDelete, function(key) {
+
+			toDelete.forEach(function(key) {
 				delete this._data.bindings[key];
 			});
+
 			this.bind();
 		}
 

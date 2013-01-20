@@ -1,12 +1,12 @@
 define(function(require) {
 
 	var $ = require('jquery');
-	var Classes = require('joss/oop/Classes');
+	var Class = require('class/Class');
 
 
 	var cache = [];
 
-	var HtmlView = Classes.create(/** @lends joss/mvc/HtmlView.prototype */ {
+	var HtmlView = Class.extend(/** @lends HtmlView.prototype */ {
 
 		constructor: function() {
 		},

@@ -1,9 +1,15 @@
 define(function(require) {
 
-	var Classes = require('./Classes');
+	var Class = require('class/Class');
 
 
-	var Lifecycle = Classes.create(/** @lends __.prototype */{
+	var Lifecycle = Class.extend(/** @lends Lifecycle.prototype */{
+
+		__chains: {
+			start: 'after',
+			stop: 'before'
+		},
+
 
 		/**
 		 * @constructs
@@ -29,10 +35,6 @@ define(function(require) {
 		}
 
 	});
-
-
-	Classes.chain(Lifecycle, 'start', 'after');
-	Classes.chain(Lifecycle, 'stop', 'before');
 
 
 	return Lifecycle;

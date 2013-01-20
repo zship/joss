@@ -1,7 +1,7 @@
 define(function(require) {
 
 	var $ = require('jquery');
-	var Classes = require('joss/oop/Classes');
+	var Class = require('class/Class');
 	require('jquery.hashchange');
 
 
@@ -9,7 +9,7 @@ define(function(require) {
 	var param = /\{([\w\d]+)\}/g;
 
 
-	var Router = Classes.create(/** @lends joss/mvc/Router.prototype */ {
+	var Router = Class.extend(/** @lends Router.prototype */ {
 
 		constructor: function() {
 			

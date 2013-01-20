@@ -1,15 +1,22 @@
 define(function(require) {
 
-	var Class = require('joss/oop/Class');
-	var Classes = require('joss/oop/Classes');
+	var Class = require('class/Class');
 	var lang = require('dojo/_base/lang');
 	var Point = require('./Point');
 	var Position = require('./Position');
-	var defaults = require('amd-utils/lang/defaults');
+	var defaults = require('mout/lang/defaults');
 
 
 	//Describes a rectangle in two-dimensional space
 	var Rect = Class.extend(/** @lends Rect.prototype */ {
+
+		__defaults: {
+			top: 0,
+			left: 0,
+			width: 0,
+			height: 0
+		},
+
 
 		/**
 		 * @class
@@ -19,6 +26,7 @@ define(function(require) {
 		 * @constructs
 		 */
 		constructor: function(opts) {
+
 			opts.top = defaults(opts.top, opts.t);
 			opts.right = defaults(opts.right, opts.r);
 			opts.bottom = defaults(opts.bottom, opts.b);
@@ -42,45 +50,34 @@ define(function(require) {
 				opts.height = opts.bottom - opts.top;
 			}
 
-			opts = Classes.defaults({
-				top: 0,
-				left: 0,
-				width: 0,
-				height: 0
-			}, opts);
+			this._apply(opts);
 
-			Classes.apply(opts, this);
 		},
 
 
 		/** @type {Number} */
-		top: {
-			get: null, set: null
-		},
+		top: { get: null, set: null },
 
 
 		/** @type {Number} */
-		left: {
-			get: null, set: null
-		},
+		left: { get: null, set: null },
 
 
 		/** @type {Number} */
-		width: {
-			get: null, set: null
-		},
+		width: { get: null, set: null },
 
 
 		/** @type {Number} */
-		height: {
-			get: null, set: null
-		},
+		height: { get: null, set: null },
 
 
 		/** @type {Number} */
 		right: {
 			get: function() {
 				return this._data.left + this._data.width;
+			},
+			set: function(val) {
+				this._data.width = val - this._data.left;
 			}
 		},
 
@@ -89,6 +86,9 @@ define(function(require) {
 		bottom: {
 			get: function() {
 				return this._data.top + this._data.height;
+			},
+			set: function(val) {
+				this._data.height = val - this._data.top;
 			}
 		},
 
@@ -308,6 +308,48 @@ define(function(require) {
 			}
 
 			return this;
+		},
+
+
+		/**
+		 * Return the point on this rectangle lying at the given position.
+		 * @param {Position|String} pos
+		 * @return {Point}
+		 */
+		pointAt: function(pos) {
+
+			if (pos.constructor !== Position) {
+				pos = new Position(pos);
+			}
+
+			var point = new Point();
+
+			switch (pos.x) {
+				case 'left':
+					point.x = this.left;
+					break;
+				case 'right':
+					point.x = this.right;
+					break;
+				default:
+					point.x = this.center.x;
+					break;
+			}
+
+			switch (pos.y) {
+				case 'top':
+					point.y = this.top;
+					break;
+				case 'bottom':
+					point.y = this.bottom;
+					break;
+				default:
+					point.y = this.center.y;
+					break;
+			}
+
+			return point;
+		
 		},
 
 

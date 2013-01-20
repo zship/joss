@@ -3,8 +3,8 @@ define(function(require) {
 	var lang = require('dojo/_base/lang');
 	var number = require('dojo/number');
 	var date = require('dojo/date/locale');
-	var forOwn = require('amd-utils/object/forOwn');
-	var toArray = require('amd-utils/lang/toArray');
+	var forOwn = require('mout/object/forOwn');
+	var toArray = require('mout/lang/toArray');
 
 
 	var Checks = {};

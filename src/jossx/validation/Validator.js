@@ -1,21 +1,20 @@
 define(function(require) {
 
 	var $ = require('jquery');
-	var Classes = require('joss/oop/Classes');
 	var lang = require('dojo/_base/lang');
 	var Controller = require('joss/mvc/Controller');
 	var Errors = require('./Errors');
 	var ValidationModel = require('./ValidationModel');
 	var Forms = require('joss/util/Forms');
 	var Elements = require('joss/util/Elements');
-	var forEach = require('amd-utils/collection/forEach');
-	var objectSize = require('amd-utils/object/size');
-	var objectKeys = require('amd-utils/object/keys');
-	var throttle = require('amd-utils/function/throttle');
+	var forEach = require('mout/collection/forEach');
+	var objectSize = require('mout/object/size');
+	var objectKeys = require('mout/object/keys');
+	var throttle = require('mout/function/throttle');
 	require('jquery.event.input');
 
 
-	var Validator = Classes.create(Controller, /** @lends jossx/validation/Validator.prototype */ {
+	var Validator = Controller.extend( /** @lends jossx/validation/Validator.prototype */ {
 
 		constructor: function(opts) {
 

@@ -1,7 +1,7 @@
 define(function(require) {
 
-	var isObject = require('amd-utils/lang/isObject');
-	var forOwn = require('amd-utils/object/forOwn');
+	var isObject = require('mout/lang/isObject');
+	var forOwn = require('mout/object/forOwn');
 
 
 	var Observable = function(opts) {

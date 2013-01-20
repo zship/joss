@@ -1,6 +1,6 @@
 define(function(require) {
 
-	var clone = require('amd-utils/lang/clone');
+	var clone = require('mout/lang/deepClone');
 
 
 	/**

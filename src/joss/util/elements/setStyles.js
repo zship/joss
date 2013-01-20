@@ -1,6 +1,6 @@
 define(function(require) {
 
-	var forOwn = require('amd-utils/object/forOwn');
+	var forOwn = require('mout/object/forOwn');
 
 
 	var cssPxLength = {

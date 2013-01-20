@@ -1,11 +1,11 @@
 define(function(require) {
 
-	var Classes = require('joss/oop/Classes');
-	var defaults = require('amd-utils/lang/defaults');
+	var Class = require('class/Class');
+	var defaults = require('mout/lang/defaults');
 
 
 	//Defines the size of a two-dimensional object
-	var Size = Classes.create(/** @lends joss/geometry/Size.prototype */ {
+	var Size = Class.extend(/** @lends Size.prototype */ {
 
 		/**
 		 * @param {Number} width

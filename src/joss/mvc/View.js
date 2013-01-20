@@ -1,10 +1,10 @@
 define(function(require) {
 
 	var $ = require('jquery');
-	var Classes = require('joss/oop/Classes');
+	var Class = require('class/Class');
 
 
-	var View = Classes.create(/** @lends joss/mvc/View.prototype */ {
+	var View = Class.extend(/** @lends View.prototype */ {
 
 		constructor: function() {
 		},

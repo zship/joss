@@ -1,7 +1,6 @@
 define(function(require) {
 
 	var $ = require('jquery');
-	var Classes = require('joss/oop/Classes');
 	var lang = require('dojo/_base/lang');
 	var Controller = require('joss/mvc/Controller');
 	var Point = require('joss/geometry/Point');
@@ -11,7 +10,7 @@ define(function(require) {
 	require('jquery.jgestures');
 
 
-	var Scrollable = Classes.create(Controller, /** @lends jossx/Scrollable.prototype */ {
+	var Scrollable = Controller.extend(/** @lends jossx/Scrollable.prototype */ {
 
 		constructor: function() {
 

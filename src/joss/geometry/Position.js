@@ -1,41 +1,66 @@
 define(function(require) {
 
-	var Classes = require('joss/oop/Classes');
-	var lang = require('dojo/_base/lang');
+	var Class = require('class/Class');
 
 
 	//Abstraction of relative positioning information, modeled after jQuery UI
 	//(more predictable) and jquery.qTip (more precise)
-	var Position = Classes.create(/** @lends joss/geometry/Position.prototype */ {
+	var Position = Class.extend(/** @lends Position.prototype */ {
+
+		__defaults: {
+			x: null,
+			y: null,
+			precedence: null
+		},
+
 
 		/**
-		 * @class Position
 		 * @constructs
 		 */
 		constructor: function(opts) {
 
 			if (opts && opts.constructor === String) {
-				var base = Position.fromString(opts);
-				opts = {
-					x: base.x,
-					y: base.y,
-					precedence: base.precedence
-				};
+				return Position.fromString(opts);
 			}
 
-			opts = lang.mixin({
-				x: null,
-				y: null,
-				precedence: null
-			}, opts);
+			this._apply(opts);
 
-			/** @type {String} */
-			this.x = opts.x;
-			/** @type {String} */
-			this.y = opts.y;
-			/** @type {String} */
-			this.precedence = opts.precedence;
-		
+		},
+
+
+		/** @type {String} */
+		x: { get: null, set: null },
+
+
+		/** @type {String} */
+		y: { get: null, set: null },
+
+
+		/** @type {String} */
+		precedence: { get: null, set: null },
+
+
+		/** @type {Array<String>} */
+		order: {
+			get: function() {
+				if (this.precedence === 'x') {
+					return ['x', 'y'];
+				}
+
+				return ['y', 'x'];
+			}
+		},
+
+
+		/** @type {Array<String>} */
+		parts: {
+			get: function() {
+				if (this.precedence === 'x') {
+					return [this.x, this.y];
+				}
+
+				return [this.y, this.x];
+			}
 		},
 
 
@@ -43,7 +68,7 @@ define(function(require) {
 		 * @return {joss/geometry/Position}
 		 */
 		reverse: function() {
-			var pos = lang.clone(this);
+			var pos = this.clone();
 
 			if (pos.x === 'left') {
 				pos.x = 'right';

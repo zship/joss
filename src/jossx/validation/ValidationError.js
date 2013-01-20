@@ -1,10 +1,10 @@
 define(function(require) {
 
 	var Elements = require('joss/util/Elements');
-	var Classes = require('joss/oop/Classes');
+	var Class = require('class/Class');
 
 
-	var ValidationError = Classes.create({
+	var ValidationError = Class.extend({
 
 		'-accessors-': ['el', 'message', 'type'],
 

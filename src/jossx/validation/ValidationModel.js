@@ -1,11 +1,11 @@
 define(function(require) {
 
-	var Classes = require('joss/oop/Classes');
+	var Class = require('class/Class');
 	var lang = require('dojo/_base/lang');
 	var Elements = require('joss/util/Elements');
 
 
-	var ValidationModel = Classes.create(/** @lends jossx/validation/ValidationModel.prototype */ {
+	var ValidationModel = Class.extend(/** @lends jossx/validation/ValidationModel.prototype */ {
 
 		constructor: function() {
 			this._model = {};
